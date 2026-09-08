@@ -1,0 +1,6 @@
+.env
+.env.local
+.env*.local
+CLAUDE.local.md
+node_modules
+.next
