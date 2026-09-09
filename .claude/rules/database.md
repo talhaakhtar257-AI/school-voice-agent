@@ -44,6 +44,24 @@ If a field like this appears in a request, drop it and continue. Do not save it.
 - Publishing copies draft to live and writes a row into `content_history`.
 - Publishing is never automatic. It happens only on an explicit request.
 
+## Language in the schema
+
+Constitution v1.1.0, Principle IV. Prose and values are stored differently.
+
+- **Prose is stored twice.** A sentence a parent reads needs an Urdu column and
+  an English column — for example `answer_ur` and `answer_en`.
+- **Language-neutral values are stored once.** A fee, a date, an age, a class
+  number, a phone number: one column, formatted for display. Never `fee_ur` and
+  `fee_en`.
+
+Two copies of a fee will eventually disagree. Someone updates one and misses the
+other, and the agent then quotes a different price depending on which language
+the parent happened to be speaking. One column makes that impossible instead of
+merely unlikely.
+
+When a value must appear inside a sentence, keep the value in its own column and
+let each language's prose reference it. Do not bake the number into both strings.
+
 ## Security
 
 - Turn on row level security on every table.

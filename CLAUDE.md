@@ -89,7 +89,10 @@ nice-to-have.
 
 ## Urdu
 
-- All parent-facing text exists in Urdu and English.
+- All parent-facing sentences exist in Urdu and English.
+- Language-neutral values — fees, dates, ages, class numbers, phone numbers —
+  are stored once and formatted for display. Never one column per language: two
+  copies of a fee eventually disagree with each other.
 - Transcripts contain Urdu script and must render correctly. Never assume
   Latin-only text.
 - Do not use fonts or components that break on right-to-left text.
@@ -100,6 +103,8 @@ nice-to-have.
 - Don't refactor code I did not ask you to touch.
 - Don't invent school data. Fees, dates, ages and documents come from me only.
 - Don't build features that are not in the current feature spec.
+- Don't start a new feature while the previous one is unimplemented. Writing a
+  spec, a plan or tasks all count as starting. Check for the code, not the spec.
 - Don't create files unless the task needs them.
 - Don't use browser localStorage or sessionStorage.
 - Don't add authentication to the public landing page. It stays public.
