@@ -81,7 +81,7 @@ falsely.
 - [x] **VII. Human Exit** — The office phone number appears on the sign-in screen, reachable without scrolling at 360px. Assumption A-006: the screen is staff-facing but publicly reachable, so a parent arriving by mistake still gets a way out.
 - [x] **VIII. Simple Over Clever** — No custom auth, no session abstraction, no role system. Two official Supabase packages, both pending approval. Every planned file is under 200 lines; the largest is the sign-in form at roughly 120.
 - [x] **IX. Testable By A Non-Developer** — All four states of the sign-in screen are reachable by clicking: empty, loading, wrong password, network failure. The dashboard home renders a designed empty state. Everything works at 360px.
-- [x] **X. Small Steps** — Sixteen tasks, each leaving the project building and runnable. Nothing outside this feature is refactored.
+- [x] **X. Small Steps** — Thirty-six tasks, each leaving the project building and runnable. Nothing outside this feature is refactored.
 
 **Result**: Passes, subject to dependency approval. Complexity Tracking is empty.
 

@@ -6,6 +6,7 @@ description: "Task list for feature 002-staff-login"
 
 **Input**: Design documents from `/specs/002-staff-login/`
 **Prerequisites**: `plan.md` ✓, `spec.md` ✓, `research.md` ✓, `data-model.md` ✓, `quickstart.md` ✓
+**Revised**: 2026-09-09 after `/sp.analyze` — four coverage gaps closed (M1, M2, L1, L2)
 
 **Tests**: No automated tests. The specification requests none, and decision
 D-006 in `research.md` records why. Verification is by clicking, following
@@ -84,9 +85,11 @@ Nothing here can start until both are settled.
 - [ ] T014 [US2] Create `middleware.ts` at the repository root: redirect a request to anything under `/dashboard` without a valid session to `/login`, refresh the session using the helper from T007, and set the `matcher` so it runs on `/dashboard/:path*` and `/login` only (depends on T007)
 - [ ] T015 [US2] In the same `middleware.ts`, send a request to `/login` that already has a valid session on to `/dashboard`
 - [ ] T016 [US2] Confirm the public landing page `/` is untouched by the matcher: open it signed out and check there is no redirect and no sign-in prompt
-- [ ] T017 [US2] Verify Part 3 of `quickstart.md`, watching specifically for any flash of dashboard content before the redirect
+- [ ] T017 [US2] Verify an **expired** session is treated exactly like no session: with a dashboard screen open, expire or delete the session cookies in the browser, then take any action and confirm you land on `/login` rather than seeing an error or empty data
+- [ ] T018 [US2] Verify a **deleted account** is treated the same way: sign in, delete that account in the Supabase dashboard, then take any action and confirm you land on `/login`
+- [ ] T019 [US2] Verify Part 3 of `quickstart.md`, watching specifically for any flash of dashboard content before the redirect
 
-**Checkpoint**: Stories 1 and 2 both work. The dashboard is genuinely closed.
+**Checkpoint**: Stories 1 and 2 both work. The dashboard is genuinely closed, including when a session dies mid-visit.
 
 ---
 
@@ -96,13 +99,13 @@ Nothing here can start until both are settled.
 
 **Independent Test**: Submit a wrong password and see a bilingual message. Follow Part 4 of `quickstart.md`.
 
-- [ ] T018 [US3] In `components/login-form.tsx`, catch a failed sign-in and show the wrong-credentials message from `lib/strings/staff-login.ts`, keeping what was typed in the email field. Use identical wording for an unknown email and a wrong password, per FR-006.
-- [ ] T019 [US3] In `components/login-form.tsx`, block submission when either field is empty and mark the empty field in both languages
-- [ ] T020 [US3] In `components/login-form.tsx`, check the email address is well formed before sending anything to the server, and show the bilingual malformed-email message if not
-- [ ] T021 [US3] In `components/login-form.tsx`, distinguish a network or server failure from a credentials failure and show the separate bilingual message for it
-- [ ] T022 [US3] In `components/login-form.tsx`, detect that cookies are unavailable and show the bilingual cookies-blocked message, rather than failing silently in a redirect loop
-- [ ] T023 [US3] Add the forgotten-password note to `app/login/page.tsx`, telling staff who to contact, since there is no self-service reset (FR-016)
-- [ ] T024 [US3] Verify all six steps of Part 4 of `quickstart.md`, confirming the unknown-email and wrong-password messages are word-for-word identical
+- [ ] T020 [US3] In `components/login-form.tsx`, catch a failed sign-in and show the wrong-credentials message from `lib/strings/staff-login.ts`, keeping what was typed in the email field. Use identical wording for an unknown email and a wrong password, per FR-006.
+- [ ] T021 [US3] In `components/login-form.tsx`, block submission when either field is empty and mark the empty field in both languages
+- [ ] T022 [US3] In `components/login-form.tsx`, check the email address is well formed before sending anything to the server, and show the bilingual malformed-email message if not
+- [ ] T023 [US3] In `components/login-form.tsx`, distinguish a network or server failure from a credentials failure and show the separate bilingual message for it
+- [ ] T024 [US3] In `components/login-form.tsx`, detect that cookies are unavailable and show the bilingual cookies-blocked message, rather than failing silently in a redirect loop
+- [ ] T025 [US3] Add the forgotten-password note to `app/login/page.tsx`, telling staff who to contact, since there is no self-service reset (FR-016)
+- [ ] T026 [US3] Verify all six steps of Part 4 of `quickstart.md`, confirming the unknown-email and wrong-password messages are word-for-word identical
 
 **Checkpoint**: Every error state is reachable by clicking and readable in both languages.
 
@@ -114,9 +117,9 @@ Nothing here can start until both are settled.
 
 **Independent Test**: Sign out, press back, and see the sign-in screen. Follow Part 5 of `quickstart.md`.
 
-- [ ] T025 [P] [US4] Build the sign-out button in `components/sign-out-button.tsx`, calling Supabase sign-out and sending the person to `/login` (depends on T004, T006)
-- [ ] T026 [US4] Add the sign-out button from T025 to `app/dashboard/layout.tsx` so it appears on every dashboard screen
-- [ ] T027 [US4] Verify Part 5 of `quickstart.md`, confirming the back button after signing out shows no dashboard content
+- [ ] T027 [P] [US4] Build the sign-out button in `components/sign-out-button.tsx`, calling Supabase sign-out and sending the person to `/login` (depends on T004, T006)
+- [ ] T028 [US4] Add the sign-out button from T027 to `app/dashboard/layout.tsx` so it appears on every dashboard screen
+- [ ] T029 [US4] Verify Part 5 of `quickstart.md`, confirming the back button after signing out shows no dashboard content
 
 **Checkpoint**: All four user stories work independently.
 
@@ -124,11 +127,46 @@ Nothing here can start until both are settled.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T028 Check every file created in this feature is under 200 lines and split any that is not, per Constitution VIII
-- [ ] T029 Confirm no password, session token or email address is written to a log line anywhere in this feature (FR-012)
-- [ ] T030 Walk through Part 6 of `quickstart.md` at 360px width: no horizontal scrolling, 44px touch targets, office number visible without scrolling, Urdu rendering right to left
-- [ ] T031 Walk through Part 7 of `quickstart.md` on the deployed Vercel preview, since cookies behave differently there than on `localhost`
-- [ ] T032 Run `npm run build` and `npx tsc --noEmit`; both must be clean before this feature is called done
+- [ ] T030 Confirm no account can be created from the application: search the codebase for any sign-up route, form or Supabase `signUp` call and confirm there are none (FR-005)
+- [ ] T031 Time a sign-in on a phone from opening `/login` to the dashboard appearing, and confirm it is under 30 seconds (SC-001)
+- [ ] T032 Check every file created in this feature is under 200 lines and split any that is not, per Constitution VIII
+- [ ] T033 Confirm no password, session token or email address is written to a log line anywhere in this feature (FR-012)
+- [ ] T034 Walk through Part 6 of `quickstart.md` at 360px width: no horizontal scrolling, 44px touch targets, office number visible without scrolling, Urdu rendering right to left
+- [ ] T035 Walk through Part 7 of `quickstart.md` on the deployed Vercel preview, since cookies behave differently there than on `localhost`
+- [ ] T036 Run `npm run build` and `npx tsc --noEmit`; both must be clean before this feature is called done
+
+---
+
+## Requirement Coverage
+
+Every functional requirement and success criterion in `spec.md` maps to at least
+one task. Verified by `/sp.analyze` on 2026-09-09.
+
+| Requirement | Tasks |
+|---|---|
+| FR-001 sign-in screen | T009, T010 |
+| FR-002 bilingual throughout | T006, T009, T020–T024 |
+| FR-003 dashboard requires session | T014 |
+| FR-004 landing page stays public | T016 |
+| FR-005 no account creation | T030 |
+| FR-006 identical failure wording | T020, T026 |
+| FR-007 sign out anywhere | T027, T028 |
+| FR-008 session survives reload and tabs | T004, T005, T007, T013 |
+| FR-009 cookies, never localStorage | T004, T005, T007 |
+| FR-010 loading state, no double submit | T009 |
+| FR-011 network failure distinct from credentials | T023 |
+| FR-012 nothing sensitive logged | T033 |
+| FR-013 office phone on sign-in screen | T008, T010, T034 |
+| FR-014 usable at 360px | T034 |
+| FR-015 dashboard empty state | T012 |
+| FR-016 forgotten-password note | T025 |
+| FR-017 RLS and service key | T003 — no table is created by this feature, so RLS applies vacuously here. The rule binds whichever feature first creates a table. Recorded in `data-model.md`. |
+| SC-001 sign-in under 30 seconds | T031 |
+| SC-002 no dashboard content for signed-out visitor | T019 |
+| SC-003 landing page loads signed out | T016 |
+| SC-004 all four states reachable and bilingual at 360px | T026, T034 |
+| SC-005 back button after sign-out | T029 |
+| SC-006 build and type check clean | T036 |
 
 ---
 
@@ -148,13 +186,13 @@ Nothing here can start until both are settled.
 
 - Components before the pages that render them
 - The form before its error states
-- Verification task last in each phase
+- Verification tasks last in each phase
 
 ### Parallel opportunities
 
 - T004, T005, T006 and T008 are four different files with no dependency on each other
 - T009 and T011 touch different files once Foundational is done
-- T025 can be built while Story 3 is in progress
+- T027 can be built while Story 3 is in progress
 
 ```bash
 # Foundational, all at once:
@@ -191,8 +229,8 @@ Story 4 matters on a shared office computer.
 | Setup | T001–T003 | 3 |
 | Foundational | T004–T008 | 5 |
 | US1 — Sign in (P1) | T009–T013 | 5 |
-| US2 — Keep others out (P1) | T014–T017 | 4 |
-| US3 — Clear errors (P2) | T018–T024 | 7 |
-| US4 — Sign out (P3) | T025–T027 | 3 |
-| Polish | T028–T032 | 5 |
-| **Total** | | **32** |
+| US2 — Keep others out (P1) | T014–T019 | 6 |
+| US3 — Clear errors (P2) | T020–T026 | 7 |
+| US4 — Sign out (P3) | T027–T029 | 3 |
+| Polish | T030–T036 | 7 |
+| **Total** | | **36** |
