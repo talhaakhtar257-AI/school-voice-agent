@@ -1,4 +1,4 @@
-import { isDatabaseReachable } from "@/lib/supabase";
+import { isDatabaseReachable } from "@/lib/supabase/health";
 
 /**
  * The health check.
