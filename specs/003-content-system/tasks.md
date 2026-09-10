@@ -26,9 +26,9 @@ keyword matching, not an LLM (option A).
 
 ## Phase 1: Setup
 
-- [ ] T001 Add `zod` with `npm install zod` and confirm it appears in `package.json` (mandated by `.claude/rules/api.md`; assumption 3)
+- [x] T001 Add `zod` with `npm install zod` and confirm it appears in `package.json` (mandated by `.claude/rules/api.md`; assumption 3)
 - [ ] T002 Confirm `RETELL_WEBHOOK_SECRET` is set in `.env.local`, add it to Vercel for Production and Preview if missing, and confirm it is listed in `.env.example`
-- [ ] T003 [P] Add a "Content" link to the dashboard nav in `app/dashboard/layout.tsx`, pointing at `/dashboard/content` (only visible change from feature 002's layout)
+- [x] T003 [P] Add a "Content" link to the dashboard nav in `app/dashboard/layout.tsx`, pointing at `/dashboard/content` (only visible change from feature 002's layout)
 
 **Checkpoint**: `zod` installed, the secret exists, and the dashboard links to the content area.
 
@@ -38,13 +38,13 @@ keyword matching, not an LLM (option A).
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T004 Write the migration file `supabase/migrations/<timestamp>_content_system.sql` per `data-model.md`: create `content` (id, channel with CHECK + UNIQUE, doc jsonb NOT NULL default '{}', created_at, updated_at) and `content_history` (id, published_at, published_by, published_by_email, doc_before, doc_after, change_summary, created_at, updated_at); an `updated_at` trigger for both; seed the two `content` rows (`draft`, `live`) with `'{}'::jsonb`; the `publish_content(actor_id uuid, actor_email text, summary jsonb)` SECURITY DEFINER function; enable RLS and add the policies from the `data-model.md` RLS matrix.
-- [ ] T005 Walk the maintainer through T004 in plain English — what tables and function are created, that no existing data is touched (the project has no tables yet), and that the two seed rows are empty. **Wait for explicit approval** (`.claude/rules/database.md`).
-- [ ] T006 Apply the approved migration to Supabase (via the Supabase MCP `apply_migration` or `supabase db push`), then confirm: `content` has exactly two rows, `content_history` is empty, RLS is on for both.
-- [ ] T007 [P] Define the content document in `lib/content/schema.ts`: the `zod` schema for `ContentDoc` (facts, policies, faqs, escalationTopics per `data-model.md`) and the `ContentDoc` type derived from it. Include a `Bilingual` schema. No React here.
-- [ ] T008 [P] Create `lib/supabase/admin.ts`: a service-role Supabase client built from `SUPABASE_SERVICE_ROLE_KEY`, for server-side use only. A comment states it must never be imported by a client component.
-- [ ] T009 Create `lib/content/queries.ts`: `readDraft()`, `readLive()` (both parse through the schema), `saveDraft(doc, expectedUpdatedAt)` (optimistic-concurrency check, throws a typed `DraftConflict` when the timestamp moved), and `listHistory(page)` — all using the server client from `lib/supabase/server.ts` (depends on T007).
-- [ ] T010 [P] Create `lib/strings/content-admin.ts`: the small set of bilingual UI strings this feature shows staff (section titles, Save, Publish, Cancel, "draft saved", the draft-conflict message, the simulation notice). English-primary chrome, but keep the pair per entry (assumption 5, research D-008).
+- [x] T004 Write the migration file `supabase/migrations/<timestamp>_content_system.sql` per `data-model.md`: create `content` (id, channel with CHECK + UNIQUE, doc jsonb NOT NULL default '{}', created_at, updated_at) and `content_history` (id, published_at, published_by, published_by_email, doc_before, doc_after, change_summary, created_at, updated_at); an `updated_at` trigger for both; seed the two `content` rows (`draft`, `live`) with `'{}'::jsonb`; the `publish_content(actor_id uuid, actor_email text, summary jsonb)` SECURITY DEFINER function; enable RLS and add the policies from the `data-model.md` RLS matrix.
+- [x] T005 Walk the maintainer through T004 in plain English — what tables and function are created, that no existing data is touched (the project has no tables yet), and that the two seed rows are empty. **Wait for explicit approval** (`.claude/rules/database.md`).
+- [x] T006 Apply the approved migration to Supabase (via the Supabase MCP `apply_migration` or `supabase db push`), then confirm: `content` has exactly two rows, `content_history` is empty, RLS is on for both.
+- [x] T007 [P] Define the content document in `lib/content/schema.ts`: the `zod` schema for `ContentDoc` (facts, policies, faqs, escalationTopics per `data-model.md`) and the `ContentDoc` type derived from it. Include a `Bilingual` schema. No React here.
+- [x] T008 [P] Create `lib/supabase/admin.ts`: a service-role Supabase client built from `SUPABASE_SERVICE_ROLE_KEY`, for server-side use only. A comment states it must never be imported by a client component.
+- [x] T009 Create `lib/content/queries.ts`: `readDraft()`, `readLive()` (both parse through the schema), `saveDraft(doc, expectedUpdatedAt)` (optimistic-concurrency check, throws a typed `DraftConflict` when the timestamp moved), and `listHistory(page)` — all using the server client from `lib/supabase/server.ts` (depends on T007).
+- [x] T010 [P] Create `lib/strings/content-admin.ts`: the small set of bilingual UI strings this feature shows staff (section titles, Save, Publish, Cancel, "draft saved", the draft-conflict message, the simulation notice). English-primary chrome, but keep the pair per entry (assumption 5, research D-008).
 
 **Checkpoint**: the database is ready, the document shape is defined once, and the read/write helpers exist.
 
@@ -56,9 +56,9 @@ keyword matching, not an LLM (option A).
 
 **Independent Test**: `curl` the endpoint with and without the secret (quickstart Part 5). With no publish yet, it returns `{ "published": false }`.
 
-- [ ] T011 [US1] Create `app/api/content/route.ts`: `GET` only; check `X-Agent-Secret` against `RETELL_WEBHOOK_SECRET` first and return `401 { error: "unauthorized" }` on miss; then read `live` via `lib/supabase/admin.ts`; return `{ published: false }` when the live doc is empty, otherwise `{ published: true, publishedAt, content }` with archived FAQs/escalation topics stripped. `export const dynamic = "force-dynamic"`. Never leak a DB error (`.claude/rules/api.md`). Put the `curl` examples from `contracts/content-api.md` in a comment at the top.
-- [ ] T012 [US1] Add a `405 { error: "method not allowed" }` handler for non-GET methods on the same route.
-- [ ] T013 [US1] Verify quickstart Part 5 against `npm run dev`: no secret → 401, wrong secret → 401, correct secret → 200 with `{ "published": false }` (nothing published yet).
+- [x] T011 [US1] Create `app/api/content/route.ts`: `GET` only; check `X-Agent-Secret` against `RETELL_WEBHOOK_SECRET` first and return `401 { error: "unauthorized" }` on miss; then read `live` via `lib/supabase/admin.ts`; return `{ published: false }` when the live doc is empty, otherwise `{ published: true, publishedAt, content }` with archived FAQs/escalation topics stripped. `export const dynamic = "force-dynamic"`. Never leak a DB error (`.claude/rules/api.md`). Put the `curl` examples from `contracts/content-api.md` in a comment at the top.
+- [x] T012 [US1] Add a `405 { error: "method not allowed" }` handler for non-GET methods on the same route.
+- [x] T013 [US1] Verify quickstart Part 5 against `npm run dev`: no secret → 401, wrong secret → 401, correct secret → 200 with `{ "published": false }` (nothing published yet).
 
 **Checkpoint**: the agent-facing contract is real and testable, before any editing UI exists.
 
@@ -70,13 +70,13 @@ keyword matching, not an LLM (option A).
 
 **Independent Test**: Change a value, save, reload — the change is there and marked draft; `GET /api/content` is unchanged (quickstart Parts 1 and 2).
 
-- [ ] T014 [P] [US2] Build `components/content/bilingual-field.tsx`: an English input and an Urdu input (`dir="rtl"` on the Urdu one) for one `Bilingual` value, showing a per-field "missing: Urdu/English" note when one side is empty (depends on T010).
-- [ ] T015 [P] [US2] Build `components/content/facts-editor.tsx`: edit `classes`, `feePerClass`, `ageCriteriaPerClass`, `admissionDates`, `officeHours`. Numeric fields reject non-digits; dates use date inputs; times use time inputs. Format checks per `data-model.md` (positive fees, `start <= end`, `opens < closes`).
-- [ ] T016 [P] [US2] Build `components/content/policies-editor.tsx`: two `bilingual-field`s — admission process, document requirements.
-- [ ] T017 [P] [US2] Build `components/content/faq-editor.tsx`: a list of FAQs, each with a question `bilingual-field` and an answer `bilingual-field`; Add FAQ; Remove (sets `archivedAt`, keeps the record — FR-025); archived items hidden.
-- [ ] T018 [P] [US2] Build `components/content/escalation-editor.tsx`: a list of escalation topics, each with a topic `bilingual-field` and a hand-off wording `bilingual-field`; Add; Remove is wired to the confirm dialog from T028 (FR-026), not a quiet delete.
-- [ ] T019 [US2] Build `app/dashboard/content/page.tsx`: load the draft with `readDraft()`, render the four editors from T015–T018, hold the working document in state, and a Save button. Loading, empty (designed, not blank), and error states for the initial load (FR-028). 360px-first (FR-029). (depends on T009, T014–T018)
-- [ ] T020 [US2] Wire Save in `app/dashboard/content/page.tsx` to a server action calling `saveDraft(doc, expectedUpdatedAt)`; on `DraftConflict` show the bilingual "draft changed since you opened it — reload" message (FR-027); on success show "draft saved" and refresh the timestamp.
+- [x] T014 [P] [US2] Build `components/content/bilingual-field.tsx`: an English input and an Urdu input (`dir="rtl"` on the Urdu one) for one `Bilingual` value, showing a per-field "missing: Urdu/English" note when one side is empty (depends on T010).
+- [x] T015 [P] [US2] Build `components/content/facts-editor.tsx`: edit `classes`, `feePerClass`, `ageCriteriaPerClass`, `admissionDates`, `officeHours`. Numeric fields reject non-digits; dates use date inputs; times use time inputs. Format checks per `data-model.md` (positive fees, `start <= end`, `opens < closes`).
+- [x] T016 [P] [US2] Build `components/content/policies-editor.tsx`: two `bilingual-field`s — admission process, document requirements.
+- [x] T017 [P] [US2] Build `components/content/faq-editor.tsx`: a list of FAQs, each with a question `bilingual-field` and an answer `bilingual-field`; Add FAQ; Remove (sets `archivedAt`, keeps the record — FR-025); archived items hidden.
+- [x] T018 [P] [US2] Build `components/content/escalation-editor.tsx`: a list of escalation topics, each with a topic `bilingual-field` and a hand-off wording `bilingual-field`; Add; Remove is wired to the confirm dialog from T028 (FR-026), not a quiet delete.
+- [x] T019 [US2] Build `app/dashboard/content/page.tsx`: load the draft with `readDraft()`, render the four editors from T015–T018, hold the working document in state, and a Save button. Loading, empty (designed, not blank), and error states for the initial load (FR-028). 360px-first (FR-029). (depends on T009, T014–T018)
+- [x] T020 [US2] Wire Save in `app/dashboard/content/page.tsx` to a server action calling `saveDraft(doc, expectedUpdatedAt)`; on `DraftConflict` show the bilingual "draft changed since you opened it — reload" message (FR-027); on success show "draft saved" and refresh the timestamp.
 - [ ] T021 [US2] Verify quickstart Parts 1 and 2 on `npm run dev`: edit a fee, save, reload (persists, marked draft); `GET /api/content` still `{ published: false }`; add an FAQ with a missing Urdu answer and confirm the field shows it is incomplete.
 
 **Checkpoint**: staff can edit and save a draft; live is untouched; Stories 1 and 2 both work.
@@ -89,8 +89,8 @@ keyword matching, not an LLM (option A).
 
 **Independent Test**: Edit a fee in the draft, ask the test tool about it, see the new figure while live is unchanged (quickstart Part 3).
 
-- [ ] T022 [P] [US3] Create `lib/content/simulate.ts`: given a question string and a `ContentDoc`, tokenise the question, score each non-archived FAQ (question + answer text) and each non-archived escalation topic against the tokens, and return `{ kind: "answer", text }` for the best FAQ, `{ kind: "handoff", text }` when an escalation topic wins (FR-019), or `{ kind: "none" }` below a threshold. Pure function, no I/O.
-- [ ] T023 [US3] Build `app/dashboard/content/test/page.tsx`: a question box; on submit, load the draft with `readDraft()` and call `simulate()`; render the result with a persistent notice that this is a simulation and the live agent may differ (FR-018, from `lib/strings/content-admin.ts`). Testing writes nothing (FR-020). 360px-first.
+- [x] T022 [P] [US3] Create `lib/content/simulate.ts`: given a question string and a `ContentDoc`, tokenise the question, score each non-archived FAQ (question + answer text) and each non-archived escalation topic against the tokens, and return `{ kind: "answer", text }` for the best FAQ, `{ kind: "handoff", text }` when an escalation topic wins (FR-019), or `{ kind: "none" }` below a threshold. Pure function, no I/O.
+- [x] T023 [US3] Build `app/dashboard/content/test/page.tsx`: a question box; on submit, load the draft with `readDraft()` and call `simulate()`; render the result with a persistent notice that this is a simulation and the live agent may differ (FR-018, from `lib/strings/content-admin.ts`). Testing writes nothing (FR-020). 360px-first.
 - [ ] T024 [US3] Verify quickstart Part 3: draft fee edit is reflected in the test answer while live is not; a discount question shows the hand-off, not an answer; after testing, `GET /api/content` and the history are both unchanged.
 
 **Checkpoint**: staff can rehearse against the draft safely.
@@ -103,13 +103,13 @@ keyword matching, not an LLM (option A).
 
 **Independent Test**: Publish, then check live matches the former draft and the history shows who and when (quickstart Parts 4 and 6).
 
-- [ ] T025 [P] [US4] Create `lib/content/validate.ts`: `checkPublishReadiness(doc)` → a list of problems, each naming the path and (for bilingual gaps) the missing language: required facts present (FR-002, FR-012), every `Bilingual` in policies and non-archived faqs/escalation topics has both sides (FR-008), formats valid, and a soft warning if no escalation topic matches "discount"/"special case" (FR-005, research D-007).
-- [ ] T026 [P] [US4] Create `lib/content/diff.ts`: `summariseChanges(before, after)` → an ordered list of human-readable lines ("Class 6 fee: 4000 → 4500", "FAQ added: …", "Escalation topic removed: discounts"). Used by the confirm dialog and stored on the history row.
-- [ ] T027 [P] [US4] Build `components/content/publish-dialog.tsx`: shows the `diff.ts` lines and, if `validate.ts` returned problems, shows those instead and disables Confirm (FR-011, FR-012). Confirm and Cancel; Cancel publishes nothing (FR scenario 2).
-- [ ] T028 [P] [US4] Build `components/content/delete-escalation-dialog.tsx`: a confirmation with the same weight as publish, naming the topic and warning that removing it widens what the agent will answer (FR-026). Used by T018.
-- [ ] T029 [US4] Create the publish server action in `app/dashboard/content/page.tsx` (or `lib/content/queries.ts`): run `checkPublishReadiness`; if clean, compute the summary with `diff.ts` and call the `publish_content` function with the signed-in user's id and email; handle the `noop` result ("nothing to publish", no history row — FR edge case); on success show "published".
-- [ ] T030 [US4] Build `app/dashboard/content/history/page.tsx`: `listHistory(page)` most-recent-first (FR-023), each row showing when, which staff email, and the `change_summary` lines; paginated ~20 per page (FR "history grows large"). Loading, empty, error states.
-- [ ] T031 [US4] Build the single-record view (a route or an expandable row) showing `doc_before` in full so a value can be read and retyped into the draft (FR-024, SC-005). No edit or delete control anywhere on history (FR-022).
+- [x] T025 [P] [US4] Create `lib/content/validate.ts`: `checkPublishReadiness(doc)` → a list of problems, each naming the path and (for bilingual gaps) the missing language: required facts present (FR-002, FR-012), every `Bilingual` in policies and non-archived faqs/escalation topics has both sides (FR-008), formats valid, and a soft warning if no escalation topic matches "discount"/"special case" (FR-005, research D-007).
+- [x] T026 [P] [US4] Create `lib/content/diff.ts`: `summariseChanges(before, after)` → an ordered list of human-readable lines ("Class 6 fee: 4000 → 4500", "FAQ added: …", "Escalation topic removed: discounts"). Used by the confirm dialog and stored on the history row.
+- [x] T027 [P] [US4] Build `components/content/publish-dialog.tsx`: shows the `diff.ts` lines and, if `validate.ts` returned problems, shows those instead and disables Confirm (FR-011, FR-012). Confirm and Cancel; Cancel publishes nothing (FR scenario 2).
+- [x] T028 [P] [US4] Build `components/content/delete-escalation-dialog.tsx`: a confirmation with the same weight as publish, naming the topic and warning that removing it widens what the agent will answer (FR-026). Used by T018.
+- [x] T029 [US4] Create the publish server action in `app/dashboard/content/page.tsx` (or `lib/content/queries.ts`): run `checkPublishReadiness`; if clean, compute the summary with `diff.ts` and call the `publish_content` function with the signed-in user's id and email; handle the `noop` result ("nothing to publish", no history row — FR edge case); on success show "published".
+- [x] T030 [US4] Build `app/dashboard/content/history/page.tsx`: `listHistory(page)` most-recent-first (FR-023), each row showing when, which staff email, and the `change_summary` lines; paginated ~20 per page (FR "history grows large"). Loading, empty, error states.
+- [x] T031 [US4] Build the single-record view (a route or an expandable row) showing `doc_before` in full so a value can be read and retyped into the draft (FR-024, SC-005). No edit or delete control anywhere on history (FR-022).
 - [ ] T032 [US4] Verify quickstart Parts 4, 6, 7: the diff dialog lists changes; Cancel publishes nothing; Confirm publishes and `GET /api/content` then matches; a second Publish with no changes says "nothing to publish" and adds no history row; history shows the publish with the right person and time; a history record shows the full prior content; removing an escalation topic requires the weighted confirm.
 
 **Checkpoint**: all four user stories work. Content only reaches the agent through Publish + Confirm.
@@ -118,13 +118,13 @@ keyword matching, not an LLM (option A).
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T033 Confirm every list on the admin screens (`content`, `test`, `history`) has a loading state, a designed empty state, and an error state (FR-028) — walk `quickstart.md` Parts 1, 3, 6.
-- [ ] T034 Confirm `GET /api/content` never returns the draft under any path, and never a partial document — read `app/api/content/route.ts` and confirm only `channel = 'live'` is selected (FR-013, FR-016, SC-002).
+- [x] T033 Confirm every list on the admin screens (`content`, `test`, `history`) has a loading state, a designed empty state, and an error state (FR-028) — walk `quickstart.md` Parts 1, 3, 6.
+- [x] T034 Confirm `GET /api/content` never returns the draft under any path, and never a partial document — read `app/api/content/route.ts` and confirm only `channel = 'live'` is selected (FR-013, FR-016, SC-002).
 - [ ] T035 Confirm no content, staff email, or secret is written to a log line anywhere in this feature; API errors log only endpoint + message + timestamp (`.claude/rules/api.md`, FR).
-- [ ] T036 Check every file added in this feature is under ~200 lines; split any that is not (Constitution VIII).
+- [x] T036 Check every file added in this feature is under ~200 lines; split any that is not (Constitution VIII).
 - [ ] T037 Walk `quickstart.md` Part 8 at 360px: no sideways scroll, 44px targets on Save/Publish, Urdu fields right-to-left.
 - [ ] T038 Walk the full `quickstart.md` on the deployed Vercel preview for this branch.
-- [ ] T039 Run `npm run build` and `npx tsc --noEmit`; both clean before this feature is called done (SC, Constitution IX/X).
+- [x] T039 Run `npm run build` and `npx tsc --noEmit`; both clean before this feature is called done (SC, Constitution IX/X).
 
 ---
 
