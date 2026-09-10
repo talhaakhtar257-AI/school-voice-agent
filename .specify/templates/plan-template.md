@@ -31,19 +31,20 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Answer each against `.specify/memory/constitution.md` v1.0.0. Any unchecked box
+Answer each against `.specify/memory/constitution.md` v1.1.0. Any unchecked box
 blocks the plan until it is fixed or justified in Complexity Tracking below.
 
 - [ ] **I. Honesty** — Every fact the agent states traces to the live `content` table. Questions it cannot answer are recorded in `unanswered_questions` and hand off to the office.
 - [ ] **II. No Authority** — Nothing here lets the agent confirm an admission, offer a discount, or promise a seat.
 - [ ] **III. Disclosure** — The agent identifies itself as an AI when asked; no flow makes it appear human.
-- [ ] **IV. Bilingual** — Every parent-facing string exists in Urdu and English, and mixed-language sentences render and process correctly.
+- [ ] **IV. Bilingual Prose** — Every parent-facing sentence exists in Urdu and English, and mixed-language sentences render and process correctly. Language-neutral values (fees, dates, ages, class numbers, phone numbers) are stored once and formatted for display, never duplicated into a column per language.
 - [ ] **V. Confirm Before Saving** — Phone and name are read back and confirmed before storage; an unconfirmed field is left empty and the lead still saves.
 - [ ] **VI. No Sensitive Data** — No CNIC, B-Form, or payment data is collected, stored, or logged; such fields arriving in a request are dropped.
 - [ ] **VII. Human Exit** — The office phone number is reachable without scrolling on every parent-facing screen, throughout a conversation.
 - [ ] **VIII. Simple Over Clever** — No new abstraction a learning developer could not follow. New dependencies are well known and were agreed first. No file over ~200 lines.
 - [ ] **IX. Testable By A Non-Developer** — Every change is verifiable by clicking. Loading, empty and error states all reachable. Works at 360px.
 - [ ] **X. Small Steps** — Broken into changes that each build and run on their own. No unrelated refactoring.
+- [ ] **Feature sequencing** — The previous feature is implemented and running. This is judged by looking for its code, not its specification.
 
 ## Project Structure
 

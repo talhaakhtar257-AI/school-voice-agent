@@ -1,44 +1,49 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: (unfilled template) → 1.0.0
-Bump rationale: First ratification. No prior version existed; every value in the
-file was a placeholder. MAJOR/MINOR/PATCH rules apply from the next amendment on.
+Version change: 1.0.0 → 1.1.0
+Bump rationale: MINOR. Two additions, no removals and no redefinition of anything
+previously permitted. Principle IV gains a storage rule it did not carry before,
+and Governance gains a sequencing rule that did not exist. Nothing that was
+allowed under 1.0.0 becomes forbidden except starting a feature out of order,
+which was never deliberately permitted — it was an omission.
 
-Principles defined (10, from the ratifying text — the template offered 6 slots,
-the ratifying text supplied 10, so four sections were added):
-  I.    Honesty
-  II.   No Authority
-  III.  Disclosure
-  IV.   Bilingual
-  V.    Confirm Before Saving
-  VI.   No Sensitive Data
-  VII.  Human Exit
-  VIII. Simple Over Clever
-  IX.   Testable By A Non-Developer
-  X.    Small Steps
+Principles modified:
+  IV. Bilingual → Bilingual Prose
+      Renamed, because the added clause draws a line the old title blurred.
+      The rule now distinguishes prose, which MUST exist in both languages, from
+      language-neutral values such as fees, dates and ages, which MUST be stored
+      once and formatted for display rather than duplicated per language.
 
-Sections added:
-  - Technology and Scope Constraints  (template slot SECTION_2)
-  - Development Workflow and Quality Gates  (template slot SECTION_3)
-  - Governance  (filled)
+Principles unchanged: I, II, III, V, VI, VII, VIII, IX, X.
+
+Sections added: none. Governance gained one rule under a new
+"Feature sequencing" heading.
 
 Sections removed: none.
 
 Templates and guidance files:
-  UPDATED  .specify/templates/plan-template.md — Constitution Check gate filled
-           with ten pass/fail checks, one per principle
-  UPDATED  CLAUDE.md — product-rules list gained Principle III (disclosure) and
-           Principle VII (human exit); the lead rule now covers names as well
-           as phone
-  UPDATED  .claude/rules/api.md — name-confirmation rule added under
-           "Saving leads"
+  UPDATED  .specify/templates/plan-template.md — Principle IV gate reworded to
+           test the storage rule as well as the translation rule
+  UPDATED  CLAUDE.md — Urdu section gained the language-neutral storage rule;
+           Don't list gained the feature sequencing rule
+  UPDATED  .claude/rules/database.md — new "Language in the schema" section:
+           prose is stored twice (an Urdu column and an English column), a
+           language-neutral value once. Placed before Security, since the
+           `content` table is where the rule first bites.
   NO CHANGE NEEDED  .specify/templates/spec-template.md (generic structure)
   NO CHANGE NEEDED  .specify/templates/tasks-template.md (generic structure)
+  NO CHANGE NEEDED  .claude/rules/api.md, .claude/rules/frontend.md
   NO CHANGE NEEDED  .claude/commands/*.md — their only constitution references
                     are PHR routing, which is already correct
 
-Deferred TODOs: none. Ratification date confirmed as the date of adoption.
+Deferred TODOs: none.
+
+Occasion for this amendment: feature 002-staff-login received a specification,
+plan, research, data model, quickstart and thirty-six tasks while feature
+001-app-foundation had never been implemented. Every one of those tasks was
+blocked from the moment it was written. The sequencing rule exists so that this
+is caught by the workflow rather than by /sp.implement failing at npm install.
 -->
 
 # School Admission Voice Agent Constitution
@@ -83,9 +88,9 @@ a human member of staff, and MUST NOT deflect the question.
 *Rationale: A parent deciding how much to trust an answer is entitled to know what
 is answering them.*
 
-### IV. Bilingual
+### IV. Bilingual Prose
 
-Urdu and English are equal. Every parent-facing string MUST exist in both.
+Urdu and English are equal. Every parent-facing **sentence** MUST exist in both.
 
 Mixed Urdu-English sentences are normal in Karachi speech and MUST render and
 process correctly — they are the expected case, not an edge case. Transcript text
@@ -93,8 +98,18 @@ MUST NOT be assumed Latin-only, MUST NOT be truncated by a fixed character count
 and MUST NOT be rendered with fonts or components that break on right-to-left
 text.
 
+**Language-neutral values MUST be stored once.** A fee, a date, an age, a class
+number and a phone number carry the same meaning in either language. They MUST be
+held in a single field and formatted for display, and MUST NOT be duplicated into
+an Urdu column and an English column. The rule above binds prose — the sentences
+wrapped around those values — not the values themselves.
+
 *Rationale: Parents switch language mid-sentence. Software that treats that as
-malformed input fails the people it is built for.*
+malformed input fails the people it is built for. And a fee stored twice is a fee
+that will eventually disagree with itself: someone updates one column, misses the
+other, and the agent quotes a different price depending on which language the
+parent happened to use. Storing it once makes that failure impossible rather than
+unlikely.*
 
 ### V. Confirm Before Saving
 
@@ -216,6 +231,22 @@ it.** School data — fees, dates, ages, required documents — is never invente
 comes from the maintainer or from the `content` table, and otherwise the answer is
 a question back.
 
+**Feature sequencing.** A new feature MUST NOT be started while the previous one
+is unimplemented. Specification, planning and task generation all count as
+starting. "Unimplemented" means the feature has no working code, judged by looking
+for the code itself rather than for its specification.
+
+Where a request would break this rule, the unfinished feature MUST be named,
+along with what remains of it, before anything else is written.
+
+*Rationale: a plan written against a foundation that does not exist encodes
+guesses about that foundation, and every guess has to be revisited once it is
+real. Worse, it disguises how far along the project is — several branches of
+polished documents can look like progress while nothing runs. This rule was added
+after feature 002 was given a full specification, plan and thirty-six tasks, all
+of them blocked from the moment they were written, because feature 001 had never
+been built.*
+
 **Amendment procedure.** An amendment MUST be proposed to the maintainer, MUST
 state which principle changes and why, and MUST NOT be applied without agreement.
 Every amendment updates the version and the Last Amended date, and refreshes the
@@ -234,4 +265,4 @@ file as CRITICAL and requires the spec, plan or tasks to change — never the
 principle. Reviews verify compliance; complexity that violates a principle must be
 justified in writing or removed.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-09 | **Last Amended**: 2026-09-09
+**Version**: 1.1.0 | **Ratified**: 2026-09-09 | **Last Amended**: 2026-09-09
