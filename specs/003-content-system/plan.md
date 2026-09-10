@@ -3,11 +3,10 @@
 **Branch**: `003-content-system` | **Date**: 2026-09-10 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/003-content-system/spec.md`
 
-## ⚠️ Assumptions — read and correct before tasks are generated
+## Assumptions — confirmed by the maintainer 2026-09-10
 
-This plan was drafted with sensible defaults where the spec left room. Each is
-listed in [research.md](./research.md) with reasoning. The ones most worth your
-attention:
+All six were reviewed. #2 was chosen explicitly (keyword matching, option A);
+the rest were accepted as-is. Kept here for the record:
 
 1. **Content is stored as one JSON document per version** (`draft` and `live`),
    not as normalised per-item tables. Publish is then a single atomic row update.
