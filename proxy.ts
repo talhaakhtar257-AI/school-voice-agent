@@ -16,8 +16,16 @@ import { updateSession } from "@/lib/supabase/proxy";
  * every other route are never touched (FR-004).
  */
 export async function proxy(request: NextRequest) {
-  const { response, user } = await updateSession(request);
   const { pathname } = request.nextUrl;
+
+  let user: Awaited<ReturnType<typeof updateSession>>["user"] = null;
+  let response = NextResponse.next({ request });
+  try {
+    ({ response, user } = await updateSession(request));
+  } catch {
+    // Supabase unreachable — bad config or an outage. Treat as no session: the
+    // dashboard fails closed below, and /login still renders so staff can retry.
+  }
 
   const onDashboard = pathname.startsWith("/dashboard");
   const onLogin = pathname === "/login";
