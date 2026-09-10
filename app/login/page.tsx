@@ -47,6 +47,19 @@ export default function LoginPage() {
           {s.screenTitle.ur}
         </h1>
         <LoginForm />
+        <p
+          dir="auto"
+          style={{
+            margin: 0,
+            textAlign: "center",
+            fontSize: "0.85rem",
+            color: "var(--text-secondary)",
+          }}
+        >
+          {s.forgotPassword.en}
+          <br />
+          {s.forgotPassword.ur}
+        </p>
         <OfficePhone />
       </div>
     </main>

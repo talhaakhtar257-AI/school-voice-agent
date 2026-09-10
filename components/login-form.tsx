@@ -5,49 +5,103 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { staffLoginStrings as s } from "@/lib/strings/staff-login";
 
+type MessageKey =
+  | "wrongCredentials"
+  | "networkFailure"
+  | "cookiesBlocked"
+  | "emailRequired"
+  | "passwordRequired"
+  | "emailMalformed";
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Both languages of one message, stacked, announced to screen readers. */
+function Message({ messageKey }: { messageKey: MessageKey }) {
+  return (
+    <p
+      role="alert"
+      dir="auto"
+      style={{ margin: 0, color: "var(--failure-border)", fontSize: "0.9rem" }}
+    >
+      {s[messageKey].en}
+      <br />
+      {s[messageKey].ur}
+    </p>
+  );
+}
+
 /**
  * The staff sign-in form.
  *
- * Client Component: it holds the field state and the loading flag, and calls
- * Supabase from the browser so @supabase/ssr writes the session cookie. On
- * success it moves to /dashboard and refreshes so the server re-reads the cookie.
+ * Client Component: holds field state and the loading flag, calls Supabase from
+ * the browser so @supabase/ssr writes the session cookie, then moves to
+ * /dashboard and refreshes so the server re-reads it.
  *
- * This step (T009) is the happy path plus the loading state that blocks a second
- * submit. The specific error messages — wrong password, empty field, malformed
- * email, network failure, cookies blocked — arrive in Phase 5 (T020-T024). Until
- * then any failure shows one generic bilingual message rather than failing
- * silently.
+ * Every failure has its own bilingual message (T020-T024). Native browser
+ * validation is off (noValidate) so every message is ours and in both languages.
+ * An unknown email and a wrong password produce the SAME message (FR-006).
  */
 export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [emailError, setEmailError] = useState<MessageKey | null>(null);
+  const [passwordError, setPasswordError] = useState<MessageKey | null>(null);
+  const [formError, setFormError] = useState<MessageKey | null>(null);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (loading) return; // blocks a second submission (FR-010, scenario 3)
+    if (loading) return; // blocks a second submission (FR-010)
+
+    setEmailError(null);
+    setPasswordError(null);
+    setFormError(null);
+
+    const trimmedEmail = email.trim();
+    let stop = false;
+    if (trimmedEmail === "") {
+      setEmailError("emailRequired");
+      stop = true;
+    } else if (!EMAIL_PATTERN.test(trimmedEmail)) {
+      setEmailError("emailMalformed");
+      stop = true;
+    }
+    if (password === "") {
+      setPasswordError("passwordRequired");
+      stop = true;
+    }
+    if (stop) return;
+
+    if (!navigator.cookieEnabled) {
+      setFormError("cookiesBlocked");
+      return;
+    }
 
     setLoading(true);
-    setFailed(false);
-
     try {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: trimmedEmail,
         password,
       });
       if (error) {
-        setFailed(true);
+        // Same message for an unknown email and a wrong password (FR-006).
+        // Anything else the server returned is a server-side failure, distinct
+        // from bad credentials (T023).
+        setFormError(
+          error.code === "invalid_credentials"
+            ? "wrongCredentials"
+            : "networkFailure",
+        );
         setLoading(false);
         return;
       }
       router.push("/dashboard");
       router.refresh();
     } catch {
-      // Network or cookie failure. Phase 5 (T023, T024) tells these apart.
-      setFailed(true);
+      // fetch threw — offline, DNS failure, request blocked.
+      setFormError("networkFailure");
       setLoading(false);
     }
   }
@@ -57,6 +111,7 @@ export function LoginForm() {
   return (
     <form
       onSubmit={handleSubmit}
+      noValidate
       dir="auto"
       style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}
     >
@@ -68,11 +123,16 @@ export function LoginForm() {
           type="email"
           name="email"
           autoComplete="email"
-          required
+          inputMode="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setEmailError(null);
+          }}
+          aria-invalid={emailError !== null}
           style={cell}
         />
+        {emailError && <Message messageKey={emailError} />}
       </label>
 
       <label style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
@@ -83,20 +143,18 @@ export function LoginForm() {
           type="password"
           name="password"
           autoComplete="current-password"
-          required
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setPasswordError(null);
+          }}
+          aria-invalid={passwordError !== null}
           style={cell}
         />
+        {passwordError && <Message messageKey={passwordError} />}
       </label>
 
-      {failed && (
-        <p role="alert" style={{ margin: 0, color: "var(--failure-border)" }}>
-          {s.wrongCredentials.en}
-          <br />
-          {s.wrongCredentials.ur}
-        </p>
-      )}
+      {formError && <Message messageKey={formError} />}
 
       <button
         type="submit"

@@ -44,8 +44,8 @@ export const staffLoginStrings = {
     ur: "آپ کا براؤزر کوکیز روک رہا ہے، جو سائن اِن رہنے کے لیے ضروری ہیں۔ اس سائٹ کے لیے کوکیز کی اجازت دے کر دوبارہ کوشش کریں۔",
   },
   forgotPassword: {
-    en: "Forgotten your password? Call the school office on {phone}.",
-    ur: "پاس ورڈ بھول گئے؟ اسکول کے دفتر کو {phone} پر کال کریں۔",
+    en: "Forgotten your password? Call the school office.",
+    ur: "پاس ورڈ بھول گئے؟ اسکول کے دفتر کو کال کریں۔",
   },
 
   signOutButton: { en: "Sign out", ur: "سائن آؤٹ کریں" },
