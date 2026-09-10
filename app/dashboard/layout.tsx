@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/sign-out-button";
@@ -57,6 +58,18 @@ export default async function DashboardLayout({
           <SignOutButton />
         </div>
       </header>
+      <nav
+        style={{
+          display: "flex",
+          gap: "1rem",
+          padding: "0.5rem 1rem",
+          borderBottom: "1px solid rgba(128,128,128,0.3)",
+          fontSize: "0.9rem",
+        }}
+      >
+        <Link href="/dashboard">Home</Link>
+        <Link href="/dashboard/content">Content</Link>
+      </nav>
       <main style={{ flex: 1, padding: "1rem" }}>{children}</main>
     </div>
   );

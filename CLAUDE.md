@@ -17,25 +17,9 @@ npm run lint         # linting
 npx tsc --noEmit     # type check
 ```
 
-## Stack
-
-- Next.js App Router, TypeScript
-- Supabase for database and staff authentication
-- Deployed on Vercel
-- Charts: Recharts
-
 ## Structure
 
-```
-app/
-  page.tsx              # public landing page
-  api/                  # endpoints called by the Retell agent
-  dashboard/            # staff screens, login required
-lib/
-  supabase/             # database client and queries
-components/             # shared UI
-.claude/rules/          # detailed rules, loaded per file type
-```
+`.claude/rules/` holds detailed rules that load per file type.
 
 ## Product rules that affect code
 
