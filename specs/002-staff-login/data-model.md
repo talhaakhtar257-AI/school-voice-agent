@@ -50,7 +50,7 @@ controls.
 |---|---|
 | Where it lives | HTTP cookies on the staff member's device (FR-009). Never `localStorage` or `sessionStorage`. |
 | Who writes it | The `@supabase/ssr` client, through the helpers in `lib/supabase/`. |
-| Who reads it | `middleware.ts` on every request under `/dashboard`, and Server Components that need to know who is signed in. |
+| Who reads it | `proxy.ts` (the Next.js 16 rename of middleware) on every request under `/dashboard`, and Server Components that need to know who is signed in. |
 | Lifetime | Until sign-out, or until Supabase expires it. No "remember me" control (assumption A-007). |
 | Scope | One device and browser. Signing in on a phone does not sign anyone in on the office laptop. |
 

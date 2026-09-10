@@ -38,9 +38,14 @@ cookie-based to happen before a dashboard screen renders.
 
 ---
 
-## D-002 — Route protection in middleware, not per page
+## D-002 — Route protection in the proxy, not per page
 
-**Decision**: A single `middleware.ts` at the repository root decides who may
+> Naming: Next.js 16 renamed the Middleware file convention to **Proxy**. This
+> decision was written as "middleware"; the file is `proxy.ts` and the export is
+> `proxy`. The reasoning below is unchanged — "middleware" and "proxy" refer to
+> the same mechanism.
+
+**Decision**: A single `proxy.ts` at the repository root decides who may
 open anything under `/dashboard`, and refreshes the session on each request.
 
 **Rationale**: SC-002 requires that no dashboard content appears even briefly for

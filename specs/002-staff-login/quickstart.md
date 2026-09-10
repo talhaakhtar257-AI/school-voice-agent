@@ -145,7 +145,8 @@ Both must be clean. Per the constitution, the work is not done until they are.
   probably created without **Auto Confirm User** turned on. Delete it in Supabase
   and create it again with that switch on.
 - **The dashboard flashes before redirecting** — protection is happening in the
-  page rather than in `middleware.ts`. It needs to move.
+  page rather than in `proxy.ts` (the Next.js 16 rename of middleware). It needs
+  to move.
 - **Signed in on reload but signed out in a new tab** — the session went to
   `localStorage` instead of cookies. That breaks a project rule as well as this
   check.

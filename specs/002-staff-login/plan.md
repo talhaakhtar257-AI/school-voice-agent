@@ -4,7 +4,9 @@
 **Input**: Feature specification from `/specs/002-staff-login/spec.md`
 **Corrected**: 2026-09-10 after merging feature 001 into this branch — prerequisite
 status, `lib/` structure, dependency approval, env-var setup and the Constitution
-Check were brought in line with the real foundation.
+Check were brought in line with the real foundation. Also renamed `middleware.ts`
+to `proxy.ts` throughout, following the Next.js 16 rename of the Middleware
+convention to Proxy.
 
 ## Prerequisite status — resolved
 
@@ -16,15 +18,21 @@ build` passes on this branch.
 
 The constitution's feature-sequencing gate is therefore satisfied: feature 001
 has working code, so feature 002 may proceed. There is still no `components/`
-directory and no `middleware.ts` — those are created by this feature.
+directory and no `proxy.ts` — those are created by this feature.
+
+Note on naming: Next.js 16 renamed the Middleware file convention to **Proxy**.
+Route protection lives in `proxy.ts` at the repository root, exporting a `proxy`
+function. `middleware.ts` still works but is deprecated, so this feature uses
+`proxy.ts` throughout.
 
 ## Summary
 
 School office staff sign in with an email address and a password and reach a
 dashboard nobody else can open. Sessions live in cookies rather than browser
 storage, because the project rules forbid `localStorage`. Route protection runs in
-Next.js middleware so no dashboard screen renders even briefly for a signed-out
-visitor. The public landing page is explicitly excluded and stays open. Every
+a Next.js proxy (the renamed middleware) so no dashboard screen renders even
+briefly for a signed-out visitor. The public landing page is explicitly excluded
+and stays open. Every
 string on the sign-in screen, including errors, exists in Urdu and English.
 
 The approach is deliberately the plainest one Supabase supports: no roles, no
@@ -54,7 +62,7 @@ maintainer's agreement.
 | Package | Status | Why it is needed | Can it be avoided? |
 |---|---|---|---|
 | `@supabase/supabase-js` | **Already installed** by feature 001 (`^2.58.0` in `package.json`), used by `lib/supabase/health.ts`. No new approval needed. | The official Supabase client. Reaching Supabase Auth without it means hand-writing HTTP calls and token refresh. | Not realistically. The constitution fixes the stack to Supabase. |
-| `@supabase/ssr` | **New — needs maintainer approval.** | Keeps the session in **cookies** instead of `localStorage`, and refreshes it in middleware and Server Components. | No. `@supabase/supabase-js` alone defaults to `localStorage`, which the project rules forbid. |
+| `@supabase/ssr` | **New — needs maintainer approval.** | Keeps the session in **cookies** instead of `localStorage`, and refreshes it in the proxy and Server Components. | No. `@supabase/supabase-js` alone defaults to `localStorage`, which the project rules forbid. |
 
 Both are published by Supabase and are the documented path for Next.js.
 
@@ -112,7 +120,7 @@ Files marked **(new)** are created by this feature. Everything else already
 exists from feature 001.
 
 ```text
-middleware.ts                      # (new) route protection; refreshes the session
+proxy.ts                           # (new) route protection; refreshes the session
 
 app/
 ├── page.tsx                       # landing page — from feature 001, untouched
@@ -134,7 +142,7 @@ lib/
 │   ├── health.ts                  # from feature 001 (was lib/supabase.ts, moved here)
 │   ├── client.ts                  # (new) browser client, cookie-based
 │   ├── server.ts                  # (new) server client for Server Components
-│   └── middleware.ts              # (new) session refresh helper used by middleware.ts
+│   └── proxy.ts                   # (new) session refresh helper used by proxy.ts
 └── strings/
     └── staff-login.ts             # (new) every Urdu and English string for this feature
 ```
@@ -150,13 +158,14 @@ easier to verify and harder to get wrong.
 
 ## Key Decisions and Rationale
 
-**Route protection in middleware, not in each page.** One file decides who may
-enter, so a dashboard screen added later is protected by default rather than by
-its author remembering. A signed-out visitor is redirected before any dashboard
-component renders, which is what SC-002 requires.
+**Route protection in the proxy, not in each page.** One file (`proxy.ts` — the
+Next.js 16 rename of middleware) decides who may enter, so a dashboard screen
+added later is protected by default rather than by its author remembering. A
+signed-out visitor is redirected before any dashboard component renders, which is
+what SC-002 requires.
 
 **Cookies, not `localStorage`.** Forced by the project rules, and also the better
-choice: middleware and Server Components can read a cookie and cannot read
+choice: the proxy and Server Components can read a cookie and cannot read
 `localStorage`, so protection happens before rendering rather than after.
 
 **One strings file per feature.** `lib/strings/staff-login.ts` holds both

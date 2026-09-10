@@ -9,7 +9,8 @@ description: "Task list for feature 002-staff-login"
 **Revised**: 2026-09-09 after `/sp.analyze` — four coverage gaps closed (M1, M2, L1, L2)
 **Corrected**: 2026-09-10 after merging feature 001 — prerequisite block, T001 and
 T003 updated to match the real foundation (feature 001 merged, `@supabase/supabase-js`
-already installed, env vars already set)
+already installed, env vars already set). T007, T014 and T015 renamed
+`middleware.ts` to `proxy.ts` (Next.js 16 renamed the Middleware convention to Proxy).
 
 **Tests**: No automated tests. The specification requests none, and decision
 D-006 in `research.md` records why. Verification is by clicking, following
@@ -58,7 +59,7 @@ Nothing here can start until the `@supabase/ssr` approval is settled.
 - [ ] T004 [P] Create the browser Supabase client in `lib/supabase/client.ts` using `createBrowserClient` from `@supabase/ssr`, reading the two `NEXT_PUBLIC_` environment variables. No `localStorage`.
 - [ ] T005 [P] Create the server Supabase client in `lib/supabase/server.ts` using `createServerClient` from `@supabase/ssr`, wired to the Next.js cookie store, for use in Server Components.
 - [ ] T006 [P] Create every Urdu and English string for this feature in `lib/strings/staff-login.ts`, as one exported object with both languages side by side. Cover: screen title, email label, password label, sign-in button, loading text, wrong-credentials message, network-failure message, empty-field messages, malformed-email message, cookies-blocked message, forgotten-password note, sign-out button, and the dashboard empty state.
-- [ ] T007 Create the session refresh helper in `lib/supabase/middleware.ts` that reads and rewrites the session cookies on each request (depends on T005)
+- [ ] T007 Create the session refresh helper in `lib/supabase/proxy.ts` that reads and rewrites the session cookies on each request (depends on T005). Next.js 16 renamed the middleware convention to "proxy"; this helper is used by the root `proxy.ts`.
 - [ ] T008 [P] Create the office phone number component in `components/office-phone.tsx`, showing the number in both languages as a tappable `tel:` link with a touch target of at least 44px
 
 **Checkpoint**: Supabase is wired up through cookies and all bilingual text exists in one file. User stories can now begin.
@@ -87,8 +88,8 @@ Nothing here can start until the `@supabase/ssr` approval is settled.
 
 **Independent Test**: With no session, type `/dashboard` in the address bar and get the sign-in screen with no flash of dashboard content. Follow Part 3 of `quickstart.md`.
 
-- [ ] T014 [US2] Create `middleware.ts` at the repository root: redirect a request to anything under `/dashboard` without a valid session to `/login`, refresh the session using the helper from T007, and set the `matcher` so it runs on `/dashboard/:path*` and `/login` only (depends on T007)
-- [ ] T015 [US2] In the same `middleware.ts`, send a request to `/login` that already has a valid session on to `/dashboard`
+- [ ] T014 [US2] Create `proxy.ts` at the repository root (Next.js 16's rename of `middleware.ts`), exporting a `proxy` function: redirect a request to anything under `/dashboard` without a valid session to `/login`, refresh the session using the helper from T007, and set the `matcher` so it runs on `/dashboard/:path*` and `/login` only (depends on T007)
+- [ ] T015 [US2] In the same `proxy.ts`, send a request to `/login` that already has a valid session on to `/dashboard`
 - [ ] T016 [US2] Confirm the public landing page `/` is untouched by the matcher: open it signed out and check there is no redirect and no sign-in prompt
 - [ ] T017 [US2] Verify an **expired** session is treated exactly like no session: with a dashboard screen open, expire or delete the session cookies in the browser, then take any action and confirm you land on `/login` rather than seeing an error or empty data
 - [ ] T018 [US2] Verify a **deleted account** is treated the same way: sign in, delete that account in the Supabase dashboard, then take any action and confirm you land on `/login`
