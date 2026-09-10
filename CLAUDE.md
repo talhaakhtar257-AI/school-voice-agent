@@ -89,7 +89,10 @@ nice-to-have.
 
 ## Urdu
 
-- All parent-facing text exists in Urdu and English.
+- All parent-facing sentences exist in Urdu and English.
+- Language-neutral values — fees, dates, ages, class numbers, phone numbers —
+  are stored once and formatted for display. Never one column per language: two
+  copies of a fee eventually disagree with each other.
 - Transcripts contain Urdu script and must render correctly. Never assume
   Latin-only text.
 - Do not use fonts or components that break on right-to-left text.
@@ -100,6 +103,8 @@ nice-to-have.
 - Don't refactor code I did not ask you to touch.
 - Don't invent school data. Fees, dates, ages and documents come from me only.
 - Don't build features that are not in the current feature spec.
+- Don't start a new feature while the previous one is unimplemented. Writing a
+  spec, a plan or tasks all count as starting. Check for the code, not the spec.
 - Don't create files unless the task needs them.
 - Don't use browser localStorage or sessionStorage.
 - Don't add authentication to the public landing page. It stays public.
@@ -162,3 +167,13 @@ across the system, say:
 Then wait. Never create an ADR without being asked.
 
 The full procedure for both is archived in `.claude/rules/sdd-workflow.md`.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
