@@ -16,7 +16,7 @@ export function OfficePhone() {
       <p
         style={{ margin: 0, fontSize: "0.95rem", color: "var(--text-secondary)" }}
       >
-        Call the school office · اسکول کے دفتر سے رابطہ کریں
+        School office · اسکول کا دفتر
       </p>
       <a
         href={`tel:${OFFICE_PHONE_E164}`}

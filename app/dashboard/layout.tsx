@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { SignOutButton } from "@/components/sign-out-button";
 
 /**
  * The shell around every dashboard screen.
@@ -36,14 +37,25 @@ export default async function DashboardLayout({
           justifyContent: "space-between",
           alignItems: "center",
           gap: "1rem",
+          flexWrap: "wrap",
           padding: "0.75rem 1rem",
           borderBottom: "1px solid rgba(128,128,128,0.3)",
         }}
       >
         <strong style={{ fontSize: "0.95rem" }}>Al-Noor Public School</strong>
-        <span style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-          {user.email}
-        </span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+            {user.email}
+          </span>
+          <SignOutButton />
+        </div>
       </header>
       <main style={{ flex: 1, padding: "1rem" }}>{children}</main>
     </div>
