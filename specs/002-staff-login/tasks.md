@@ -7,6 +7,9 @@ description: "Task list for feature 002-staff-login"
 **Input**: Design documents from `/specs/002-staff-login/`
 **Prerequisites**: `plan.md` ✓, `spec.md` ✓, `research.md` ✓, `data-model.md` ✓, `quickstart.md` ✓
 **Revised**: 2026-09-09 after `/sp.analyze` — four coverage gaps closed (M1, M2, L1, L2)
+**Corrected**: 2026-09-10 after merging feature 001 — prerequisite block, T001 and
+T003 updated to match the real foundation (feature 001 merged, `@supabase/supabase-js`
+already installed, env vars already set)
 
 **Tests**: No automated tests. The specification requests none, and decision
 D-006 in `research.md` records why. Verification is by clicking, following
@@ -15,15 +18,17 @@ D-006 in `research.md` records why. Verification is by clicking, following
 **Organization**: Tasks are grouped by user story so each story can be built and
 checked on its own.
 
-## ⚠️ Two things must happen before T001
+## ⚠️ Before T001
 
-1. **Feature `001-app-foundation` must be built and merged.** There is no
-   `package.json`, no `app/` folder and no `lib/` folder in this repository yet.
-   Every task below edits files inside a Next.js application that does not exist.
-2. **The maintainer must approve two dependencies**: `@supabase/supabase-js` and
-   `@supabase/ssr`. See the Dependency Decision section of `plan.md`.
+1. **Feature `001-app-foundation` is built and merged into this branch** (merge
+   commit `19eac1c`). `package.json`, `app/`, `lib/env.ts` and
+   `lib/supabase/health.ts` all exist; `npm run build` passes. This prerequisite
+   is met.
+2. **The maintainer must approve one dependency**: `@supabase/ssr`.
+   `@supabase/supabase-js` is already installed by feature 001. See the
+   Dependency Decision section of `plan.md`.
 
-Nothing here can start until both are settled.
+Nothing here can start until the `@supabase/ssr` approval is settled.
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -36,11 +41,11 @@ Nothing here can start until both are settled.
 
 **Purpose**: Get the pieces in place that everything else needs.
 
-- [ ] T001 Install `@supabase/supabase-js` and `@supabase/ssr` with `npm install`, once the maintainer has approved both, and confirm they appear in `package.json`
+- [ ] T001 Install `@supabase/ssr` with `npm install`, once the maintainer has approved it, and confirm it appears in `package.json`. (`@supabase/supabase-js` is already there from feature 001.)
 - [ ] T002 Create one staff account by hand in the Supabase dashboard under Authentication → Users, with **Auto Confirm User** switched on, following Part 1.1 of `specs/002-staff-login/quickstart.md`
-- [ ] T003 Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `.env.local`, and add the same two names with empty values to `.env.example`. Confirm the service role key is **not** present in either file.
+- [ ] T003 Confirm `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set in `.env.local` (feature 001 already added them) and listed in `.env.example`. Confirm `.env.example` carries `SUPABASE_SERVICE_ROLE_KEY` as an **empty placeholder only**, and that no real service role key appears in `.env.local` or anywhere in the codebase.
 
-**Checkpoint**: The app runs, the packages are installed, and one account exists to test with.
+**Checkpoint**: The app runs, `@supabase/ssr` is installed, and one account exists to test with.
 
 ---
 
@@ -174,7 +179,7 @@ one task. Verified by `/sp.analyze` on 2026-09-09.
 
 ### Phase dependencies
 
-- **Setup (Phase 1)** — blocked by feature 001 and the dependency approval, not by anything in this feature
+- **Setup (Phase 1)** — blocked only by the `@supabase/ssr` approval; feature 001 is already merged
 - **Foundational (Phase 2)** — needs Setup. Blocks every user story.
 - **User Story 1 (Phase 3)** — needs Foundational
 - **User Story 2 (Phase 4)** — needs Foundational and T007. Best done after US1, so there is a working sign-in to be redirected to.
