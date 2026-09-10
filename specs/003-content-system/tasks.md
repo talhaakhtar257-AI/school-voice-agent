@@ -77,7 +77,7 @@ keyword matching, not an LLM (option A).
 - [x] T018 [P] [US2] Build `components/content/escalation-editor.tsx`: a list of escalation topics, each with a topic `bilingual-field` and a hand-off wording `bilingual-field`; Add; Remove is wired to the confirm dialog from T028 (FR-026), not a quiet delete.
 - [x] T019 [US2] Build `app/dashboard/content/page.tsx`: load the draft with `readDraft()`, render the four editors from T015–T018, hold the working document in state, and a Save button. Loading, empty (designed, not blank), and error states for the initial load (FR-028). 360px-first (FR-029). (depends on T009, T014–T018)
 - [x] T020 [US2] Wire Save in `app/dashboard/content/page.tsx` to a server action calling `saveDraft(doc, expectedUpdatedAt)`; on `DraftConflict` show the bilingual "draft changed since you opened it — reload" message (FR-027); on success show "draft saved" and refresh the timestamp.
-- [ ] T021 [US2] Verify quickstart Parts 1 and 2 on `npm run dev`: edit a fee, save, reload (persists, marked draft); `GET /api/content` still `{ published: false }`; add an FAQ with a missing Urdu answer and confirm the field shows it is incomplete.
+- [x] T021 [US2] Verify quickstart Parts 1 and 2 on `npm run dev`: edit a fee, save, reload (persists, marked draft); `GET /api/content` still `{ published: false }`; add an FAQ with a missing Urdu answer and confirm the field shows it is incomplete.
 
 **Checkpoint**: staff can edit and save a draft; live is untouched; Stories 1 and 2 both work.
 
@@ -91,7 +91,7 @@ keyword matching, not an LLM (option A).
 
 - [x] T022 [P] [US3] Create `lib/content/simulate.ts`: given a question string and a `ContentDoc`, tokenise the question, score each non-archived FAQ (question + answer text) and each non-archived escalation topic against the tokens, and return `{ kind: "answer", text }` for the best FAQ, `{ kind: "handoff", text }` when an escalation topic wins (FR-019), or `{ kind: "none" }` below a threshold. Pure function, no I/O.
 - [x] T023 [US3] Build `app/dashboard/content/test/page.tsx`: a question box; on submit, load the draft with `readDraft()` and call `simulate()`; render the result with a persistent notice that this is a simulation and the live agent may differ (FR-018, from `lib/strings/content-admin.ts`). Testing writes nothing (FR-020). 360px-first.
-- [ ] T024 [US3] Verify quickstart Part 3: draft fee edit is reflected in the test answer while live is not; a discount question shows the hand-off, not an answer; after testing, `GET /api/content` and the history are both unchanged.
+- [x] T024 [US3] Verify quickstart Part 3: draft fee edit is reflected in the test answer while live is not; a discount question shows the hand-off, not an answer; after testing, `GET /api/content` and the history are both unchanged.
 
 **Checkpoint**: staff can rehearse against the draft safely.
 
@@ -110,7 +110,7 @@ keyword matching, not an LLM (option A).
 - [x] T029 [US4] Create the publish server action in `app/dashboard/content/page.tsx` (or `lib/content/queries.ts`): run `checkPublishReadiness`; if clean, compute the summary with `diff.ts` and call the `publish_content` function with the signed-in user's id and email; handle the `noop` result ("nothing to publish", no history row — FR edge case); on success show "published".
 - [x] T030 [US4] Build `app/dashboard/content/history/page.tsx`: `listHistory(page)` most-recent-first (FR-023), each row showing when, which staff email, and the `change_summary` lines; paginated ~20 per page (FR "history grows large"). Loading, empty, error states.
 - [x] T031 [US4] Build the single-record view (a route or an expandable row) showing `doc_before` in full so a value can be read and retyped into the draft (FR-024, SC-005). No edit or delete control anywhere on history (FR-022).
-- [ ] T032 [US4] Verify quickstart Parts 4, 6, 7: the diff dialog lists changes; Cancel publishes nothing; Confirm publishes and `GET /api/content` then matches; a second Publish with no changes says "nothing to publish" and adds no history row; history shows the publish with the right person and time; a history record shows the full prior content; removing an escalation topic requires the weighted confirm.
+- [x] T032 [US4] Verify quickstart Parts 4, 6, 7: the diff dialog lists changes; Cancel publishes nothing; Confirm publishes and `GET /api/content` then matches; a second Publish with no changes says "nothing to publish" and adds no history row; history shows the publish with the right person and time; a history record shows the full prior content; removing an escalation topic requires the weighted confirm.
 
 **Checkpoint**: all four user stories work. Content only reaches the agent through Publish + Confirm.
 
