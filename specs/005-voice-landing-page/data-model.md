@@ -144,16 +144,19 @@ const incomingEnquiry = z.object({
 
 ---
 
-## The web-call token response (not stored)
+## The web-call gate response (not stored)
 
-`POST /api/retell/web-call` returns one of:
+`POST /api/retell/web-call` is a pre-flight check only — Retell's browser SDK
+connects directly using a publishable key (research D-001), so there is no
+token to return. The route responds with one of:
 
 ```jsonc
-{ "accessToken": "…", "agentId": "agent_…" }   // 200 — start the call
-{ "reason": "no-content" }                        // 200 — nothing published; show the fallback
-{ "reason": "not-configured" }                    // 200 — RETELL_API_KEY / agent id absent
-{ "reason": "retell-error" }                      // 200 — Retell refused; show the fallback
+{ "ok": true }               // 200 — the browser may call Retell's createWebCall itself
+{ "reason": "no-content" }   // 200 — nothing published; show the fallback
+{ "reason": "not-configured" } // 200 — NEXT_PUBLIC_RETELL_PUBLIC_KEY / agent id absent
+{ "reason": "capped" }       // 200 — a usage limit is in force; show the fallback
 ```
 
 A `reason` is always a 200 so the panel can render a calm bilingual message
-rather than treating it as a crash. Nothing about the token or the key is logged.
+rather than treating it as a crash. Nothing about the key is logged (there is no
+secret to log — the key is meant to be public).

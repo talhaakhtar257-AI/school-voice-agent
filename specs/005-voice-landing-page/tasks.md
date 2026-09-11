@@ -31,7 +31,7 @@ as a content lookup rather than a second AI, were both confirmed earlier.
 ## Phase 1: Setup
 
 - [ ] T001 Install `retell-client-js-sdk` with `npm install`, confirm it appears in `package.json` (approved dependency)
-- [ ] T002 Add `RETELL_API_KEY`, `VOICE_MAX_CALL_SECONDS`, `VOICE_MAX_CALLS_PER_VISITOR_PER_DAY`, `VOICE_MONTHLY_CAP_MINUTES` to `.env.example` with empty/example values; set working dev values in `.env.local`. Confirm `RETELL_API_KEY` never gets a `NEXT_PUBLIC_` prefix.
+- [ ] T002 Add `NEXT_PUBLIC_RETELL_PUBLIC_KEY`, `VOICE_MAX_CALL_SECONDS`, `VOICE_MAX_CALLS_PER_VISITOR_PER_DAY`, `VOICE_MONTHLY_CAP_MINUTES` to `.env.example` with empty/example values; set working dev values in `.env.local`. The three limit values stay server-only (no `NEXT_PUBLIC_` prefix) since they are read only by `app/api/retell/web-call/route.ts`.
 - [ ] T003 [P] Add a placeholder school logo at `public/school-logo.svg` — plain, obviously a placeholder, not resembling any real school's branding
 
 **Checkpoint**: dependency installed, env vars exist, a logo file exists to reference.
@@ -93,7 +93,7 @@ nothing is stored or sent anywhere.
 
 **Goal**: Tapping the button explains the microphone, connects to Retell, shows
 distinct connecting/listening/speaking states with a live transcript, and can be
-ended with one tap at any time. This phase's token route does **not** yet enforce
+ended with one tap at any time. This phase's gate route does **not** yet enforce
 the usage limits — that is Phase 7, so each phase stays small and testable.
 
 **Independent Test**: With content published and Retell configured, tap the
@@ -101,10 +101,10 @@ button, allow the microphone, ask a published question, hear the right answer,
 end the call.
 
 - [ ] T016 [P] [US1] Create `components/voice/mic-explainer.tsx`: the plain-language explanation of why the microphone is needed, shown before `startCall` — a step in the flow, not a passive notice, so it renders and is dismissed/confirmed strictly before the SDK requests the microphone (FR-013).
-- [ ] T017 [US1] Create `app/api/retell/web-call/route.ts` (minimal, pre-limits version): `POST`; `readLiveForApi()` — empty → `{ reason: "no-content" }`; missing `RETELL_API_KEY` or `NEXT_PUBLIC_RETELL_AGENT_ID` → `{ reason: "not-configured" }`; otherwise call Retell's create-web-call API and return `{ accessToken, agentId }`, or `{ reason: "retell-error" }` on failure. `export const dynamic = "force-dynamic"`. `405` on non-POST. curl examples in a header comment (depends on T009 for the file location convention, not yet calling it).
-- [ ] T018 [US1] Create `components/voice/talk-panel.tsx`: `"use client"`. On tap: show `MicExplainer`; on confirm, `POST /api/retell/web-call`; on a `reason` response, show the matching fallback message (no-content / not-configured / retell-error) pointing at the text chat and the phone number; on success, start the SDK call with the returned token, map its connection/talking events to connecting/listening/speaking, render a live transcript (`dir="auto"` per line), and show an End Call button for the whole duration that calls the SDK's end method on the first tap and returns the panel to its start state (FR-007–FR-009, FR-039 Android Chrome/iPhone Safari event handling).
+- [ ] T017 [US1] Create `app/api/retell/web-call/route.ts` (minimal, pre-limits version — a pre-flight gate, not a token mint, per research D-001): `POST`; `readLiveForApi()` — empty → `{ reason: "no-content" }`; missing `NEXT_PUBLIC_RETELL_PUBLIC_KEY` or `NEXT_PUBLIC_RETELL_AGENT_ID` → `{ reason: "not-configured" }`; otherwise → `{ ok: true }`. `export const dynamic = "force-dynamic"`. `405` on non-POST. curl examples in a header comment (depends on T009 for the file location convention, not yet calling it).
+- [ ] T018 [US1] Create `components/voice/talk-panel.tsx`: `"use client"`. On tap: show `MicExplainer`; on confirm, `POST /api/retell/web-call`; on a `reason` response, show the matching fallback message (no-content / not-configured / capped) pointing at the text chat and the phone number; on `{ ok: true }`, construct `new RetellClient({ key: NEXT_PUBLIC_RETELL_PUBLIC_KEY })` and call `createWebCall({ agent_id: NEXT_PUBLIC_RETELL_AGENT_ID, hooks: {...} })` — map `onStatus`/`onAgentStartTalking`/`onAgentStopTalking` to connecting/listening/speaking, render the transcript from `onTranscript` (`dir="auto"` per line), and show an End Call button for the whole duration that calls the session's `end()` on the first tap and returns the panel to its start state (FR-007–FR-009, FR-039 Android Chrome/iPhone Safari event handling).
 - [ ] T019 [US1] Wire `TalkPanel` into `app/page.tsx` as the client island inside the server page (depends on T011, T018).
-- [ ] T020 [US1] Verify quickstart Part 5 (needs `RETELL_API_KEY` and a configured agent): the mic explanation appears before the browser prompt; connecting → listening → speaking are visually distinct; a published question gets the right answer in the language asked; "are you a person" gets an AI disclosure; a discount question routes to the office; End Call stops it on the first tap; tapping Talk again during a call does nothing.
+- [ ] T020 [US1] Verify quickstart Part 5 (needs `NEXT_PUBLIC_RETELL_PUBLIC_KEY` and a configured agent): the mic explanation appears before the browser prompt; connecting → listening → speaking are visually distinct; a published question gets the right answer in the language asked; "are you a person" gets an AI disclosure; a discount question routes to the office; End Call stops it on the first tap; tapping Talk again during a call does nothing.
 
 **Checkpoint**: the full voice path works end to end (pending Retell setup), independent of the usage limits.
 
@@ -136,7 +136,7 @@ the phone number, text chat, and FAQ.
 
 - [ ] T023 [US5] In `app/api/retell/web-call/route.ts`, after the content and configuration checks and before calling Retell, call `getOrSetVisitorId` and `checkAndReserve` (`lib/voice/limits.ts`, T009); on `{ allowed: false }` return `{ reason: "capped" }` without contacting Retell; set the `visitor_id` cookie on the response in every case, including refusals (depends on T009, T017).
 - [ ] T024 [US5] In `components/voice/talk-panel.tsx`, handle the `capped` reason with its own bilingual message (today's limit reached — call the office), and start a client-side timer at call start that ends the call automatically at `VOICE_MAX_CALL_SECONDS` and shows the "call time is up" message (FR-030 — a UX pacing control, not the security boundary; that is the server-side monthly reservation) (depends on T018).
-- [ ] T025 [US5] Verify quickstart Part 4b with low limits: a call ends itself at the configured length; the third call in a day is refused with the phone number, text chat, and FAQ all still offered; `curl`ing the token route after the daily cap returns `{ "reason": "capped" }`; with a very low monthly cap, a second call (from a different visitor cookie) is refused once the reservation would exceed it. Restore realistic limit values afterward.
+- [ ] T025 [US5] Verify quickstart Part 4b with low limits: a call ends itself at the configured length; the third call in a day is refused with the phone number, text chat, and FAQ all still offered; `curl`ing the gate route after the daily cap returns `{ "reason": "capped" }`; with a very low monthly cap, a second call (from a different visitor cookie) is refused once the reservation would exceed it. Restore realistic limit values afterward.
 
 **Checkpoint**: all five user stories work; the page cannot be turned into an open-ended bill.
 
@@ -149,7 +149,7 @@ the phone number, text chat, and FAQ.
 - [ ] T028 Check every file added in this feature is under ~200 lines; split any that is not (Constitution VIII).
 - [ ] T029 Walk `quickstart.md` Part 7 on a real Android phone (Chrome) and a real iPhone (Safari) if available, otherwise device mode at 360px: no sideways scroll, logo/button/notices/phone number all visible without scrolling, the mic prompt only appears after a tap on iOS.
 - [ ] T030 Walk quickstart Part 7's throttled "Slow 3G" check: the school name, logo, headline, button, and notices render without waiting on Retell or the content/limits check (FR-040).
-- [ ] T031 Walk the full `quickstart.md` on the deployed Vercel preview for this branch, with `RETELL_API_KEY`, `NEXT_PUBLIC_RETELL_AGENT_ID`, and the three limit env vars all set there.
+- [ ] T031 Walk the full `quickstart.md` on the deployed Vercel preview for this branch, with `NEXT_PUBLIC_RETELL_PUBLIC_KEY`, `NEXT_PUBLIC_RETELL_AGENT_ID`, and the three limit env vars all set there.
 - [ ] T032 Run `npm run build` and `npx tsc --noEmit`; both clean before this feature is called done.
 - [ ] T033 Restate to the maintainer: the office phone number and the school logo are both placeholders. Neither may reach a real parent until replaced with the school's actual number and logo.
 
@@ -199,7 +199,7 @@ the phone number, text chat, and FAQ.
 - **Foundational (Phase 2)** — needs Setup. **T005/T006 (migration approval and apply) block Phases 6 and 7**; T007–T010 can run in parallel once T001–T002 land.
 - **US2 written page (Phase 3)** — needs T010, T011's own content read. No Retell needed — buildable and testable first.
 - **US2 text chat (Phase 4)** — needs Phase 3 (T011) and T013.
-- **US1 voice (Phase 5)** — needs Phase 2 (T009's file exists but Phase 5 does not call it yet) and Phase 3 (T011). Needs `RETELL_API_KEY` and an agent to verify live, but T016–T019 build and type-check without them.
+- **US1 voice (Phase 5)** — needs Phase 2 (T009's file exists but Phase 5 does not call it yet) and Phase 3 (T011). Needs `NEXT_PUBLIC_RETELL_PUBLIC_KEY` and an agent to verify live, but T016–T019 build and type-check without them.
 - **US3 leads (Phase 6)** — needs T006, T007, T008. Independent of Phases 3–5.
 - **US5 limits (Phase 7)** — needs Phase 5 (T017, T018 exist) and T009. Deliberately layered on top of the working voice path rather than built into it from the start.
 - **Polish (Phase 8)** — needs every phase you intend to ship.

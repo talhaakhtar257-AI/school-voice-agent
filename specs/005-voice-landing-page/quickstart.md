@@ -11,7 +11,7 @@ preview for this branch, or `npm run dev`. No sign-in — this page is public.
 
 1. The `leads` migration has been run (a task confirms it with you first).
 2. `RETELL_WEBHOOK_SECRET` is set in `.env.local` (a dev value is already there).
-3. For the **live voice** parts (5, 6): `RETELL_API_KEY` and
+3. For the **live voice** parts (5, 6): `NEXT_PUBLIC_RETELL_PUBLIC_KEY` and
    `NEXT_PUBLIC_RETELL_AGENT_ID` are set and a Retell agent exists. Without them,
    Parts 1–4 and 7 still pass and the talk button shows the "not available"
    fallback.

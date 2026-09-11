@@ -49,6 +49,6 @@
 - Placeholders remaining: the office phone number and the school logo. Both must
   be replaced with real assets before any parent sees the page — recorded as a
   risk in Assumptions.
-- `RETELL_API_KEY` and a configured Retell agent are needed for live voice; the
-  page degrades to the text chat and written FAQ without them, so the rest of the
-  feature is testable first.
+- `NEXT_PUBLIC_RETELL_PUBLIC_KEY` and a configured Retell agent are needed for
+  live voice; the page degrades to the text chat and written FAQ without them,
+  so the rest of the feature is testable first.

@@ -1,10 +1,12 @@
 # Contract: `POST /api/retell/web-call`
 
 **Feature**: `005-voice-landing-page` | **Phase**: 1
-
-Called by the landing page (same origin) when a parent taps Talk, to mint a
-Retell web-call token. Keeps `RETELL_API_KEY` server-side and enforces "no call
-without published content" (FR-007).
+**Corrected 2026-09-11** — see research D-001. Retell's browser SDK
+(`retell-client-js-sdk` v3) connects directly from the browser using a
+publishable key; there is no server-minted access token in this design. This
+route is a **pre-flight gate**, not a token mint: it checks published content
+and the usage limits, and tells the browser whether it may proceed to call
+Retell itself.
 
 ---
 
@@ -14,23 +16,28 @@ without published content" (FR-007).
 POST /api/retell/web-call
 ```
 
-No body, no auth header — the page is public. (No rate limiting this phase; a
-follow-up before the page is advertised.)
+No body, no auth header — the page is public. (No bot protection beyond the
+three usage limits this phase; a follow-up before the page is advertised.)
 
 ## Responses
 
 All responses are **200**. The panel branches on the shape, so a "cannot start"
-outcome renders a calm bilingual message, never a browser error (FR-028, FR-012,
-FR-015).
+outcome renders a calm bilingual message, never a browser error (FR-041, FR-015,
+FR-033).
 
-### Start the call
+### Proceed
 
 ```json
-{ "accessToken": "eyJ…", "agentId": "agent_1234" }
+{ "ok": true }
 ```
 
-The browser SDK connects with `accessToken`. Token is short-lived (Retell's
-default).
+On receiving this, `talk-panel.tsx` constructs
+`new RetellClient({ key: NEXT_PUBLIC_RETELL_PUBLIC_KEY })` and calls
+`client.createWebCall({ agent_id: NEXT_PUBLIC_RETELL_AGENT_ID, hooks })` itself
+— that single call both creates the Retell call and connects the browser's
+audio. `NEXT_PUBLIC_RETELL_PUBLIC_KEY` is a publishable key by design (like a
+Stripe publishable key): safe to ship to the browser, not a secret this route
+needs to protect.
 
 ### Cannot start — nothing published
 
@@ -40,7 +47,7 @@ default).
 
 `readLiveForApi()` returned nothing. The panel disables the button and shows
 "the assistant has no information to share yet — please call the office", with
-the phone number (FR-007, SC-010).
+the phone number (FR-010, SC-010).
 
 ### Cannot start — not configured
 
@@ -48,17 +55,8 @@ the phone number (FR-007, SC-010).
 { "reason": "not-configured" }
 ```
 
-`RETELL_API_KEY` or `NEXT_PUBLIC_RETELL_AGENT_ID` is absent. Same fallback
-display as `no-content`, wording "the assistant is not available right now".
-
-### Cannot start — Retell refused
-
-```json
-{ "reason": "retell-error" }
-```
-
-Retell's API returned an error. Same fallback. Logged server-side as route +
-status + timestamp; no key, no token.
+`NEXT_PUBLIC_RETELL_PUBLIC_KEY` or `NEXT_PUBLIC_RETELL_AGENT_ID` is absent. Same
+fallback display, wording "the assistant is not available right now".
 
 ### Cannot start — a usage limit is in force
 
@@ -83,8 +81,11 @@ counters from being probeable from outside.
 ## Behaviour
 
 1. `readLiveForApi()` — if empty → `{ reason: "no-content" }`.
-2. Read `RETELL_API_KEY` and `NEXT_PUBLIC_RETELL_AGENT_ID` — if either absent →
-   `{ reason: "not-configured" }`.
+2. Read `NEXT_PUBLIC_RETELL_PUBLIC_KEY` and `NEXT_PUBLIC_RETELL_AGENT_ID` — if
+   either absent → `{ reason: "not-configured" }`. (Both are `NEXT_PUBLIC_`
+   because both are meant to reach the browser eventually; the route reads them
+   from `process.env` server-side purely to fail fast with a clean message
+   before the browser tries and gets a confusing SDK error.)
 3. Read or set the `visitor_id` cookie (D-010).
 4. **Limit check (`lib/voice/limits.ts`), in one request:**
    - `voice_usage_daily` for `(visitor_id, today)` — if `call_count >=
@@ -94,16 +95,11 @@ counters from being probeable from outside.
      `{ reason: "capped" }`.
    - Otherwise, increment both (daily `call_count += 1`, monthly
      `reserved_minutes += VOICE_MAX_CALL_SECONDS / 60`) and continue.
-5. `POST` to Retell's create-web-call endpoint with the API key and the agent id,
-   and (if supported) the max-duration setting matching
-   `VOICE_MAX_CALL_SECONDS`. Non-2xx → `{ reason: "retell-error" }`. The
-   reservation from step 4 is **not** rolled back on this failure — accepted as
-   simpler than a compensating transaction, and it only ever under-uses the
-   monthly capacity, never exceeds it.
-6. Return `{ accessToken, agentId }`.
+5. Return `{ ok: true }`. The browser takes it from here.
 
 `export const dynamic = "force-dynamic"`. Uses `lib/supabase/admin.ts` for the
-content check and the limit tables.
+content check and the limit tables (both are service-role only — no
+`anon`/`authenticated` RLS grant, per `data-model.md`).
 
 ## Test command
 
@@ -111,7 +107,8 @@ content check and the limit tables.
 # nothing published -> { "reason": "no-content" }
 curl -s -X POST http://localhost:3000/api/retell/web-call | jq
 
-# with content published but no RETELL_API_KEY -> { "reason": "not-configured" }
+# with content published but no NEXT_PUBLIC_RETELL_PUBLIC_KEY -> { "reason": "not-configured" }
 
-# fully configured -> { "accessToken": "...", "agentId": "..." }
+# fully configured, within limits -> { "ok": true }
+curl -s -X POST http://localhost:3000/api/retell/web-call | jq
 ```

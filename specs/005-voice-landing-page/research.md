@@ -8,37 +8,51 @@ makes and why.
 
 ---
 
-## D-001 — Retell web call: server-minted token, not a browser public key
+## D-001 — Retell web call: a server-side gate, then a browser-direct call with a public key
 
-**Decision**: `POST /api/retell/web-call` runs server-side, calls Retell's
-create-web-call API with `RETELL_API_KEY`, and returns a short-lived
-`access_token` plus the `agent_id` for the browser SDK to connect with. Before
-minting anything it reads the live content and refuses with a plain "no content
-published yet" message when there is none.
+**Corrected 2026-09-11** after installing `retell-client-js-sdk` and reading its
+types. The originally planned design (a server route minting a short-lived
+`access_token` for the browser) assumed the SDK's `RetellWebClient` class —
+which its own types mark `@deprecated … Removed in 4.0`. The current, supported
+class is `RetellClient`, constructed in the **browser** with a **publishable
+key** (`new RetellClient({ key: NEXT_PUBLIC_RETELL_PUBLIC_KEY })`), whose
+`createWebCall({ agent_id, hooks })` both creates the call and connects the
+audio transport in one client-side step. This key is designed to be public —
+the same pattern as a Stripe publishable key — not a secret to keep server-side.
+
+**Decision**: Keep `POST /api/retell/web-call` as a **pre-flight gate only**. It
+checks published content (FR-010) and the three usage limits (FR-030–034) and
+returns `{ ok: true }` or a typed `{ reason }` — no token, because there is
+nothing left to mint. On `{ ok: true }`, `talk-panel.tsx` itself constructs
+`RetellClient` with `NEXT_PUBLIC_RETELL_PUBLIC_KEY` and calls `createWebCall({
+agent_id: NEXT_PUBLIC_RETELL_AGENT_ID, hooks })`.
 
 **Rationale**:
-- `.claude/rules` and `CLAUDE.md` say secrets live in server env only. A browser
-  public key would put a Retell credential on the client.
-- FR-007 requires the call to be refused when nothing is published. A server
-  route is the one place that check belongs; the browser cannot be trusted to
-  enforce it.
-- FR-028 wants a designed error state — the route can return a typed reason
-  (`no-content`, `not-configured`, `retell-error`) that the panel maps to a
-  bilingual message.
+- FR-007/FR-010 and FR-030–034 still need one place the browser cannot bypass —
+  the gate route remains that place. What changed is what it returns, not
+  whether it exists.
+- The publishable key is meant for the browser; there is no longer a secret
+  Retell credential in this feature to protect. `RETELL_API_KEY` is replaced by
+  `NEXT_PUBLIC_RETELL_PUBLIC_KEY` throughout the plan and data model.
+- Building against the class the SDK's own types mark for removal would create
+  guaranteed rework; `RetellClient`/`createWebCall`/`WebCallSession` is the
+  surface documented as current.
 
 **Alternatives considered**:
-- *Browser public key (`new RetellClient({ key })`)* — simpler, no backend, but
-  leaks a credential and moves the published-content gate to the client.
-- *A Next.js server action instead of a route* — equivalent; a route is clearer
-  here because the browser calls it with `fetch` and the response shape is a
-  contract.
+- *The deprecated `RetellWebClient` + a server-minted `access_token`* — rejected;
+  builds on a class slated for removal in the SDK's next major version.
+- *No gate route at all, browser calls `createWebCall` directly* — rejected; it
+  is the only way to enforce FR-010 and the usage limits before a call starts.
 
 ---
 
 ## D-002 — Dependency: `retell-client-js-sdk`
 
-**Decision**: Add `retell-client-js-sdk` (v2.x). Import its browser client class
-in `components/voice/talk-panel.tsx` only.
+**Decision**: Add `retell-client-js-sdk` (v3.0.1, the version that installed).
+Import `RetellClient` and its `createWebCall` in `components/voice/talk-panel.tsx`
+only. Its `hooks` (`onStatus`, `onAgentStartTalking`/`onAgentStopTalking`,
+`onTranscript`, `onEnd`, `onError`) drive D-001's state mapping and D-005's
+transcript directly — no manual event wiring needed.
 
 **Rationale**: It is Retell's own browser SDK for web calls — WebRTC setup,
 microphone handling, and the event stream (call start/end, agent talking, live

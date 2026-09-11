@@ -6,10 +6,13 @@ chat, logo, decision line, how-it-works strip added.
 
 ## Three things need your approval before the build reaches them
 
-1. **A new dependency: `retell-client-js-sdk`** (v2, published by Retell). The
-   browser client that runs the voice call and gives the page control over its
-   own UI — confirmed as your intent (SDK over the fixed drop-in widget).
-   `CLAUDE.md` forbids a dependency without your agreement.
+1. **A new dependency: `retell-client-js-sdk`** (v3.0.1, published by Retell —
+   the version that actually installed; its current, supported class is
+   `RetellClient`, not the deprecated `RetellWebClient` the first draft of this
+   plan assumed, corrected below). The browser client that runs the voice call
+   and gives the page control over its own UI — confirmed as your intent (SDK
+   over the fixed drop-in widget). `CLAUDE.md` forbids a dependency without your
+   agreement.
 2. **A database migration** adding three tables: `leads` (on the documented
    list), plus **`voice_usage_daily` and `voice_usage_monthly`** — **not** on
    `.claude/rules/database.md`'s table list. They exist only to make the three
@@ -43,11 +46,11 @@ that stores it as a `new` lead.
 **Language/Version**: TypeScript; Next.js 16 App Router (fixed by feature 001)
 **Primary Dependencies**: `@supabase/supabase-js`, `@supabase/ssr`, `zod` (present); **`retell-client-js-sdk` — to add, needs approval**
 **Storage**: Supabase Postgres — `leads`, `voice_usage_daily`, `voice_usage_monthly` via one reviewable migration
-**External services**: Retell (voice agent, configured outside this repo). Server calls Retell's create-web-call API; Retell calls our `POST /api/leads`.
+**External services**: Retell (voice agent, configured outside this repo). The browser calls Retell's `createWebCall` directly with a publishable key; our server only gates (content + limits) before that and receives Retell's `POST /api/leads` at call end.
 **Testing**: Manual, by clicking and `curl`, following `quickstart.md`.
 **Target Platform**: Vercel; parents on Android Chrome and iPhone Safari, including slow mobile data
 **Performance Goals**: First meaningful paint (name, logo, headline, button, notices, phone number, written FAQ) renders without waiting on Retell or on the usage check (FR-040).
-**Constraints**: No `localStorage`/`sessionStorage` (a first-party cookie is used for the visitor id, which is allowed). No auth on this page. `RETELL_API_KEY` server-side only. Everything parent-facing bilingual. 360px, Android Chrome, iPhone Safari. No CNIC/B-Form; no parent PII in logs. The three limits are environment settings, not hardcoded (FR-034).
+**Constraints**: No `localStorage`/`sessionStorage` (a first-party cookie is used for the visitor id, which is allowed). No auth on this page. `NEXT_PUBLIC_RETELL_PUBLIC_KEY` is a publishable key by design — safe in the browser, not a secret to protect. Everything parent-facing bilingual. 360px, Android Chrome, iPhone Safari. No CNIC/B-Form; no parent PII in logs. The three limits are environment settings, not hardcoded (FR-034).
 **Scale/Scope**: One public page, three API routes, three tables.
 
 No unresolved NEEDS CLARIFICATION. Both spec assumptions the maintainer was asked
@@ -69,7 +72,7 @@ Answered against `.specify/memory/constitution.md` v1.1.0.
 - [x] **VII. Human Exit** — The office number is visible in every state, including every limit-refusal state (FR-004, FR-033).
 - [x] **VIII. Simple Over Clever** — The monthly cap is enforced by reserving the worst case (the configured max call length) at call start, entirely server-side, with no dependency on hearing back from the client or on Retell webhooks — the simplest thing that makes the cap a hard ceiling. The per-call length limit is a client-side timer, acknowledged as a soft/UX limit rather than a security boundary, because enforcing it harder would need call-in-progress server control this feature does not otherwise require.
 - [x] **IX. Testable By A Non-Developer** — Every path is checkable by clicking, by turning JavaScript off, or by `curl`, per `quickstart.md`. Loading and error states are designed (FR-041).
-- [x] **X. Small Steps** — Phased: the static page and written FAQ first, then the leads endpoint, then the token route with limits, then the live call, then the text chat.
+- [x] **X. Small Steps** — Phased: the static page and written FAQ first, then the leads endpoint, then the gate route with limits, then the live call.
 - [x] **Feature sequencing** — Feature 003 is on `main` and this branch; its content endpoint and `simulate()` are reused directly.
 
 **Result**: Passes, subject to the three approvals above. Complexity Tracking
@@ -109,7 +112,9 @@ app/
 └── api/
     ├── leads/route.ts                       # (new) POST — unchanged from the earlier plan
     └── retell/
-        └── web-call/route.ts                # (new) POST — visitor cookie, daily + monthly limit check, token mint
+        └── web-call/route.ts                # (new) POST — pre-flight gate only: content check, visitor
+                                              #   cookie, daily + monthly limit check. Returns { ok } or
+                                              #   { reason }, never a token — the browser calls Retell itself.
 
 components/
 ├── office-phone.tsx                         # reused unchanged (feature 002)
@@ -135,28 +140,38 @@ lib/
 `TextChat` are the only client islands, so the written page (name, logo,
 headline, notices, how-it-works, FAQ, phone) is real HTML that needs neither
 JavaScript nor Retell (FR-020, FR-021, FR-040). `lib/voice/limits.ts` is the one
-place all three usage rules live, called only from the token route.
+place all three usage rules live, called only from the gate route.
 
 ## Key Decisions and Rationale
 
+**Retell's browser SDK connects directly, with a publishable key — our route
+only gates.** Corrected after installing the SDK and reading its types (see
+research D-001): the supported class is `RetellClient({ key:
+NEXT_PUBLIC_RETELL_PUBLIC_KEY })`, whose `createWebCall({ agent_id, hooks })`
+creates the call and connects the audio in one client-side step; there is no
+server-minted token to hand it. `POST /api/retell/web-call` therefore checks
+published content (FR-010) and the two hard usage limits, and returns `{ ok:
+true }` or a typed `{ reason }` — the panel only calls `createWebCall` after
+`{ ok: true }`.
+
 **The monthly cap reserves the worst case at call start, not the actual duration
-at call end.** `POST /api/retell/web-call` increments `voice_usage_monthly` by
-the configured max-call-length *before* minting a token, and refuses if that
-would exceed the cap. This makes the monthly limit a hard ceiling enforced
-entirely server-side, with no dependency on Retell telling us how a call actually
-went (which would need webhooks and a `calls` table — explicitly out of scope).
-The cost: a short call still "spends" the full reservation, so real capacity is
-somewhat under-used near the cap. Accepted as the simple, safe choice
-(Constitution VIII); reconciling actual duration is a named follow-up, not this
-feature.
+at call end.** On `{ ok: true }`, the same request increments `voice_usage_monthly`
+by the configured max-call-length, and refuses instead if that would exceed the
+cap. This makes the monthly limit a hard ceiling enforced entirely server-side,
+with no dependency on Retell telling us how a call actually went (which would
+need webhooks and a `calls` table — explicitly out of scope). The cost: a short
+call still "spends" the full reservation, so real capacity is somewhat
+under-used near the cap. Accepted as the simple, safe choice (Constitution
+VIII); reconciling actual duration is a named follow-up, not this feature.
 
 **The per-call length limit is enforced by a client-side timer**, ending the SDK
 call itself when reached. It is a UX pacing control, not a security boundary — a
 technically determined visitor could bypass it in their own browser. The real
 cost backstop is the monthly reservation above, which cannot be bypassed from the
-client because it happens before a token is even issued.
+client because the gate route checks and reserves it before the browser is ever
+told it may call Retell.
 
-**The daily per-visitor cap uses a first-party cookie**, set by the token route
+**The daily per-visitor cap uses a first-party cookie**, set by the gate route
 on first visit if absent. `voice_usage_daily` keys on `(visitor_id, day)`. This
 is explicitly best-effort (spec assumption) — a cleared cookie resets it — which
 is acceptable because the monthly cap does not depend on visitor identity at all.
@@ -181,8 +196,8 @@ unavailable" line, never a blank page (FR-021, FR-041).
 - **The monthly reservation trades some capacity for a hard guarantee** (see
   above) — worth knowing if the cap seems to bind earlier than the raw minute
   math suggests.
-- **`RETELL_API_KEY` and a configured agent are required for live voice.**
-  Without them the token route returns `not-configured` and the page falls back
+- **`NEXT_PUBLIC_RETELL_PUBLIC_KEY` and a configured agent are required for live voice.**
+  Without them the gate route returns `not-configured` and the page falls back
   to the text chat and FAQ — the same path as "assistant unavailable," so nothing
   breaks; it just means Parts 5–6 of `quickstart.md` wait until Retell is set up.
 - **Two new tables outside the documented list** — flagged above for explicit
@@ -194,7 +209,7 @@ unavailable" line, never a blank page (FR-021, FR-041).
   logo (the three approvals above).
 - Decide the shared secret for `POST /api/leads`: reuse `RETELL_WEBHOOK_SECRET`
   (default) or a separate one.
-- Add `RETELL_API_KEY`, `VOICE_MAX_CALL_SECONDS`, `VOICE_MAX_CALLS_PER_VISITOR_PER_DAY`,
+- Add `NEXT_PUBLIC_RETELL_PUBLIC_KEY`, `VOICE_MAX_CALL_SECONDS`, `VOICE_MAX_CALLS_PER_VISITOR_PER_DAY`,
   `VOICE_MONTHLY_CAP_MINUTES` to `.env.example`.
 - After the build: create the agent on Retell, set its own max-call-duration to
   match `VOICE_MAX_CALL_SECONDS` as a second line of defence, point it at
