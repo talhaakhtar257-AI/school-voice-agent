@@ -135,3 +135,86 @@ wants per-endpoint isolation.
 
 **Rationale**: Consistent with features 002 and 003 (their research notes) and
 Constitution IX. A framework is an unapproved dependency and a workflow change.
+
+---
+
+## D-009 — The monthly voice cap reserves the worst case at call start
+
+**Decision**: `POST /api/retell/web-call` reads `voice_usage_monthly` for the
+current month, and if `reserved_minutes + VOICE_MAX_CALL_SECONDS/60` would exceed
+`VOICE_MONTHLY_CAP_MINUTES`, refuses with `{ reason: "capped" }` before minting
+anything. On success it increments `reserved_minutes` by the same amount, in the
+same request.
+
+**Rationale**: FR-032 requires the cap to actually hold, not just describe an
+intention. Vercel functions do not share memory between invocations, so the
+number has to live in the database, and it has to be checked and incremented in
+one place before a call can start — otherwise two requests arriving together
+could both pass the check. Reserving the *maximum* possible length rather than
+waiting to learn the *actual* length avoids needing Retell to tell us how a call
+went, which would mean webhooks and a call-tracking table — the `calls` table is
+explicitly out of scope for this feature. The trade-off (a short call still
+"spends" the full reservation) is named in `plan.md` as a risk, not hidden.
+
+**Alternatives considered**:
+- *Record actual duration via a Retell webhook, reconcile after the fact* — more
+  accurate, but needs an authenticated webhook endpoint and a place to store
+  per-call records, which pulls in the `calls` table this feature deliberately
+  excludes. A good follow-up once that table exists for other reasons.
+- *An in-memory or edge-cache counter* — does not survive across Vercel's
+  serverless instances; would need a new external service (Redis, etc.), a
+  bigger dependency than one column in Postgres.
+
+---
+
+## D-010 — The daily per-visitor cap uses a first-party cookie
+
+**Decision**: `POST /api/retell/web-call` reads a `visitor_id` cookie; if absent,
+generates a random one and sets it on the response regardless of outcome. Checks
+and increments `voice_usage_daily` keyed on `(visitor_id, today's date)` against
+`VOICE_MAX_CALLS_PER_VISITOR_PER_DAY`.
+
+**Rationale**: FR-031 needs *some* notion of "the same visitor" without a login,
+which this page will never have (FR-001). A first-party cookie is allowed —
+`CLAUDE.md` only forbids `localStorage`/`sessionStorage`; feature 002 already
+uses cookies for the (unrelated) staff session. The identifier is random and
+holds no personal data.
+
+**Accepted limitation**: clearing cookies resets the count (spec edge case). The
+monthly cap (D-009), which does not depend on visitor identity, is the real
+backstop against runaway cost; the daily cap is aimed at accidental repeat use
+and casual scripting, not a determined bypass.
+
+---
+
+## D-011 — The text chat reuses `lib/content/simulate.ts` directly
+
+**Decision**: `components/voice/text-chat.tsx` is a client component that
+receives the live `ContentDoc` as a prop from `app/page.tsx` (the same document
+the written FAQ renders from) and calls `simulate()` — the pure keyword-matching
+function feature 003 built for its draft-content test tool — to answer a typed
+question. No new endpoint, no new matching logic.
+
+**Rationale**: The maintainer confirmed the text chat should answer from
+published content rather than run a second AI (spec assumption, confirmed). The
+matching behaviour needed — score FAQs and escalation topics, hand off on an
+escalation match, say so when nothing matches — is exactly what `simulate()`
+already does; only the surrounding strings change ("from our published
+information" rather than "this is a simulation of the draft"). Reusing it is
+also the plainest way to guarantee FR-017 (escalation topics route to the office
+in text too): both paths call the same function.
+
+---
+
+## D-012 — Logo, decision line, and how-it-works strip: content, not logic
+
+**Decision**: The school logo is a placeholder SVG in `public/`, the decision
+line ("final decisions are made by school staff") and the three how-it-works
+steps are entries in `lib/strings/landing.ts`, rendered by small presentational
+components (`how-it-works.tsx`) or inline in `page.tsx`.
+
+**Rationale**: None of these need any logic — they are static bilingual content,
+same treatment as every other string in this project. The logo follows the same
+"obviously fake until replaced" rule as the office phone number placeholder
+(project pattern, first used in feature 002): a plain graphic that cannot be
+mistaken for the school's real branding.

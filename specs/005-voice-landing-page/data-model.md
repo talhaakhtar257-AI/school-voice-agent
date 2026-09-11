@@ -1,11 +1,18 @@
 # Data Model: Parent-Facing Voice Landing Page
 
 **Feature**: `005-voice-landing-page` | **Date**: 2026-09-11
+**Revised**: 2026-09-11 — added `voice_usage_daily` and `voice_usage_monthly` for
+the three call limits (FR-030–034).
+
 **Phase**: 1 — Design
 
-One new table, `leads`. Follows `.claude/rules/database.md`: `id`, `created_at`,
-`updated_at` on every table; UTC timestamps; RLS on; no row ever deleted; the
-migration is a reviewable SQL file.
+Three new tables: `leads` (on the documented table list) and
+`voice_usage_daily` / `voice_usage_monthly` (**not** on it — flagged in `plan.md`
+for explicit approval; no personal data in either). Follows
+`.claude/rules/database.md` where it applies: `id`, `created_at`, `updated_at` on
+`leads`; UTC timestamps; RLS on; no row ever deleted; the migration is a
+reviewable SQL file. The two usage tables are pure counters with no `id`/staff
+visibility need — see their own notes below.
 
 ---
 
@@ -35,6 +42,40 @@ this feature (the dashboard, feature 004, will update `status`), never deleted.
 - Every column except `id` and `created_at` is nullable (`.claude/rules/database.md`).
 - No column for a CNIC, a B-Form, or any payment detail. The endpoint's schema
   has no such field, so one arriving in a request is dropped on parse (FR-022).
+
+## Table `voice_usage_daily`
+
+Counts voice conversations per visitor per day, for FR-031. No personal data —
+`visitor_id` is a random value from a cookie, not linked to a lead or a name.
+
+| Column | Type | Notes |
+|---|---|---|
+| `visitor_id` | `uuid` | from the `visitor_id` cookie (D-010) |
+| `usage_date` | `date` | the day, server time |
+| `call_count` | `integer` | default `0`, incremented at token-mint time |
+| `updated_at` | `timestamptz` | default `now()`, bumped on each increment |
+
+- Primary key `(visitor_id, usage_date)`.
+- Old rows are harmless clutter, not a privacy concern (no personal data); a
+  periodic cleanup is a future nice-to-have, not required by this feature.
+- RLS: no `anon`/`authenticated` access at all. Read and written only by the
+  service-role client in `POST /api/retell/web-call`.
+
+## Table `voice_usage_monthly`
+
+One running total for the whole school, for FR-032. Also no personal data.
+
+| Column | Type | Notes |
+|---|---|---|
+| `usage_month` | `text` primary key | `'2026-09'` format |
+| `reserved_minutes` | `numeric` | default `0`. Incremented by the configured max-call-length at every successful token mint (D-009) |
+| `updated_at` | `timestamptz` | default `now()`, bumped on each increment |
+
+- A new month simply has no row yet; the check-and-increment does an upsert
+  starting from `0`.
+- RLS: no `anon`/`authenticated` access. Service-role client only.
+- This is a reservation, not a record of actual usage — see D-009 in
+  `research.md` for why, and the trade-off it accepts.
 - Ordered `created_at DESC` when the dashboard reads it (feature 004).
 
 ## Trigger

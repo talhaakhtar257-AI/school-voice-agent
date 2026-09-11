@@ -22,10 +22,21 @@ preview for this branch, or `npm run dev`. No sign-in — this page is public.
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Open `/` | The Talk button is the biggest thing on screen, above the fold. |
-| 2 | Look without scrolling | The recording notice, the privacy line, and the office phone number are all visible. |
-| 3 | Read the page | Every sentence is in English and Urdu; Urdu reads right to left. |
-| 4 | Tap the office phone number on a phone | It offers to call. |
+| 1 | Open `/` | The school name and logo are at the top; a bilingual headline; the "Talk to Admission Office" button is the biggest thing on screen, above the fold. |
+| 2 | Look without scrolling | The recording notice, the privacy line, the "staff make the final decision" line, and the office phone number are all visible. |
+| 3 | Scroll a little | The three-step "how it works" strip, above the talk area or just below it. |
+| 4 | Read the page | Every sentence is in English and Urdu; Urdu reads right to left. |
+| 5 | Tap the office phone number on a phone | It offers to call. |
+
+## Part 1b — The text chat (US2)
+
+| # | Do | Expect |
+|---|---|---|
+| 1 | Find the text chat entry point (near the button, or shown after refusing the microphone) | A box to type a question, labelled as answering from the school's published information — not a live agent. |
+| 2 | Type a question the published content answers (e.g. a fee) | The matching published answer appears. |
+| 3 | Ask about a discount or other escalation topic | It points to the office, not an answer. |
+| 4 | Ask something unrelated to anything published | A plain "couldn't find an answer to that" message, with the phone number nearby. |
+| 5 | Check the `leads` table and the browser's network tab afterwards | Nothing was stored or sent anywhere — the text chat runs entirely in the browser. |
 
 ## Part 2 — The written FAQ survives JavaScript failing (US2)
 
@@ -75,6 +86,23 @@ Then check the `leads` table (Supabase dashboard or a query):
 - Row 4 has `parent_name = 'Sara'` and **no `cnic` column exists**.
 - No row was overwritten — each `curl` added one.
 
+## Part 4b — The three usage limits (US5) — set low limits in `.env.local` for this test
+
+Set `VOICE_MAX_CALL_SECONDS=20`, `VOICE_MAX_CALLS_PER_VISITOR_PER_DAY=2`,
+`VOICE_MONTHLY_CAP_MINUTES=1`, restart the dev server.
+
+| # | Do | Expect |
+|---|---|---|
+| 1 | Start a call and let it run past 20 seconds | It ends on its own; the page says the call time is up and shows the phone number. |
+| 2 | Start and end two calls today, then try a third | Refused: "reached today's limit," with the phone number, text chat, and FAQ all still offered. |
+| 3 | `curl -s -X POST http://localhost:3000/api/retell/web-call` a third time | `{ "reason": "capped" }` |
+| 4 | With the monthly cap at 1 minute and the per-call length at 20 seconds, start two calls (different visitor cookies, e.g. two browsers) | The second is refused once the reservation would exceed the 1-minute cap — likely on the very first or second call, depending on the numbers you set. |
+| 5 | Reset the env values to real ones afterwards | — |
+
+Restore normal values (e.g. `VOICE_MAX_CALL_SECONDS=300`,
+`VOICE_MAX_CALLS_PER_VISITOR_PER_DAY=5`, `VOICE_MONTHLY_CAP_MINUTES=500`, or
+whatever the school agrees) before deploying.
+
 ## Part 5 — A live conversation (US1, US4) — needs Retell configured
 
 | # | Do | Expect |
@@ -95,13 +123,20 @@ Then check the `leads` table (Supabase dashboard or a query):
 2. End the call.
 3. Check the `leads` table — a new row with what you confirmed, `status = 'new'`.
 
-## Part 7 — On a phone (FR-027, SC-002)
+## Part 7 — On a phone (FR-038, FR-039, SC-002)
 
-1. Open `/` on a phone, or Chrome DevTools device mode at 360 px.
-2. Check: no sideways scrolling; the Talk button, the recording notice, and the
-   office phone number all visible without scrolling; the transcript (if a call
-   is running) does not push the End Call button off screen; Urdu reads right to
-   left.
+1. Open `/` on a real Android phone (Chrome) and a real iPhone (Safari) if you
+   have both; otherwise Chrome DevTools device mode at 360 px is the minimum.
+2. Check: no sideways scrolling; the logo, the Talk button, the recording
+   notice, and the office phone number all visible without scrolling; the
+   transcript (if a call is running) does not push the End Call button off
+   screen; Urdu reads right to left.
+3. On iPhone Safari specifically: the microphone prompt appears only after a
+   tap (not on page load); the assistant's first reply is audible without a
+   second tap.
+4. On a throttled "Slow 3G" network profile (DevTools → Network): the school
+   name, logo, headline, button, and notices all appear without waiting for
+   Retell or the content check to finish (FR-040).
 
 ## Part 8 — Build gate
 

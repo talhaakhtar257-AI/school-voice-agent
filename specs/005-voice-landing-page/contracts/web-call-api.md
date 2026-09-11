@@ -60,6 +60,20 @@ display as `no-content`, wording "the assistant is not available right now".
 Retell's API returned an error. Same fallback. Logged server-side as route +
 status + timestamp; no key, no token.
 
+### Cannot start — a usage limit is in force
+
+```json
+{ "reason": "capped" }
+```
+
+Either the visitor's daily call count or the school's monthly minute reservation
+is at its configured limit (FR-030–032). Same fallback display, wording "we've
+reached today's limit for calls — please call the office" (daily) or a
+month-agnostic version for the monthly cap; both point at the phone number, the
+text chat, and the written FAQ (FR-033). The response does not say which of the
+two limits was hit — a parent does not need to know, and it keeps the two
+counters from being probeable from outside.
+
 ### 405 — wrong method
 
 ```json
@@ -71,12 +85,25 @@ status + timestamp; no key, no token.
 1. `readLiveForApi()` — if empty → `{ reason: "no-content" }`.
 2. Read `RETELL_API_KEY` and `NEXT_PUBLIC_RETELL_AGENT_ID` — if either absent →
    `{ reason: "not-configured" }`.
-3. `POST` to Retell's create-web-call endpoint with the API key and the agent id.
-   Non-2xx → `{ reason: "retell-error" }`.
-4. Return `{ accessToken, agentId }`.
+3. Read or set the `visitor_id` cookie (D-010).
+4. **Limit check (`lib/voice/limits.ts`), in one request:**
+   - `voice_usage_daily` for `(visitor_id, today)` — if `call_count >=
+     VOICE_MAX_CALLS_PER_VISITOR_PER_DAY` → `{ reason: "capped" }`.
+   - `voice_usage_monthly` for the current month — if `reserved_minutes +
+     (VOICE_MAX_CALL_SECONDS / 60)` would exceed `VOICE_MONTHLY_CAP_MINUTES` →
+     `{ reason: "capped" }`.
+   - Otherwise, increment both (daily `call_count += 1`, monthly
+     `reserved_minutes += VOICE_MAX_CALL_SECONDS / 60`) and continue.
+5. `POST` to Retell's create-web-call endpoint with the API key and the agent id,
+   and (if supported) the max-duration setting matching
+   `VOICE_MAX_CALL_SECONDS`. Non-2xx → `{ reason: "retell-error" }`. The
+   reservation from step 4 is **not** rolled back on this failure — accepted as
+   simpler than a compensating transaction, and it only ever under-uses the
+   monthly capacity, never exceeds it.
+6. Return `{ accessToken, agentId }`.
 
 `export const dynamic = "force-dynamic"`. Uses `lib/supabase/admin.ts` for the
-content check.
+content check and the limit tables.
 
 ## Test command
 
