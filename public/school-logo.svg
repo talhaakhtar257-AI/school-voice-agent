@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Placeholder school logo">
+  <!--
+    PLACEHOLDER — replace with the school's real logo before any demo.
+    Deliberately plain so it cannot be mistaken for real branding
+    (same rule as the placeholder office phone number in lib/office.ts).
+  -->
+  <circle cx="60" cy="60" r="56" fill="#e5e5e5" stroke="#9a9a9a" stroke-width="3" stroke-dasharray="6 5"/>
+  <text x="60" y="56" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" fill="#6b6b6b">LOGO</text>
+  <text x="60" y="76" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#6b6b6b">placeholder</text>
+</svg>

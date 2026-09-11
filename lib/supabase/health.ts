@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { getSupabaseAnonKey, getSupabaseUrl } from "./env";
+import { getSupabaseAnonKey, getSupabaseUrl } from "../env";
 
 /**
  * Creates the Supabase client and answers one question: can this application
