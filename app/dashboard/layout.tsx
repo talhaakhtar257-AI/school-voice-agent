@@ -68,6 +68,7 @@ export default async function DashboardLayout({
         }}
       >
         <Link href="/dashboard">Home</Link>
+        <Link href="/dashboard/unanswered">Unanswered</Link>
         <Link href="/dashboard/content">Content</Link>
       </nav>
       <main style={{ flex: 1, padding: "1rem" }}>{children}</main>
