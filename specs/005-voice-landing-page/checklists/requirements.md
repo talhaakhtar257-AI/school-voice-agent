@@ -2,6 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-09-11
+**Revised**: 2026-09-11 — fuller requirements list from the maintainer (logo, decision line, text chat, how-it-works strip, three usage limits, iOS Safari)
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
@@ -31,20 +32,23 @@
 
 ## Notes
 
-- The spec names no framework, SDK, or database. The voice service is referred
-  to generically; the Input quote preserves the maintainer's own wording, which
-  does name Retell.
-- "JavaScript does not run" (FR-014, SC-003) is kept deliberately. It is the
-  project's own rule wording in `.claude/rules/frontend.md` and describes a
-  condition a non-developer can reproduce, not an implementation choice.
-- Zero `[NEEDS CLARIFICATION]` markers. Seven open points were resolved as
-  documented assumptions instead, so the maintainer can strike any of them
-  without unblocking work. Two are worth their attention:
-  - **The on-screen transcript** — assumed yes; it is an assumption, not a
-    requirement, and the spec says so.
-  - **No rate limiting on a public, per-call-cost button** — accepted for the
-    demo and listed under Out of Scope, to be revisited before the page is
-    advertised.
-- The office phone number remains an obvious placeholder. Replacing it is a
-  prerequisite for any parent seeing this page and is recorded as a risk in
-  Assumptions.
+- 41 functional requirements, 13 success criteria, 5 user stories, 12 edge cases.
+- Rate limiting moved from Out of Scope to a P2 user story (US5) with FR-030–FR-034.
+  The maintainer's revised input requires all three limits.
+- Two assumptions the maintainer should read, both stated in the spec so either
+  can be struck without unblocking work:
+  1. **"Retell web widget" is read as the SDK, not the drop-in widget** — the
+     custom UI requirements (mic explainer before the prompt, custom states,
+     custom End Call) are impossible with Retell's fixed widget script.
+  2. **The text chat answers from published content, it is not a second AI** —
+     reuses feature 003's matching. A real Retell chat agent is a larger,
+     separate build.
+- A third, smaller assumption: a visitor is a first-party cookie, so per-visitor
+  daily limits are best-effort; the monthly cap is the real backstop and is not
+  per-visitor.
+- Placeholders remaining: the office phone number and the school logo. Both must
+  be replaced with real assets before any parent sees the page — recorded as a
+  risk in Assumptions.
+- `RETELL_API_KEY` and a configured Retell agent are needed for live voice; the
+  page degrades to the text chat and written FAQ without them, so the rest of the
+  feature is testable first.
