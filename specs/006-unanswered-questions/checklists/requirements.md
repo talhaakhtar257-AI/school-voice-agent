@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Voice Agent API (Calls & Unanswered Questions)
+# Specification Quality Checklist: Unanswered Questions Capture
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-09-11
@@ -31,9 +31,14 @@
 
 ## Notes
 
-- No [NEEDS CLARIFICATION] markers were needed. The three points that could
-  have gone either way (duplicate `retell_call_id` handling, duration's unit,
-  transcript's stored shape) were resolved as stated Assumptions instead,
-  each with its reasoning, per the project's own preference for a complete
-  draft over a blocked one.
-- All items pass on first draft. Ready for `/sp.plan`.
+- This replaces the checklist for the earlier, broader `006-voice-agent-api`
+  draft (calls table + per-instance logging), which the maintainer scrapped
+  in favour of this smaller design before any code was written.
+- The one open design question — what counts as "the same question" for
+  deduplication — is resolved as a stated Assumption (normalised text match)
+  rather than a [NEEDS CLARIFICATION] marker, since a reasonable default
+  exists and the maintainer can correct it easily if it's wrong in practice.
+- All items pass on this draft. Ready for implementation directly, given the
+  feature's small size — the maintainer asked for small steps with each
+  change shown before it's made, rather than a separate `/sp.plan`/`/sp.tasks`
+  pass.
