@@ -151,7 +151,7 @@ connects directly using a publishable key (research D-001), so there is no
 token to return. The route responds with one of:
 
 ```jsonc
-{ "ok": true }               // 200 — the browser may call Retell's createWebCall itself
+{ "ok": true, "maxCallSeconds": 300 } // 200 — proceed; maxCallSeconds drives the client's own countdown (T024)
 { "reason": "no-content" }   // 200 — nothing published; show the fallback
 { "reason": "not-configured" } // 200 — NEXT_PUBLIC_RETELL_PUBLIC_KEY / agent id absent
 { "reason": "capped" }       // 200 — a usage limit is in force; show the fallback

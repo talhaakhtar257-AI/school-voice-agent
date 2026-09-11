@@ -28,8 +28,12 @@ FR-033).
 ### Proceed
 
 ```json
-{ "ok": true }
+{ "ok": true, "maxCallSeconds": 300 }
 ```
+
+`maxCallSeconds` is the configured per-call length, handed over so the browser's
+own countdown (T024) matches what the monthly reservation was computed from,
+without duplicating `VOICE_MAX_CALL_SECONDS` as a second `NEXT_PUBLIC_` variable.
 
 On receiving this, `talk-panel.tsx` constructs
 `new RetellClient({ key: NEXT_PUBLIC_RETELL_PUBLIC_KEY })` and calls
