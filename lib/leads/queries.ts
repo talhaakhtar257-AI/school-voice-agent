@@ -1,5 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import type { IncomingEnquiry } from "./schema";
+import { LEAD_COLUMNS, type LeadRow } from "./rows";
 
 /**
  * Store a validated enquiry as a lead. Status is always "new" here, never taken
@@ -36,4 +38,22 @@ export async function insertLead(enquiry: IncomingEnquiry): Promise<string> {
 
   if (error) throw error;
   return data.id;
+}
+
+/**
+ * Read every lead for the dashboard's Leads screen, newest first (FR-004).
+ * Goes through the signed-in staff member's own session, never the service
+ * key — the database rules require the dashboard to read via an
+ * authenticated session, and the leads_select_authenticated RLS policy
+ * (feature 005 migration) already allows it.
+ */
+export async function listLeads(): Promise<LeadRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("leads")
+    .select(LEAD_COLUMNS)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as unknown as LeadRow[];
 }
