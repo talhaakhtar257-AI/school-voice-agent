@@ -3,7 +3,10 @@
 import { useRef, useState } from "react";
 import { RetellClient, type WebCallSession } from "retell-client-js-sdk";
 import { MicExplainer } from "./mic-explainer";
+import type { Lang } from "@/lib/language";
 import { landingStrings as s } from "@/lib/strings/landing";
+import { sectionStrings } from "@/lib/strings/landing-sections";
+import styles from "@/components/landing/talk-card.module.css";
 
 type CallState = "idle" | "explaining" | "connecting" | "listening" | "speaking";
 type Turn = { role: "agent" | "user"; content: string };
@@ -16,8 +19,6 @@ const FALLBACK_MESSAGES: Record<string, Bilingual> = {
   "retell-error": s.assistantUnavailable,
 };
 
-const cell = { minHeight: "44px", padding: "0.5rem 1.25rem", fontSize: "1.1rem", fontWeight: 700 };
-
 /**
  * The whole voice-call lifecycle. Tap -> MicExplainer -> the gate route
  * (POST /api/retell/web-call) -> on { ok: true }, connect directly to Retell
@@ -26,13 +27,28 @@ const cell = { minHeight: "44px", padding: "0.5rem 1.25rem", fontSize: "1.1rem",
  * ends the call at the configured length (T024, FR-030) — a pacing control;
  * the monthly cost cap is enforced server-side, before this component ever
  * gets to call Retell.
+ *
+ * One multilingual agent serves both languages; `lang` only changes the words
+ * on screen, never which agent is called.
  */
-export function TalkPanel() {
-  const [state, setState] = useState<CallState>("idle");
+export function TalkPanel({
+  lang,
+  onSpeakingChange,
+}: {
+  lang: Lang;
+  onSpeakingChange?: (speaking: boolean) => void;
+}) {
+  const [state, setStateRaw] = useState<CallState>("idle");
   const [fallback, setFallback] = useState<Bilingual | null>(null);
   const [transcript, setTranscript] = useState<Turn[]>([]);
   const sessionRef = useRef<WebCallSession | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Every state change goes through here so the card's orb animation follows it.
+  function setState(next: CallState) {
+    setStateRaw(next);
+    onSpeakingChange?.(next === "speaking");
+  }
 
   function clearTimer() {
     if (timerRef.current) {
@@ -125,6 +141,7 @@ export function TalkPanel() {
   if (state === "explaining") {
     return (
       <MicExplainer
+        lang={lang}
         onContinue={() => {
           setState("idle");
           void startCall();
@@ -135,19 +152,17 @@ export function TalkPanel() {
 
   if (state === "idle") {
     return (
-      <div dir="auto" style={{ textAlign: "center" }}>
-        <button
-          type="button"
-          style={cell}
-          onClick={() => setState("explaining")}
-        >
-          {s.talkButton.en} · {s.talkButton.ur}
+      <div className={styles.panel}>
+        <button type="button" className={styles.talkButton} onClick={() => setState("explaining")}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3" />
+          </svg>
+          {s.talkButton[lang]}
         </button>
         {fallback && (
-          <p role="alert" style={{ color: "var(--failure-border)", fontSize: "0.9rem" }}>
-            {fallback.en}
-            <br />
-            {fallback.ur}
+          <p role="alert" className={styles.fallback}>
+            {fallback[lang]}
           </p>
         )}
       </div>
@@ -156,35 +171,31 @@ export function TalkPanel() {
 
   // connecting / listening / speaking
   return (
-    <div dir="auto" style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-      <p role="status" style={{ fontSize: "1.1rem", fontWeight: 600, margin: 0 }}>
-        {state === "connecting" && `${s.stateConnecting.en} · ${s.stateConnecting.ur}`}
-        {state === "listening" && `${s.stateListening.en} · ${s.stateListening.ur}`}
-        {state === "speaking" && `${s.stateSpeaking.en} · ${s.stateSpeaking.ur}`}
+    <div className={styles.panel}>
+      <p role="status" className={styles.status}>
+        {state === "connecting" && s.stateConnecting[lang]}
+        {state === "listening" && s.stateListening[lang]}
+        {state === "speaking" && s.stateSpeaking[lang]}
       </p>
 
-      <div
-        style={{
-          maxWidth: "32rem",
-          margin: "0 auto",
-          maxHeight: "14rem",
-          overflowY: "auto",
-          textAlign: "start",
-          fontSize: "0.9rem",
-          border: "1px solid rgba(128,128,128,0.3)",
-          borderRadius: "0.5rem",
-          padding: "0.6rem",
-        }}
-      >
-        {transcript.map((t, i) => (
-          <p key={i} style={{ margin: "0.2rem 0" }}>
-            <strong>{t.role === "agent" ? "Assistant" : "You"}:</strong> {t.content}
-          </p>
-        ))}
+      <div className={styles.transcript}>
+        {transcript.length === 0 ? (
+          <p className={styles.transcriptEmpty}>{sectionStrings.transcriptEmpty[lang]}</p>
+        ) : (
+          transcript.map((t, i) => (
+            // Transcripts mix Urdu script and English; dir="auto" per bubble.
+            <p key={i} dir="auto" className={`${styles.bubble} ${t.role === "agent" ? styles.bubbleAgent : styles.bubbleUser}`}>
+              <strong>
+                {t.role === "agent" ? sectionStrings.transcriptAssistant[lang] : sectionStrings.transcriptYou[lang]}:
+              </strong>{" "}
+              {t.content}
+            </p>
+          ))
+        )}
       </div>
 
-      <button type="button" style={cell} onClick={() => void endCall()}>
-        {s.endCall.en} · {s.endCall.ur}
+      <button type="button" className={styles.endButton} onClick={() => void endCall()}>
+        {s.endCall[lang]}
       </button>
     </div>
   );

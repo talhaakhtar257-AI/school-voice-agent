@@ -1,26 +1,38 @@
-import Image from "next/image";
 import { readLiveForApi } from "@/lib/content/queries";
-import { forPublicApi, isEmptyDoc, type ContentDoc } from "@/lib/content/schema";
-import { landingStrings as s } from "@/lib/strings/landing";
-import { OfficePhone } from "@/components/office-phone";
-import { TalkPanel } from "@/components/voice/talk-panel";
-import { TextChat } from "@/components/voice/text-chat";
+import { forPublicApi, type ContentDoc } from "@/lib/content/schema";
+import { englishFont, urduFont } from "@/lib/fonts";
+import { dirFor } from "@/lib/language";
+import { readLang } from "@/lib/language-server";
+import { sectionStrings } from "@/lib/strings/landing-sections";
+import { DocumentLanguage } from "@/components/landing/document-language";
+import { SiteHeader } from "@/components/landing/site-header";
+import { SiteFooter } from "@/components/landing/site-footer";
+import { Hero } from "@/components/landing/hero";
+import { TalkCard } from "@/components/landing/talk-card";
+import { ProgramsSection } from "@/components/landing/programs-section";
+import { FeesSection } from "@/components/landing/fees-section";
+import { ProcessDocumentsSection } from "@/components/landing/process-documents-section";
+import { FaqSection } from "@/components/landing/faq-section";
 import { HowItWorks } from "@/components/voice/how-it-works";
+import { TextChat } from "@/components/voice/text-chat";
+import landing from "@/components/landing/landing.module.css";
 
 // Always check for a fresh publish — never a cached "nothing published" state.
 export const dynamic = "force-dynamic";
 
 /**
- * The public admissions page. A server component: the name, logo, headline,
- * notices, how-it-works strip, and written FAQ are plain HTML that needs
- * neither JavaScript nor Retell to appear (FR-020, FR-021, FR-040). The only
- * client islands are TalkPanel and TextChat.
+ * The public admissions page. A server component: everything except the talk
+ * card and the text chat is plain HTML that needs neither JavaScript nor Retell
+ * to appear (FR-020, FR-021, FR-040).
  *
- * A failed content read still renders everything except a working talk
- * button — the FAQ shows its own "temporarily unavailable" line rather than
- * the page going blank (FR-021, FR-041).
+ * One language at a time, chosen by the `lang` cookie. Classes, fees, process,
+ * documents, FAQ and office hours all come from the published content — the
+ * same source the voice agent answers from. A failed content read still renders
+ * the page; each section shows its own "temporarily unavailable" card.
  */
 export default async function HomePage() {
+  const lang = await readLang();
+
   let content: ContentDoc | null = null;
   let contentFailed = false;
   try {
@@ -30,97 +42,42 @@ export default async function HomePage() {
     contentFailed = true;
   }
 
-  const published = content && !isEmptyDoc(content);
   const publicContent = content ? forPublicApi(content) : null;
 
   return (
-    <main
-      style={{
-        maxWidth: "40rem",
-        margin: "0 auto",
-        padding: "1.5rem 1rem 3rem",
-        display: "flex",
-        flexDirection: "column",
-        gap: "2rem",
-      }}
+    <div
+      lang={lang}
+      dir={dirFor(lang)}
+      className={`${landing.page} ${englishFont.variable} ${urduFont.variable}`}
     >
-      <header dir="auto" style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-        <Image
-          src="/school-logo.svg"
-          alt="School logo"
-          width={72}
-          height={72}
-          style={{ margin: "0 auto" }}
-        />
-        <h1 style={{ margin: 0, fontSize: "1.4rem" }}>{s.schoolName.en}</h1>
-        <p style={{ margin: 0, fontSize: "1rem", color: "var(--text-secondary)" }}>
-          {s.headline.en}
-          <br />
-          {s.headline.ur}
-        </p>
-      </header>
+      <DocumentLanguage lang={lang} />
+      <SiteHeader lang={lang} />
 
-      <section dir="auto" style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-        <TalkPanel />
-        <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-          {s.decisionNotice.en}
-          <br />
-          {s.decisionNotice.ur}
-        </p>
-        <p style={{ margin: 0, fontSize: "0.85rem" }}>
-          {s.recordingNotice.en}
-          <br />
-          {s.recordingNotice.ur}
-        </p>
-        <p style={{ margin: 0, fontSize: "0.85rem" }}>
-          {s.privacyLine.en}
-          <br />
-          {s.privacyLine.ur}
-        </p>
-      </section>
+      <div className={`${landing.wrap} ${landing.layout}`}>
+        <aside id="talk" className={landing.aside}>
+          <TalkCard lang={lang} />
+        </aside>
 
-      <OfficePhone />
+        <main className={landing.main}>
+          <Hero lang={lang} />
+          <HowItWorks lang={lang} />
+          <ProgramsSection lang={lang} facts={publicContent?.facts ?? null} failed={contentFailed} />
+          <FeesSection lang={lang} facts={publicContent?.facts ?? null} failed={contentFailed} />
+          <ProcessDocumentsSection lang={lang} policies={publicContent?.policies ?? null} failed={contentFailed} />
+          <FaqSection lang={lang} faqs={publicContent?.faqs ?? []} failed={contentFailed} />
+          {content && <TextChat content={content} lang={lang} />}
+        </main>
+      </div>
 
-      <HowItWorks />
+      <SiteFooter lang={lang} officeHours={publicContent?.facts.officeHours ?? []} />
 
-      {content && <TextChat content={content} />}
-
-      <section dir="auto" style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-        <h2 style={{ margin: 0, fontSize: "1.05rem" }}>
-          {s.faqTitle.en} · {s.faqTitle.ur}
-        </h2>
-
-        {contentFailed && (
-          <p style={{ color: "var(--failure-border)" }}>
-            {s.faqUnavailable.en}
-            <br />
-            {s.faqUnavailable.ur}
-          </p>
-        )}
-
-        {!contentFailed && !published && (
-          <p style={{ color: "var(--text-secondary)" }}>
-            {s.faqEmpty.en}
-            <br />
-            {s.faqEmpty.ur}
-          </p>
-        )}
-
-        {publicContent?.faqs.map((faq) => (
-          <div key={faq.id} style={{ borderTop: "1px solid rgba(128,128,128,0.3)", paddingTop: "0.6rem" }}>
-            <p style={{ margin: 0, fontWeight: 600 }}>
-              {faq.question.en}
-              <br />
-              {faq.question.ur}
-            </p>
-            <p style={{ margin: "0.3rem 0 0" }}>
-              {faq.answer.en}
-              <br />
-              {faq.answer.ur}
-            </p>
-          </div>
-        ))}
-      </section>
-    </main>
+      <a href="#talk" className={landing.fab}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" aria-hidden="true">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3" />
+        </svg>
+        {sectionStrings.fab[lang]}
+      </a>
+    </div>
   );
 }

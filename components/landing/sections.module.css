@@ -1,0 +1,347 @@
+/*
+  The content sections of the landing page: hero, how it works, classes, fees,
+  process and documents, FAQ, text chat, and the shared empty/unavailable card.
+  Tokens come from .page in landing.module.css.
+*/
+
+.section {
+  padding-block: 36px;
+  scroll-margin-top: 90px;
+}
+
+.section + .section {
+  border-top: 1px solid var(--line);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.lead {
+  margin: 10px 0 0;
+  color: var(--ink-2);
+  font-size: 16px;
+  max-width: 62ch;
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  padding-block: 8px 36px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brand-700);
+  background: var(--brand-50);
+  border: 1px solid var(--brand-100);
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+}
+
+.heroTitle {
+  margin: 16px 0 0;
+  font-size: clamp(30px, 4.6vw, 50px);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+[lang="ur"] .heroTitle {
+  line-height: 1.8;
+  letter-spacing: 0;
+  font-size: clamp(26px, 4vw, 42px);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  padding: 6px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-2);
+  box-shadow: var(--shadow-sm);
+}
+
+.chip svg {
+  color: var(--brand-500);
+  flex: none;
+}
+
+/* ---------- Cards and grids ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 22px 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.card h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.card p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+.stepNumber {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--brand-50);
+  color: var(--brand-700);
+  border: 1px solid var(--brand-100);
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.programAge {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold-700);
+  margin-bottom: 2px;
+}
+
+/* ---------- Fees ---------- */
+.tableWrap {
+  margin-top: 24px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  text-align: start;
+  padding: 14px 18px;
+  font-size: 15px;
+}
+
+.table thead th {
+  background: var(--brand-50);
+  color: var(--brand-900);
+  font-weight: 700;
+  border-bottom: 1px solid var(--brand-100);
+}
+
+.table tbody tr + tr {
+  border-top: 1px solid var(--line);
+}
+
+.feeAmount {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ---------- Process + documents ---------- */
+.split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+.prose {
+  margin: 20px 0 0;
+  white-space: pre-line;
+  color: var(--ink-2);
+  font-size: 16px;
+}
+
+.askCard {
+  margin-top: 20px;
+  background: var(--brand-50);
+  border-color: var(--brand-100);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--brand-700);
+  color: #fff !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.button:hover {
+  background: var(--brand-900);
+}
+
+/* ---------- FAQ ---------- */
+.faq {
+  margin-top: 20px;
+  display: grid;
+  gap: 10px;
+}
+
+.faqItem {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.faqItem[open] {
+  border-color: var(--brand-100);
+  box-shadow: var(--shadow-sm);
+}
+
+.faqQuestion {
+  list-style: none;
+  cursor: pointer;
+  min-height: 44px;
+  padding: 14px 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.faqQuestion::-webkit-details-marker {
+  display: none;
+}
+
+.plus {
+  margin-inline-start: auto;
+  flex: none;
+  color: var(--brand-600);
+  transition: transform 0.2s;
+}
+
+.faqItem[open] .plus {
+  transform: rotate(45deg);
+}
+
+.faqAnswer {
+  margin: 0;
+  padding: 0 18px 16px;
+  color: var(--ink-2);
+  white-space: pre-line;
+}
+
+/* ---------- Text chat ---------- */
+.chatForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.chatInput {
+  flex: 1;
+  min-width: 10rem;
+  min-height: 48px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 16px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+}
+
+.chatInput:focus {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 1px;
+}
+
+.chatResult {
+  margin-top: 14px;
+}
+
+.handoff {
+  color: var(--danger);
+}
+
+/* ---------- Empty and unavailable states ---------- */
+.state {
+  margin-top: 20px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: #fff;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  color: var(--ink-2);
+}
+
+.state svg {
+  flex: none;
+  color: var(--brand-600);
+  margin-top: 4px;
+}
+
+.state p {
+  margin: 0;
+}
+
+.stateUnavailable {
+  border-style: solid;
+  border-color: #f1c9c5;
+  background: #fdf1f0;
+}
+
+.stateUnavailable svg {
+  color: var(--danger);
+}
+
+@media (min-width: 700px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1180px) {
+  .gridThree {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .split {
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+}
