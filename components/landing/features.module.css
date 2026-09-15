@@ -1,0 +1,300 @@
+/*
+  The new landing features: class finder, admission dates timeline, and the
+  dark "prefer to type?" band that holds the text chat.
+*/
+
+/* ---------- Class finder ---------- */
+.finderCard {
+  display: grid;
+  gap: 18px;
+  margin-top: 28px;
+  padding: 24px 22px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.finderField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 320px;
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.finderInput {
+  min-height: 50px;
+  padding: 0 14px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  font: inherit;
+  font-family: var(--font-en), system-ui, sans-serif;
+  font-size: 16px;
+}
+
+.finderInput:focus {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 1px;
+}
+
+.finderResult {
+  margin: 0;
+  padding: 18px;
+  background: var(--brand-50);
+  border: 1px solid var(--brand-100);
+  border-radius: 16px;
+}
+
+.finderResultNone {
+  background: var(--gold-50);
+  border-color: #f0ddb4;
+}
+
+.finderResult p {
+  margin: 0;
+}
+
+.finderAge {
+  font-weight: 700;
+}
+
+.matchList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.match {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  color: var(--brand-900);
+  background: #fff;
+  border: 1px solid var(--brand-100);
+  border-radius: var(--r-pill);
+  font-weight: 700;
+}
+
+.finderActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* ---------- Admission dates timeline ---------- */
+.timeline {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timelineItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.timelineDot {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 16px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--line-strong);
+  box-shadow: 0 0 0 1px var(--line-strong);
+}
+
+.dotOpen {
+  background: var(--brand-500);
+  box-shadow: 0 0 0 1px var(--brand-500);
+}
+
+.dotUpcoming {
+  background: var(--gold-400);
+  box-shadow: 0 0 0 1px var(--gold-400);
+}
+
+.timelineBody {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.timelineHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.timelineLabel {
+  font-weight: 700;
+}
+
+.timelineDates {
+  margin-top: 2px;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.tagOpen {
+  color: #0a6b4f;
+  background: #e6f7f1;
+  border-color: #bee8d9;
+}
+
+.tagUpcoming {
+  color: var(--gold-700);
+  background: var(--gold-50);
+  border-color: #f2dfb6;
+}
+
+.tagClosed {
+  color: #5f6e68;
+  background: #f3f4f3;
+  border-color: #e0e5e2;
+}
+
+/* ---------- Prefer to type? band ---------- */
+.askBand {
+  color: #fff;
+  background: linear-gradient(170deg, #0b3f33, #0f5c4a);
+}
+
+.askInner {
+  max-width: 840px;
+}
+
+.askEyebrow {
+  display: inline-flex;
+  padding: 6px 14px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.askTitle {
+  margin-top: 16px !important;
+  color: #fff;
+  font-size: clamp(26px, 3.4vw, 38px);
+}
+
+.askLead {
+  margin: 12px 0 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 16.5px;
+}
+
+.askCard {
+  margin-top: 26px;
+  padding: clamp(20px, 4vw, 36px);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--r-xl);
+}
+
+.askCard p {
+  margin: 0;
+}
+
+.chatForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chatInput {
+  flex: 1 1 220px;
+  min-height: 52px;
+  padding: 0 16px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 14px;
+  font: inherit;
+  font-size: 16px;
+}
+
+.chatInput::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.chatInput:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--gold-400);
+}
+
+.chatButton {
+  min-height: 52px;
+  padding: 0 26px;
+  color: #3a2600;
+  background: var(--gold-400);
+  border: 0;
+  border-radius: var(--r-pill);
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.chatButton:hover {
+  background: #f2c866;
+}
+
+.chatResult {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  white-space: pre-line;
+}
+
+.chatHandoff {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--gold-400);
+}
+
+.chatOffice {
+  margin-top: 10px !important;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.chatOffice a {
+  color: #fff !important;
+  font-weight: 800;
+  text-decoration: none;
+  direction: ltr;
+  display: inline-block;
+}

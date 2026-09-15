@@ -1,0 +1,284 @@
+/*
+  Staff dashboard frame: tokens, sidebar, top bar, phone nav strip.
+  Colours are set explicitly on .app so the app's dark-mode globals never leak
+  in. Logical properties (inline-start/end) mirror the layout in Urdu.
+  Token names shared with the landing page (--brand-700, --line-strong, --ink-2,
+  --r-pill) let the landing language toggle render correctly here too.
+*/
+
+.app {
+  --brand-900: #0b3f33;
+  --brand-700: #0f5c4a;
+  --brand-600: #147a62;
+  --brand-500: #12a67b;
+  --brand-100: #cdebe0;
+  --brand-50: #e9f6f1;
+  --gold-700: #a86e00;
+  --gold-600: #c98500;
+  --gold-50: #fdf4e1;
+  --page: #f6f7f5;
+  --card: #ffffff;
+  --ink: #10201b;
+  --ink-2: #4b605a;
+  --ink-3: #6e7f78;
+  --line: #e4e9e6;
+  --line-strong: #cfdad5;
+  --ok: #046904;
+  --crit: #b3261e;
+  --r-sm: 9px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-pill: 999px;
+  --sh-sm: 0 1px 2px rgba(16, 32, 27, 0.05), 0 1px 3px rgba(16, 32, 27, 0.04);
+  --sh-lg: 0 20px 48px rgba(16, 32, 27, 0.16);
+
+  /* Older screens (content editor internals) read these globals; pin them to
+     the light values so a dark-mode phone cannot put grey text on white cards. */
+  --page-background: #ffffff;
+  --text-primary: #10201b;
+  --text-secondary: #4b605a;
+  --success-background: #e8f5e9;
+  --success-border: #2e7d32;
+  --failure-background: #fdecea;
+  --failure-border: #b3261e;
+  color-scheme: light;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-en), system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.app[lang="ur"] {
+  font-family: var(--font-ur), var(--font-en), "Segoe UI", sans-serif;
+  line-height: 1.9;
+}
+
+.app a {
+  color: inherit;
+}
+
+.app button,
+.app select,
+.app input,
+.app textarea {
+  font: inherit;
+}
+
+/* ---------- Sidebar (top block on phones) ---------- */
+.sidebar {
+  background: var(--brand-900);
+  color: rgba(255, 255, 255, 0.78);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 6px;
+}
+
+.logoText b {
+  display: block;
+  color: #fff;
+  font-size: 14.5px;
+  line-height: 1.3;
+}
+
+.brandSub {
+  font-size: 12px;
+  opacity: 0.7;
+  font-weight: 600;
+}
+
+.nav {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: 2px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 13px;
+  border-radius: 11px;
+  color: inherit !important;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14.5px;
+  white-space: nowrap;
+}
+
+.navItem svg {
+  flex: none;
+  opacity: 0.85;
+}
+
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff !important;
+}
+
+.navItemActive {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff !important;
+}
+
+.sideFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  padding: 8px 6px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 13px;
+}
+
+.sideFoot a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: none;
+  opacity: 0.85;
+}
+
+.sideFoot a:hover {
+  opacity: 1;
+  color: #fff;
+}
+
+.sideEmail {
+  overflow-wrap: anywhere;
+  opacity: 0.75;
+}
+
+.sideFoot button {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+}
+
+.sideFoot button:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ---------- Main column ---------- */
+.main {
+  min-width: 0;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-height: 64px;
+  padding: 8px 16px;
+  background: rgba(246, 247, 245, 0.94);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+
+.pageTitle {
+  margin: 0;
+  margin-inline-end: auto;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.pill i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.pillOk i {
+  background: #0ca30c;
+  box-shadow: 0 0 0 3px rgba(12, 163, 12, 0.16);
+}
+
+.pillWarn {
+  color: var(--gold-700) !important;
+  border-color: #f2dfb6;
+  background: var(--gold-50);
+}
+
+.pillWarn i {
+  background: var(--gold-600);
+}
+
+.content {
+  padding: 16px;
+}
+
+/* ---------- Wide screens: real sidebar ---------- */
+@media (min-width: 861px) {
+  .app {
+    grid-template-columns: 248px minmax(0, 1fr);
+  }
+  .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 22px 14px;
+    gap: 6px;
+  }
+  .logo {
+    padding: 4px 8px 20px;
+  }
+  .nav {
+    flex-direction: column;
+    overflow: visible;
+  }
+  .sideFoot {
+    margin-top: auto;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px 8px 0;
+  }
+  .topbar {
+    padding: 8px clamp(16px, 2.4vw, 30px);
+    min-height: 70px;
+  }
+  .pageTitle {
+    font-size: 20px;
+  }
+  .content {
+    padding: clamp(18px, 2.4vw, 30px);
+  }
+}

@@ -1,6 +1,7 @@
 import type { Lang } from "@/lib/language";
 import { OFFICE_PHONE_DISPLAY, OFFICE_PHONE_E164 } from "@/lib/office";
-import { sectionStrings as s } from "@/lib/strings/landing-sections";
+import { contentStrings as s } from "@/lib/strings/landing-content";
+import { InfoIcon } from "./icons";
 import landing from "./landing.module.css";
 import styles from "./sections.module.css";
 
@@ -24,10 +25,7 @@ export function SectionState({
       className={`${styles.state} ${unavailable ? styles.stateUnavailable : ""}`}
       role={unavailable ? "alert" : undefined}
     >
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 8v5M12 16.5v.5" />
-      </svg>
+      <InfoIcon size={20} />
       <div>
         <p>{unavailable ? s.sectionUnavailable[lang] : emptyMessage[lang]}</p>
         <p>

@@ -24,8 +24,37 @@ function Pair({ label, v }: { label: string; v: { en: string; ur: string } }) {
  * it back into the editor (FR-024, SC-005). No developer needed.
  */
 export function DocView({ doc }: { doc: ContentDoc }) {
+  const { stats } = doc.facts;
+  const activePrograms = doc.programs.filter((p) => p.archivedAt === null);
+
   return (
     <div dir="auto">
+      <div style={block}>
+        <strong>School profile</strong>
+        <Pair label="Tagline" v={doc.profile.tagline} />
+        <Pair label="About" v={doc.profile.about} />
+        <Pair label="Address" v={doc.profile.address} />
+        <div style={{ marginTop: "0.5rem" }}>
+          Figures: students {stats.studentsEnrolled ?? "—"}, teachers {stats.teachers ?? "—"}, founded{" "}
+          {stats.foundedYear ?? "—"}
+        </div>
+        <div>Sample-content banner: {doc.profile.showSampleBanner ? "on" : "off"}</div>
+      </div>
+
+      <div style={block}>
+        <strong>Programs</strong>
+        {activePrograms.length === 0 && <div style={dim}>None</div>}
+        {activePrograms.map((p, i) => (
+          <div key={p.id} style={{ marginTop: "0.5rem" }}>
+            <div style={dim}>
+              Program {i + 1} — classes: {p.classes.join(", ") || "none"}
+            </div>
+            <Pair label="Title" v={p.title} />
+            <Pair label="Description" v={p.description} />
+          </div>
+        ))}
+      </div>
+
       <div style={block}>
         <strong>Facts</strong>
         <div style={{ marginTop: "0.4rem" }}>
@@ -35,7 +64,8 @@ export function DocView({ doc }: { doc: ContentDoc }) {
             <ul style={{ margin: 0, paddingInlineStart: "1.2rem" }}>
               {doc.facts.classes.map((c) => (
                 <li key={c}>
-                  {c}: fee {doc.facts.feePerClass[c] ?? "?"}, age{" "}
+                  {c}: monthly fee {doc.facts.feePerClass[c] ?? "?"}, admission fee{" "}
+                  {doc.facts.admissionFeePerClass[c] ?? "—"}, age{" "}
                   {doc.facts.ageCriteriaPerClass[c]?.minYears ?? "?"}–
                   {doc.facts.ageCriteriaPerClass[c]?.maxYears ?? "?"} years
                 </li>
@@ -49,6 +79,12 @@ export function DocView({ doc }: { doc: ContentDoc }) {
           <div>
             Office hours:{" "}
             {doc.facts.officeHours.map((h) => `${h.days} ${h.opens}–${h.closes}`).join("; ") || <em style={dim}>none</em>}
+          </div>
+          <div>
+            School timings:{" "}
+            {doc.facts.schoolTimings
+              .map((t) => `${t.label.en || t.label.ur} ${t.days} ${t.starts}–${t.ends}`)
+              .join("; ") || <em style={dim}>none</em>}
           </div>
         </div>
       </div>

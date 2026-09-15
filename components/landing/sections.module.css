@@ -1,110 +1,63 @@
 /*
-  The content sections of the landing page: hero, how it works, classes, fees,
-  process and documents, FAQ, text chat, and the shared empty/unavailable card.
-  Tokens come from .page in landing.module.css.
+  Content sections, ported from the design: headings, card grids, programs,
+  fee table, process steps, documents checklist, timings, FAQ, and the shared
+  empty/unavailable card. Tokens come from .page in landing.module.css.
 */
 
 .section {
-  padding-block: 36px;
+  padding-block: 56px;
   scroll-margin-top: 90px;
 }
 
-.section + .section {
-  border-top: 1px solid var(--line);
-}
-
-.title {
-  margin: 0;
-  font-size: clamp(24px, 3vw, 34px);
-  font-weight: 800;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
-}
-
-.lead {
-  margin: 10px 0 0;
-  color: var(--ink-2);
-  font-size: 16px;
-  max-width: 62ch;
-}
-
-/* ---------- Hero ---------- */
-.hero {
-  padding-block: 8px 36px;
-}
-
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--brand-700);
-  background: var(--brand-50);
-  border: 1px solid var(--brand-100);
-  padding: 6px 14px;
-  border-radius: var(--r-pill);
-}
-
-.heroTitle {
-  margin: 16px 0 0;
-  font-size: clamp(30px, 4.6vw, 50px);
-  font-weight: 800;
-  line-height: 1.12;
-  letter-spacing: -0.02em;
-}
-
-[lang="ur"] .heroTitle {
-  line-height: 1.8;
-  letter-spacing: 0;
-  font-size: clamp(26px, 4vw, 42px);
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 20px;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
+.sectionAlt {
   background: #fff;
-  border: 1px solid var(--line);
-  border-radius: var(--r-pill);
-  padding: 6px 14px;
-  font-size: 14px;
-  font-weight: 600;
+  border-block: 1px solid var(--line);
+}
+
+.sectionTitle {
+  font-size: clamp(26px, 3.4vw, 38px);
+  line-height: 1.2;
+}
+
+.sectionLead {
+  max-width: 62ch;
+  margin: 12px 0 0;
   color: var(--ink-2);
-  box-shadow: var(--shadow-sm);
+  font-size: 16.5px;
 }
 
-.chip svg {
-  color: var(--brand-500);
-  flex: none;
+.narrow {
+  max-width: 840px;
 }
 
-/* ---------- Cards and grids ---------- */
-.grid {
+/* ---------- Cards ---------- */
+.grid3,
+.grid4 {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  margin-top: 24px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  margin: 32px 0 0;
+  padding: 0;
+  list-style: none;
 }
 
 .card {
+  padding: 24px 22px;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
-  padding: 22px 20px;
   box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 .card h3 {
-  margin: 0 0 6px;
-  font-size: 18px;
+  margin-bottom: 6px !important;
+  font-size: 18.5px;
 }
 
 .card p {
@@ -113,76 +66,224 @@
   font-size: 15px;
 }
 
-.stepNumber {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
+.stepN {
+  flex: none;
   display: grid;
   place-items: center;
-  background: var(--brand-50);
+  width: 38px;
+  height: 38px;
+  margin-bottom: 14px;
   color: var(--brand-700);
+  background: var(--brand-50);
   border: 1px solid var(--brand-100);
+  border-radius: 12px;
+  font-family: var(--font-en), system-ui, sans-serif;
   font-weight: 800;
-  margin-bottom: 12px;
 }
 
-.programAge {
+.cardActions {
+  margin-top: 16px;
+}
+
+/* ---------- Programs ---------- */
+.progIcon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 16px;
+  color: var(--gold-700);
+  background: var(--gold-50);
+  border: 1px solid #f4e2bc;
+  border-radius: 14px;
+}
+
+.progAge {
+  margin-bottom: 4px;
+  color: var(--gold-700);
   font-size: 13px;
   font-weight: 700;
-  color: var(--gold-700);
-  margin-bottom: 2px;
+}
+
+.progClasses {
+  margin-top: 12px !important;
+  color: var(--ink-3) !important;
+  font-size: 13.5px !important;
+}
+
+/* ---------- About + visit ---------- */
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 36px;
+  align-items: start;
+}
+
+.prose {
+  margin: 18px 0 0;
+  color: var(--ink-2);
+  font-size: 16.5px;
+  white-space: pre-line;
+}
+
+.visitCard {
+  display: grid;
+  gap: 16px;
+}
+
+.visitRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.visitRow svg {
+  flex: none;
+  margin-top: 5px;
+  color: var(--brand-600);
+}
+
+.visitLabel {
+  color: var(--ink-3);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 /* ---------- Fees ---------- */
 .tableWrap {
-  margin-top: 24px;
+  margin-top: 32px;
+  overflow: hidden;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-sm);
+}
+
+.tscroll {
   overflow-x: auto;
 }
 
 .table {
   width: 100%;
+  min-width: 480px;
   border-collapse: collapse;
 }
 
 .table th,
 .table td {
-  text-align: start;
-  padding: 14px 18px;
+  padding: 15px 20px;
   font-size: 15px;
+  text-align: start;
 }
 
 .table thead th {
-  background: var(--brand-50);
   color: var(--brand-900);
-  font-weight: 700;
+  background: var(--brand-50);
   border-bottom: 1px solid var(--brand-100);
+  font-size: 13.5px;
+  font-weight: 700;
 }
 
 .table tbody tr + tr {
   border-top: 1px solid var(--line);
 }
 
-.feeAmount {
-  font-weight: 700;
+.table tbody tr:hover {
+  background: var(--paper);
+}
+
+.tabular {
+  font-family: var(--font-en), system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
   white-space: nowrap;
 }
 
-/* ---------- Process + documents ---------- */
-.split {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 32px;
+.feeNote {
+  padding: 14px 20px;
+  color: var(--gold-700);
+  background: var(--gold-50);
+  border-top: 1px solid #f4e2bc;
+  font-size: 14px;
+  font-weight: 600;
 }
 
-.prose {
-  margin: 20px 0 0;
-  white-space: pre-line;
+/* ---------- Process, documents, timings ---------- */
+.stepList {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stepCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+.stepCard .stepN {
+  margin: 0;
+}
+
+.stepText {
+  padding-top: 6px;
+  color: var(--ink) !important;
+  font-weight: 600;
+}
+
+.subTitle {
+  margin-top: 36px !important;
+  font-size: 21px;
+}
+
+.docList {
+  display: grid;
+  gap: 11px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.docList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
   color: var(--ink-2);
-  font-size: 16px;
+  font-size: 15.5px;
+}
+
+.docList svg {
+  flex: none;
+  margin-top: 6px;
+  color: var(--brand-500);
+}
+
+.timingsCard {
+  margin-top: 24px;
+}
+
+.timingRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 12px;
+  padding-block: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.timingRow:first-of-type {
+  border-top: 0;
+}
+
+.timingLabel {
+  font-weight: 700;
+}
+
+.timingValue {
+  color: var(--ink-2);
 }
 
 .askCard {
@@ -191,38 +292,18 @@
   border-color: var(--brand-100);
 }
 
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 44px;
-  margin-top: 14px;
-  padding: 0 20px;
-  border: 0;
-  border-radius: var(--r-pill);
-  background: var(--brand-700);
-  color: #fff !important;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.button:hover {
-  background: var(--brand-900);
-}
-
 /* ---------- FAQ ---------- */
 .faq {
-  margin-top: 20px;
   display: grid;
   gap: 10px;
+  margin-top: 26px;
 }
 
 .faqItem {
+  overflow: hidden;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: var(--r-md);
-  overflow: hidden;
 }
 
 .faqItem[open] {
@@ -231,14 +312,15 @@
 }
 
 .faqQuestion {
-  list-style: none;
-  cursor: pointer;
-  min-height: 44px;
-  padding: 14px 18px;
-  font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  min-height: 44px;
+  padding: 16px 20px;
+  font-weight: 700;
+  font-size: 16px;
+  list-style: none;
+  cursor: pointer;
 }
 
 .faqQuestion::-webkit-details-marker {
@@ -246,10 +328,10 @@
 }
 
 .plus {
-  margin-inline-start: auto;
   flex: none;
+  margin-inline-start: auto;
   color: var(--brand-600);
-  transition: transform 0.2s;
+  transition: transform 0.2s ease;
 }
 
 .faqItem[open] .plus {
@@ -258,62 +340,29 @@
 
 .faqAnswer {
   margin: 0;
-  padding: 0 18px 16px;
+  padding: 0 20px 18px;
   color: var(--ink-2);
+  font-size: 15px;
   white-space: pre-line;
-}
-
-/* ---------- Text chat ---------- */
-.chatForm {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.chatInput {
-  flex: 1;
-  min-width: 10rem;
-  min-height: 48px;
-  padding: 0 14px;
-  font: inherit;
-  font-size: 16px;
-  color: var(--ink);
-  background: #fff;
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-}
-
-.chatInput:focus {
-  outline: 2px solid var(--brand-500);
-  outline-offset: 1px;
-}
-
-.chatResult {
-  margin-top: 14px;
-}
-
-.handoff {
-  color: var(--danger);
 }
 
 /* ---------- Empty and unavailable states ---------- */
 .state {
-  margin-top: 20px;
   display: flex;
-  gap: 14px;
   align-items: flex-start;
+  gap: 14px;
+  margin-top: 24px;
+  padding: 20px;
+  color: var(--ink-2);
   background: #fff;
   border: 1px dashed var(--line-strong);
   border-radius: var(--r-lg);
-  padding: 20px;
-  color: var(--ink-2);
 }
 
 .state svg {
   flex: none;
-  color: var(--brand-600);
   margin-top: 4px;
+  color: var(--brand-600);
 }
 
 .state p {
@@ -321,27 +370,41 @@
 }
 
 .stateUnavailable {
+  background: #fdf1f0;
   border-style: solid;
   border-color: #f1c9c5;
-  background: #fdf1f0;
 }
 
 .stateUnavailable svg {
   color: var(--danger);
 }
 
-@media (min-width: 700px) {
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
+@media (min-width: 640px) {
+  .grid3,
+  .grid4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (min-width: 1180px) {
-  .gridThree {
-    grid-template-columns: repeat(3, 1fr);
+@media (min-width: 980px) {
+  .section {
+    padding-block: 84px;
+  }
+  .grid3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .grid4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .split {
     grid-template-columns: 1fr 1fr;
-    gap: 40px;
+    gap: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .plus {
+    transition: none;
   }
 }

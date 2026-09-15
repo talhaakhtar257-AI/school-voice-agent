@@ -1,0 +1,382 @@
+/*
+  Hero, green agent card and the figures strip, ported from the design.
+  Tokens come from .page in landing.module.css.
+*/
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding-block: 32px 56px;
+  scroll-margin-top: 90px;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset-inline-end: -18%;
+  top: -32%;
+  width: 760px;
+  height: 760px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(18, 166, 123, 0.17), rgba(18, 166, 123, 0) 62%);
+  pointer-events: none;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: -12%;
+  bottom: -38%;
+  width: 560px;
+  height: 560px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(233, 185, 73, 0.2), rgba(233, 185, 73, 0) 62%);
+  pointer-events: none;
+}
+
+.heroGrid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 36px;
+  align-items: center;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  color: var(--brand-700);
+  background: var(--brand-50);
+  border: 1px solid var(--brand-100);
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+[lang="ur"] .eyebrow {
+  padding-block: 2px;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.eyebrow i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand-500);
+}
+
+.heroTitle {
+  margin-top: 18px !important;
+  font-size: clamp(32px, 5.2vw, 56px);
+  line-height: 1.08;
+}
+
+[lang="ur"] .heroTitle {
+  font-size: clamp(26px, 4.4vw, 46px);
+  line-height: 1.75;
+}
+
+.heroLead {
+  max-width: 54ch;
+  margin: 16px 0 0;
+  color: var(--ink-2);
+  font-size: clamp(16.5px, 1.5vw, 19px);
+}
+
+.heroActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 15px;
+  color: var(--ink-2);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  box-shadow: var(--shadow-sm);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+[lang="ur"] .chip {
+  padding-block: 3px;
+  font-size: 14.5px;
+}
+
+.chip svg {
+  flex: none;
+  color: var(--brand-500);
+}
+
+/* ---------- Agent card ---------- */
+.agentCard {
+  position: relative;
+  overflow: hidden;
+  padding: 26px 22px 24px;
+  color: #fff;
+  background: linear-gradient(168deg, var(--brand-900), var(--brand-700) 58%, #12604d);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+.agentCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 78% 6%, rgba(233, 185, 73, 0.24), transparent 46%);
+  pointer-events: none;
+}
+
+.agentCard > * {
+  position: relative;
+  z-index: 1;
+}
+
+.acTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.liveDot {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 13px;
+  background: rgba(255, 255, 255, 0.13);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--r-pill);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.liveDot i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ae3a8;
+  box-shadow: 0 0 0 0 rgba(74, 227, 168, 0.75);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  70% { box-shadow: 0 0 0 9px rgba(74, 227, 168, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(74, 227, 168, 0); }
+}
+
+.acLang {
+  font-size: 12.5px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.orbWrap {
+  display: grid;
+  place-items: center;
+  padding: 6px 0 18px;
+}
+
+.orb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 116px;
+  height: 116px;
+  color: #fff;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #7bf0c8, var(--brand-500) 52%, #0c7a5c);
+  box-shadow: 0 14px 42px rgba(18, 166, 123, 0.42);
+}
+
+.orb svg {
+  width: 44px;
+  height: 44px;
+}
+
+.orb::before,
+.orb::after {
+  content: "";
+  position: absolute;
+  inset: -16px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(123, 240, 200, 0.45);
+  animation: ring 2.8s ease-out infinite;
+}
+
+.orb::after {
+  animation-delay: 1.4s;
+}
+
+@keyframes ring {
+  0% { transform: scale(0.88); opacity: 0.85; }
+  100% { transform: scale(1.38); opacity: 0; }
+}
+
+.wave {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: 26px;
+  margin-top: 2px;
+}
+
+.wave span {
+  width: 4px;
+  height: 8px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.55);
+  animation: bar 1.1s ease-in-out infinite;
+}
+
+.wave span:nth-child(2) { animation-delay: 0.12s; }
+.wave span:nth-child(3) { animation-delay: 0.24s; }
+.wave span:nth-child(4) { animation-delay: 0.36s; }
+.wave span:nth-child(5) { animation-delay: 0.48s; }
+.wave span:nth-child(6) { animation-delay: 0.6s; }
+.wave span:nth-child(7) { animation-delay: 0.72s; }
+
+@keyframes bar {
+  0%, 100% { height: 7px; opacity: 0.5; }
+  50% { height: 24px; opacity: 1; }
+}
+
+.acQuote {
+  margin: 8px 0 22px;
+  font-size: 15.5px;
+  line-height: 1.55;
+  text-align: center;
+  opacity: 0.95;
+}
+
+[lang="ur"] .acQuote {
+  line-height: 2.1;
+}
+
+.acButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 56px;
+  color: var(--brand-900);
+  background: #fff;
+  border: 0;
+  border-radius: var(--r-pill);
+  font-weight: 800;
+  font-size: 16.5px;
+}
+
+.acButton:hover {
+  background: var(--gold-50);
+}
+
+.acNote {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  text-align: center;
+  opacity: 0.75;
+}
+
+.acNotices {
+  display: grid;
+  gap: 5px;
+  margin: 16px 0 0;
+  padding: 14px 0 0;
+  list-style: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 12.5px;
+  opacity: 0.85;
+}
+
+[lang="ur"] .acNotices,
+[lang="ur"] .acNote {
+  font-size: 13.5px;
+}
+
+/* ---------- Figures strip ---------- */
+.stats {
+  padding-block: 36px;
+  color: #fff;
+  background: var(--brand-900);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 24px 18px;
+  text-align: center;
+}
+
+.statValue {
+  font-family: var(--font-en), system-ui, sans-serif;
+  font-size: clamp(26px, 3.2vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.statLabel {
+  margin-top: 2px;
+  font-size: 13.5px;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+[lang="ur"] .statLabel {
+  font-size: 14.5px;
+}
+
+@media (min-width: 560px) {
+  .heroActions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+@media (min-width: 980px) {
+  .hero {
+    padding-block: 64px 88px;
+  }
+  .heroGrid {
+    grid-template-columns: 1.08fr 0.92fr;
+    gap: 56px;
+  }
+  .agentCard {
+    padding: 34px 30px 30px;
+  }
+  .orb {
+    width: 132px;
+    height: 132px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb::before,
+  .orb::after,
+  .wave span,
+  .liveDot i {
+    animation: none;
+  }
+}

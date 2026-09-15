@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { listHistory } from "@/lib/content/queries";
+import { orNull } from "@/lib/dashboard/overview";
+import { formatDateTime } from "@/lib/dashboard/format";
+import { readLang } from "@/lib/language-server";
 import { contentAdminStrings as s } from "@/lib/strings/content-admin";
+import { dashboardStrings } from "@/lib/strings/dashboard";
+import { EmptyState } from "@/components/dashboard/empty-state";
+import ui from "@/components/dashboard/ui.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -12,85 +18,53 @@ export default async function ContentHistoryPage({
 }) {
   const { page: pageParam } = await searchParams;
   const page = Math.max(0, Math.floor(Number(pageParam ?? 0)) || 0);
-
-  let data: Awaited<ReturnType<typeof listHistory>>;
-  try {
-    data = await listHistory(page);
-  } catch {
-    return (
-      <p dir="auto" role="alert" style={{ color: "var(--failure-border)" }}>
-        {s.loadError.en}
-        <br />
-        {s.loadError.ur}
-      </p>
-    );
-  }
+  const lang = await readLang();
+  const data = await orNull("content-history", listHistory(page));
 
   return (
-    <div dir="auto" style={{ maxWidth: "44rem", margin: "0 auto" }}>
-      <h2>
-        {s.historyTitle.en} · {s.historyTitle.ur}
-      </h2>
-
-      {data.rows.length === 0 ? (
-        <p style={{ color: "var(--text-secondary)" }}>
-          {s.historyEmpty.en}
-          <br />
-          {s.historyEmpty.ur}
-        </p>
-      ) : (
-        <ul
-          style={{
-            listStyle: "none",
-            padding: 0,
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.75rem",
-          }}
-        >
-          {data.rows.map((r) => (
-            <li
-              key={r.id}
-              style={{
-                border: "1px solid rgba(128,128,128,0.3)",
-                borderRadius: "0.5rem",
-                padding: "0.75rem",
-              }}
-            >
-              <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-                {new Date(r.published_at).toLocaleString()} —{" "}
-                {r.published_by_email ?? "unknown"}
-              </div>
-              <ul
-                style={{
-                  margin: "0.4rem 0 0.5rem",
-                  paddingInlineStart: "1.2rem",
-                  fontSize: "0.9rem",
-                }}
-              >
-                {r.change_summary.map((line, i) => (
-                  <li key={i}>{line}</li>
-                ))}
-              </ul>
-              <Link
-                href={`/dashboard/content/history/${r.id}`}
-                style={{ fontSize: "0.85rem" }}
-              >
-                See what the content said before this publish
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div style={{ display: "flex", gap: "1.5rem", marginTop: "1rem" }}>
-        {page > 0 && (
-          <Link href={`/dashboard/content/history?page=${page - 1}`}>← Newer</Link>
-        )}
-        {data.hasMore && (
-          <Link href={`/dashboard/content/history?page=${page + 1}`}>Older →</Link>
-        )}
+    <section className={ui.card}>
+      <div className={ui.cardHead}>
+        <h2 className={ui.cardTitle}>{s.historyTitle[lang]}</h2>
       </div>
-    </div>
+
+      {data === null ? (
+        <EmptyState tone="error" title={dashboardStrings.loadErrorTitle[lang]} body={s.loadError[lang]} />
+      ) : data.rows.length === 0 ? (
+        <EmptyState title={s.historyTitle[lang]} body={s.historyEmpty[lang]} />
+      ) : (
+        <div className={ui.cardBody}>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            {data.rows.map((r) => (
+              <li key={r.id} style={{ border: "1px solid var(--line)", borderRadius: "14px", padding: "0.85rem 1rem" }}>
+                <div className={ui.sub}>
+                  <span className={ui.num}>{formatDateTime(r.published_at, lang)}</span> — <bdi>{r.published_by_email ?? "unknown"}</bdi>
+                </div>
+                <ul dir="auto" style={{ margin: "0.4rem 0 0.5rem", paddingInlineStart: "1.2rem", fontSize: "0.9rem" }}>
+                  {r.change_summary.map((line, i) => (
+                    <li key={i}>{line}</li>
+                  ))}
+                </ul>
+                <Link href={`/dashboard/content/history/${r.id}`} className={`${ui.btn} ${ui.btnGhost} ${ui.btnSmall}`}>
+                  See what the content said before this publish
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
+            {page > 0 && (
+              <Link href={`/dashboard/content/history?page=${page - 1}`} className={`${ui.btn} ${ui.btnGhost} ${ui.btnSmall}`}>
+                ← Newer
+              </Link>
+            )}
+            {data.hasMore && (
+              <Link href={`/dashboard/content/history?page=${page + 1}`} className={`${ui.btn} ${ui.btnGhost} ${ui.btnSmall}`}>
+                Older →
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

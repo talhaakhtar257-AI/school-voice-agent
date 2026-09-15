@@ -1,6 +1,6 @@
 import { setLanguage } from "@/app/actions/language";
 import type { Lang } from "@/lib/language";
-import { sectionStrings as s } from "@/lib/strings/landing-sections";
+import { heroStrings as s } from "@/lib/strings/landing-hero";
 import styles from "./landing.module.css";
 
 /**

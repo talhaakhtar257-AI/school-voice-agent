@@ -1,9 +1,8 @@
 /*
-  Page frame for the public landing page: tokens, header, the two-column grid
-  with the sticky talk card, footer, and the phone floating button.
-  Colours are set explicitly on .page so the app's dark-mode globals never
-  leak into this page. Logical properties (inline-start/end) make the whole
-  layout mirror automatically in Urdu.
+  Page frame for the public landing page, ported from the design: tokens,
+  announcement bar, header, buttons, footer, floating talk card and the phone
+  Talk button. Colours are set explicitly on .page so the app's dark-mode
+  globals never leak in. Logical properties mirror everything in Urdu.
 */
 
 .page {
@@ -14,6 +13,7 @@
   --brand-100: #cdebe0;
   --brand-50: #e9f6f1;
   --gold-700: #a86e00;
+  --gold-600: #c98500;
   --gold-400: #e9b949;
   --gold-50: #fdf4e1;
   --paper: #fbf9f5;
@@ -27,24 +27,43 @@
   --r-sm: 10px;
   --r-md: 16px;
   --r-lg: 24px;
+  --r-xl: 32px;
   --r-pill: 999px;
   --shadow-sm: 0 1px 2px rgba(16, 32, 27, 0.06), 0 1px 3px rgba(16, 32, 27, 0.05);
+  --shadow-md: 0 4px 12px rgba(16, 32, 27, 0.07), 0 12px 28px rgba(16, 32, 27, 0.06);
   --shadow-lg: 0 18px 48px rgba(11, 63, 51, 0.16);
   --header-h: 72px;
 
   min-height: 100vh;
-  background: var(--paper);
   color: var(--ink);
+  background: var(--paper);
   font-family: var(--font-en), system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 16px;
   line-height: 1.6;
-  /* clip, not hidden: hidden would create a scroll box and break sticky */
+  color-scheme: light;
+  -webkit-font-smoothing: antialiased;
+  /* clip, not hidden: hidden would make a scroll box and break the sticky header */
   overflow-x: clip;
 }
 
 .page[lang="ur"] {
   font-family: var(--font-ur), "Jameel Noori Nastaleeq", var(--font-en), serif;
-  line-height: 2.1;
+  line-height: 2.15;
+}
+
+.page h1,
+.page h2,
+.page h3 {
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.page[lang="ur"] h1,
+.page[lang="ur"] h2,
+.page[lang="ur"] h3 {
+  letter-spacing: 0;
+  line-height: 1.8;
 }
 
 .page a {
@@ -63,9 +82,64 @@
 }
 
 .wrap {
-  max-width: 1200px;
+  max-width: 1160px;
   margin: 0 auto;
   padding-inline: 16px;
+}
+
+/* ---------- Announcement bar + sample ribbon ---------- */
+.announce {
+  color: #fff;
+  background: var(--brand-900);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.announceInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px 22px;
+  min-height: 40px;
+  padding-block: 6px;
+  text-align: center;
+}
+
+.announceItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.dotOpen {
+  background: #4ae3a8;
+  box-shadow: 0 0 0 3px rgba(74, 227, 168, 0.25);
+}
+
+.dotClosed {
+  background: var(--gold-400);
+}
+
+.dotInfo {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.ribbon {
+  padding: 8px 16px;
+  color: var(--gold-700);
+  background: var(--gold-50);
+  border-bottom: 1px solid #f0ddb4;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: center;
 }
 
 /* ---------- Header ---------- */
@@ -73,8 +147,8 @@
   position: sticky;
   top: 0;
   z-index: 60;
-  background: rgba(251, 249, 245, 0.94);
-  backdrop-filter: blur(12px);
+  background: rgba(251, 249, 245, 0.92);
+  backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line);
 }
 
@@ -90,17 +164,30 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
+  min-width: 0;
   min-height: 44px;
-  text-decoration: none;
   margin-inline-end: auto;
+  text-decoration: none;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
 }
 
 .brandName {
   font-weight: 800;
-  font-size: 16px;
-  line-height: 1.3;
+  font-size: 16.5px;
+  line-height: 1.25;
+}
+
+.brandSub {
+  color: var(--ink-3);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 .navLinks {
@@ -109,36 +196,36 @@
 }
 
 .navLinks a {
-  text-decoration: none;
+  padding: 10px 12px;
   color: var(--ink-2);
   font-weight: 600;
   font-size: 15px;
-  padding: 10px 12px;
+  text-decoration: none;
   border-radius: var(--r-sm);
 }
 
 .navLinks a:hover {
-  background: #fff;
   color: var(--ink);
+  background: #fff;
 }
 
 .langSwitch {
   display: inline-flex;
+  gap: 2px;
+  margin: 0;
+  padding: 3px;
   background: #fff;
   border: 1px solid var(--line-strong);
   border-radius: var(--r-pill);
-  padding: 3px;
-  gap: 2px;
-  margin: 0;
 }
 
 .langButton {
-  border: 0;
-  background: transparent;
-  color: var(--ink-2);
-  min-height: 44px;
   min-width: 56px;
+  min-height: 44px;
   padding: 0 14px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 0;
   border-radius: var(--r-pill);
   font-size: 14px;
   font-weight: 700;
@@ -146,8 +233,8 @@
 }
 
 .langButton[aria-pressed="true"] {
-  background: var(--brand-700);
   color: #fff;
+  background: var(--brand-700);
 }
 
 .langUrdu {
@@ -155,74 +242,197 @@
   font-size: 15px;
 }
 
-.phone {
-  display: flex;
+.announcePhone {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  font-size: 14px;
-  color: var(--ink-2);
+  gap: 7px;
+  min-height: 44px;
+  color: #fff !important;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.announcePhone:hover {
+  color: var(--gold-400) !important;
 }
 
 .phoneLink {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding-inline: 8px;
+  padding-inline: 6px;
+  color: var(--brand-700) !important;
   font-weight: 800;
   font-size: 16px;
-  color: var(--brand-700) !important;
   text-decoration: none;
   direction: ltr;
 }
 
-/* ---------- Grid with the sticky talk card ---------- */
-.layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
-  padding-block: 20px 48px;
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 0 22px;
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  font-weight: 700;
+  font-size: 15px;
+  text-decoration: none;
+  transition: transform 0.12s ease, background 0.16s ease;
 }
 
-.aside {
-  scroll-margin-top: calc(var(--header-h) + 60px);
+.btn:active {
+  transform: translateY(1px);
 }
 
-.main {
-  min-width: 0;
+.btnPrimary {
+  color: #fff !important;
+  background: var(--brand-700);
+  box-shadow: 0 6px 18px rgba(15, 92, 74, 0.28);
+}
+
+.btnPrimary:hover {
+  background: var(--brand-900);
+}
+
+.btnGhost {
+  color: var(--ink) !important;
+  background: #fff;
+  border-color: var(--line-strong);
+}
+
+.btnGhost:hover {
+  color: var(--brand-700) !important;
+  border-color: var(--brand-600);
+}
+
+.btnSm {
+  min-height: 44px;
+  padding: 0 18px;
+  font-size: 14px;
+}
+
+.btnCall {
+  min-height: 58px;
+  padding: 0 28px;
+  font-size: 17px;
+}
+
+/* Declared after .btn so the phone-only hiding wins. */
+.headerCall {
+  display: none;
 }
 
 /* ---------- Footer ---------- */
 .footer {
+  padding-block: 52px 104px;
+  color: rgba(255, 255, 255, 0.78);
   background: #083027;
-  color: rgba(255, 255, 255, 0.8);
-  padding-block: 44px 96px;
-  font-size: 15px;
+  font-size: 14.5px;
 }
 
 .footGrid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 28px;
 }
 
-.footer h2 {
+.footTitle {
+  margin: 0 0 12px !important;
   color: #fff;
-  font-size: 16px;
-  margin: 0 0 10px;
+  font-size: 15.5px !important;
+  font-weight: 700 !important;
 }
 
 .footer p {
-  margin: 0;
+  margin: 0 0 8px;
 }
 
 .footer .phoneLink {
-  color: #fff !important;
   padding-inline: 0;
+  color: #fff !important;
 }
 
-/* ---------- Floating Talk button (phones only) ---------- */
+.footBottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 16px;
+  margin-top: 36px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 13px;
+}
+
+.footBottom a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: none;
+}
+
+.footBottom a:hover {
+  color: #fff;
+}
+
+/* ---------- Floating talk card (wide screens) + phone Talk button ---------- */
+.floating {
+  display: none;
+}
+
+.floatingOrb {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  color: #fff;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #7bf0c8, var(--brand-500) 52%, #0c7a5c);
+  box-shadow: 0 8px 22px rgba(18, 166, 123, 0.4);
+}
+
+.floatingTitle {
+  display: none;
+  margin: 0;
+  font-weight: 800;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.floatingButton {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 8px;
+  color: var(--brand-900);
+  background: #fff;
+  border: 0;
+  border-radius: var(--r-pill);
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.floatingButton:hover {
+  background: var(--gold-50);
+}
+
+.floatingLong,
+.floatingPhone {
+  display: none;
+}
+
+.floatingPhone {
+  align-items: center;
+  min-height: 44px;
+  color: #fff !important;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
 .fab {
   position: fixed;
   inset-inline-end: 16px;
@@ -230,24 +440,29 @@
   z-index: 90;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-height: 52px;
+  gap: 9px;
+  min-height: 54px;
   padding: 0 22px;
+  color: #fff;
   background: var(--brand-700);
-  color: #fff !important;
+  border: 0;
   border-radius: var(--r-pill);
   font-weight: 800;
-  text-decoration: none;
+  font-size: 15.5px;
   box-shadow: var(--shadow-lg);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-/* ---------- Wider screens ---------- */
+.fabHidden {
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+}
+
 @media (min-width: 700px) {
-  .phone {
-    width: auto;
-  }
   .footGrid {
-    grid-template-columns: 1.4fr 1fr 1fr;
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 40px;
   }
 }
 
@@ -255,20 +470,69 @@
   .navLinks {
     display: flex;
   }
-  .layout {
-    grid-template-columns: 360px minmax(0, 1fr);
-    gap: 40px;
-    align-items: start;
-  }
-  /* Sticks while scrolling; the grid ends before the footer, so it stops there. */
-  .aside {
-    position: sticky;
-    top: calc(var(--header-h) + 16px);
+  .headerCall {
+    display: inline-flex;
   }
   .fab {
     display: none;
   }
   .footer {
-    padding-block: 52px 36px;
+    padding-block: 56px 32px;
+  }
+  /* Compact floating card: sits in the page margin without covering content. */
+  .floating {
+    position: fixed;
+    top: 50%;
+    inset-inline-start: 12px;
+    z-index: 70;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 88px;
+    padding: 14px 10px;
+    color: #fff;
+    text-align: center;
+    background: linear-gradient(168deg, var(--brand-900), var(--brand-700));
+    border-radius: 24px;
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-40%);
+    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+  }
+  .floatingVisible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-50%);
+  }
+}
+
+/* Wide enough for the full card beside the 1160px content column. */
+@media (min-width: 1500px) {
+  .floating {
+    inset-inline-start: 24px;
+    width: 210px;
+    padding: 18px 16px;
+  }
+  .floatingTitle {
+    display: block;
+  }
+  .floatingLong {
+    display: inline;
+  }
+  .floatingShort {
+    display: none;
+  }
+  .floatingPhone {
+    display: inline-flex;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .fab,
+  .floating {
+    transition: none;
   }
 }

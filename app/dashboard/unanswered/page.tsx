@@ -1,76 +1,66 @@
+import Link from "next/link";
 import { listUnansweredQuestions } from "@/lib/unanswered/list";
+import { orNull } from "@/lib/dashboard/overview";
+import { formatDate } from "@/lib/dashboard/format";
+import { readLang } from "@/lib/language-server";
 import { unansweredAdminStrings as s } from "@/lib/strings/unanswered-admin";
+import { dashboardStrings } from "@/lib/strings/dashboard";
+import { screenStrings as d } from "@/lib/strings/dashboard-screens";
+import { EmptyState } from "@/components/dashboard/empty-state";
+import { LanguageTag } from "@/components/dashboard/status-tag";
+import ui from "@/components/dashboard/ui.module.css";
 
 export const dynamic = "force-dynamic";
 
-/** Staff see every unanswered question, most-asked first (User Story 2, FR-007). */
-export default async function UnansweredQuestionsPage() {
-  let rows;
-  try {
-    rows = await listUnansweredQuestions();
-  } catch {
-    return (
-      <div dir="auto" style={{ textAlign: "center", padding: "3rem 1rem" }}>
-        <p role="alert" style={{ color: "var(--failure-border)", fontWeight: 600 }}>
-          {s.errorTitle.en} · {s.errorTitle.ur}
-        </p>
-        <p style={{ color: "var(--text-secondary)" }}>{s.errorBody.en}</p>
-        <p style={{ color: "var(--text-secondary)" }}>{s.errorBody.ur}</p>
-      </div>
-    );
-  }
+/**
+ * The gap list: every question the agent could not answer, most asked first
+ * (006 FR-007, 004 FR-019). Each row links to the FAQ section of the content
+ * editor, where the missing answer is added and published (004 FR-020).
+ */
+export default async function GapListPage() {
+  const lang = await readLang();
+  const rows = await orNull("gaps", listUnansweredQuestions());
 
   return (
-    <div dir="auto">
-      <h2 style={{ margin: "0 0 1rem" }}>
-        {s.title.en} · {s.title.ur}
-      </h2>
-
-      {rows.length === 0 ? (
-        <div
-          style={{ textAlign: "center", padding: "3rem 1rem", color: "var(--text-secondary)" }}
-        >
-          <p style={{ fontWeight: 600, fontSize: "1.1rem", margin: 0 }}>
-            {s.emptyTitle.en} · {s.emptyTitle.ur}
-          </p>
-          <p style={{ margin: "0.5rem 0 0" }}>{s.emptyBody.en}</p>
-          <p style={{ margin: 0 }}>{s.emptyBody.ur}</p>
+    <section className={ui.card}>
+      <div className={ui.cardHead}>
+        <div>
+          <h2 className={ui.cardTitle}>{dashboardStrings.navGaps[lang]}</h2>
+          <div className={ui.sub}>{d.gapsSub[lang]}</div>
         </div>
+      </div>
+
+      {rows === null ? (
+        <EmptyState tone="error" title={s.errorTitle[lang]} body={s.errorBody[lang]} />
+      ) : rows.length === 0 ? (
+        <EmptyState title={s.emptyTitle[lang]} body={s.emptyBody[lang]} />
       ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.9rem" }}>
+        <div className={ui.tscroll}>
+          <table className={ui.table}>
             <thead>
-              <tr style={{ textAlign: "start", borderBottom: "2px solid rgba(128,128,128,0.3)" }}>
-                <th style={{ padding: "0.5rem 0.75rem" }}>
-                  {s.question.en} · {s.question.ur}
-                </th>
-                <th style={{ padding: "0.5rem 0.75rem", whiteSpace: "nowrap" }}>
-                  {s.timesAsked.en} · {s.timesAsked.ur}
-                </th>
-                <th style={{ padding: "0.5rem 0.75rem" }}>
-                  {s.language.en} · {s.language.ur}
-                </th>
-                <th style={{ padding: "0.5rem 0.75rem", whiteSpace: "nowrap" }}>
-                  {s.lastAsked.en} · {s.lastAsked.ur}
+              <tr>
+                <th scope="col">{s.question[lang]}</th>
+                <th scope="col">{s.timesAsked[lang]}</th>
+                <th scope="col">{s.language[lang]}</th>
+                <th scope="col">{s.lastAsked[lang]}</th>
+                <th scope="col">
+                  <span style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
+                    {d.addAnswer[lang]}
+                  </span>
                 </th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} style={{ borderBottom: "1px solid rgba(128,128,128,0.2)" }}>
-                  <td dir="auto" style={{ padding: "0.5rem 0.75rem" }}>
-                    {r.question_text}
-                  </td>
-                  <td style={{ padding: "0.5rem 0.75rem", fontWeight: 600 }}>{r.times_asked}</td>
-                  <td style={{ padding: "0.5rem 0.75rem" }}>
-                    {r.language === "ur"
-                      ? s.urdu.en
-                      : r.language === "en"
-                        ? s.english.en
-                        : s.notGiven.en}
-                  </td>
-                  <td style={{ padding: "0.5rem 0.75rem", whiteSpace: "nowrap" }}>
-                    {new Date(r.updated_at).toLocaleDateString()}
+              {rows.map((row) => (
+                <tr key={row.id}>
+                  <td dir="auto"><b>{row.question_text}</b></td>
+                  <td className={ui.num}><b>{row.times_asked}</b></td>
+                  <td><LanguageTag language={row.language} lang={lang} /></td>
+                  <td className={ui.num} style={{ whiteSpace: "nowrap" }}>{formatDate(row.updated_at, lang)}</td>
+                  <td>
+                    <Link href="/dashboard/content#faqs" className={`${ui.btn} ${ui.btnGhost} ${ui.btnSmall}`}>
+                      {d.addAnswer[lang]}
+                    </Link>
                   </td>
                 </tr>
               ))}
@@ -78,6 +68,6 @@ export default async function UnansweredQuestionsPage() {
           </table>
         </div>
       )}
-    </div>
+    </section>
   );
 }

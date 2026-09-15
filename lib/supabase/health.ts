@@ -24,12 +24,15 @@ export function createSupabaseClient() {
  * function. This is the one place in the codebase where discarding an error is
  * the correct behaviour rather than a mistake.
  *
- * The REST root is probed rather than a table, because this feature creates no
- * tables and FR-009 requires success against an empty database.
+ * Supabase's own health endpoint is probed rather than a table, because FR-009
+ * requires success against an empty database. It must be called with the key,
+ * so a 200 also proves the URL and key are correct. The REST root (/rest/v1/)
+ * was used before, but Supabase now refuses it with 401 for the anonymous key,
+ * which made a healthy project report "cannot reach its database".
  */
 export async function isDatabaseReachable(): Promise<boolean> {
   try {
-    const response = await fetch(`${getSupabaseUrl()}/rest/v1/`, {
+    const response = await fetch(`${getSupabaseUrl()}/auth/v1/health`, {
       headers: {
         apikey: getSupabaseAnonKey(),
         Authorization: `Bearer ${getSupabaseAnonKey()}`,

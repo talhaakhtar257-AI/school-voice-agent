@@ -26,7 +26,26 @@ function methodNotAllowed() {
   return NextResponse.json({ error: "method not allowed" }, { status: 405 });
 }
 
+/**
+ * Only this website's own page may start a call. Every reservation spends part
+ * of the monthly minute budget, so another site — or a script that does not
+ * present itself as this page — must not be able to use it up and lock real
+ * parents out. Browsers send Sec-Fetch-Site on every fetch; Origin is the
+ * fallback for older ones. A determined script can still fake both headers,
+ * so a rate-limit rule at the hosting firewall remains the outer defence.
+ */
+function isFromThisSite(request: NextRequest): boolean {
+  const fetchSite = request.headers.get("sec-fetch-site");
+  if (fetchSite) return fetchSite === "same-origin";
+  const origin = request.headers.get("origin");
+  return origin !== null && origin === request.nextUrl.origin;
+}
+
 export async function POST(request: NextRequest) {
+  if (!isFromThisSite(request)) {
+    return NextResponse.json({ reason: "forbidden" }, { status: 403 });
+  }
+
   const visitorId = getVisitorId(request);
 
   function respond(body: { ok: true; maxCallSeconds: number } | { reason: string }) {
