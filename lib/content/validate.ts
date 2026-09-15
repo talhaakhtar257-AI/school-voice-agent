@@ -79,6 +79,47 @@ export function checkPublishReadiness(doc: ContentDoc): Problem[] {
     bilingual(`Escalation topic ${i + 1} / Hand-off wording`, t.handoffWording);
   });
 
+  // --- Website extras: fees, timings, figures, profile, programs ---
+  for (const c of doc.facts.classes) {
+    const admissionFee = doc.facts.admissionFeePerClass[c];
+    if (admissionFee === undefined || admissionFee <= 0) {
+      warn(`Facts / Admission fee for ${c || "(unnamed class)"}`, "No one-time admission fee entered.");
+    }
+  }
+  if (doc.facts.schoolTimings.length === 0) {
+    warn("Facts / School timings", "No school timings entered.");
+  }
+  doc.facts.schoolTimings.forEach((t, i) => {
+    if (blank(t.days) || blank(t.starts) || blank(t.ends)) {
+      block(`Facts / School timing ${i + 1}`, "Fill the days and both times.");
+    } else if (t.starts >= t.ends) {
+      block(`Facts / School timing ${i + 1}`, "Start time is not before end time.");
+    }
+    bilingual(`Facts / School timing ${i + 1} / Label`, t.label);
+  });
+  const { studentsEnrolled, teachers, foundedYear } = doc.facts.stats;
+  if (studentsEnrolled === null && teachers === null && foundedYear === null) {
+    warn("School profile / Figures", "No figures entered — the website hides the figures strip.");
+  }
+  if (foundedYear !== null && foundedYear > new Date().getFullYear()) {
+    block("School profile / Founded year", "The founded year is in the future.");
+  }
+  // A profile field may be left out entirely, but never translated only halfway.
+  const halfTranslated = (path: string, v: { en: string; ur: string }) => {
+    if (blank(v.en) && blank(v.ur)) warn(path, "Empty — this part is hidden on the website.");
+    else bilingual(path, v);
+  };
+  halfTranslated("School profile / Tagline", doc.profile.tagline);
+  halfTranslated("School profile / About", doc.profile.about);
+  halfTranslated("School profile / Address", doc.profile.address);
+  doc.programs
+    .filter((p) => p.archivedAt === null)
+    .forEach((p, i) => {
+      bilingual(`Program ${i + 1} / Title`, p.title);
+      bilingual(`Program ${i + 1} / Description`, p.description);
+      if (p.classes.length === 0) warn(`Program ${i + 1}`, "No classes ticked — the age tag is hidden.");
+    });
+
   // --- Escalation minimum (FR-005) — warnings only ---
   const escText = activeEsc.map((t) => t.topic.en.toLowerCase()).join(" | ");
   if (!escText.includes("discount")) {

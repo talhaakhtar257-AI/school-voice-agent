@@ -10,6 +10,8 @@ export const contentAdminStrings = {
   policiesTitle: { en: "Policies", ur: "پالیسیاں" },
   faqsTitle: { en: "FAQs", ur: "عمومی سوالات" },
   escalationTitle: { en: "Escalation topics", ur: "انسان کو منتقل کیے جانے والے موضوعات" },
+  profileTitle: { en: "School profile", ur: "اسکول کا تعارف" },
+  programsTitle: { en: "Programs", ur: "تعلیمی مراحل" },
 
   // Actions
   save: { en: "Save draft", ur: "مسودہ محفوظ کریں" },

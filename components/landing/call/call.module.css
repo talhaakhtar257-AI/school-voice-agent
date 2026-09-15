@@ -1,0 +1,318 @@
+/*
+  The call pop-up window, as in the design. It renders inside .page, so the
+  landing tokens (--brand-900, --gold-400, …) are available here.
+*/
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(8, 32, 26, 0.62);
+  backdrop-filter: blur(7px);
+}
+
+.panel {
+  width: min(560px, 100%);
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(170deg, #0b3f33, #10604d);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 28px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+  outline: none;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.status {
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.sub {
+  font-size: 12.5px;
+  opacity: 0.72;
+}
+
+.timer {
+  margin-inline-start: auto;
+  font-family: var(--font-en), system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 15px;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
+.close {
+  margin-inline-start: auto;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px;
+}
+
+/* ---------- Orb ---------- */
+.orbWrap {
+  display: grid;
+  place-items: center;
+  padding-block: 6px;
+}
+
+.orb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  color: #fff;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #7bf0c8, #12a67b 52%, #0c7a5c);
+  box-shadow: 0 12px 36px rgba(18, 166, 123, 0.42);
+  transition: transform 0.25s ease;
+}
+
+.speaking .orb {
+  transform: scale(1.08);
+}
+
+.speaking .orb::before,
+.speaking .orb::after {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(123, 240, 200, 0.5);
+  animation: ring 2.4s ease-out infinite;
+}
+
+.speaking .orb::after {
+  animation-delay: 1.2s;
+}
+
+@keyframes ring {
+  0% { transform: scale(0.88); opacity: 0.85; }
+  100% { transform: scale(1.38); opacity: 0; }
+}
+
+/* ---------- Transcript ---------- */
+.transcript {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 140px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.14);
+  border-radius: 18px;
+}
+
+.empty {
+  margin: auto;
+  opacity: 0.6;
+  font-size: 14px;
+  text-align: center;
+}
+
+.bubble {
+  max-width: 86%;
+  margin: 0;
+  padding: 9px 13px;
+  border-radius: 15px;
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+[lang="ur"] .bubble {
+  line-height: 2.05;
+}
+
+.agent {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-start-start-radius: 5px;
+}
+
+.user {
+  align-self: flex-end;
+  color: #3a2600;
+  font-weight: 600;
+  background: var(--gold-400);
+  border-end-end-radius: 5px;
+}
+
+.who {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 11.5px;
+  font-weight: 800;
+  opacity: 0.7;
+}
+
+/* ---------- Footer buttons ---------- */
+.foot {
+  display: flex;
+  gap: 10px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.foot button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 15.5px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+}
+
+.foot button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.foot button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.foot .end {
+  background: #d9483d;
+  border-color: #d9483d;
+}
+
+.foot .end:hover:not(:disabled) {
+  background: #c23c32;
+}
+
+.foot .primary {
+  color: var(--brand-900);
+  background: #fff;
+  border-color: #fff;
+}
+
+.foot .primary:hover {
+  background: var(--gold-50);
+}
+
+/* ---------- Messages ---------- */
+.fallback {
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 15px;
+  background: rgba(224, 90, 79, 0.22);
+  border: 1px solid rgba(255, 170, 160, 0.6);
+  border-radius: 12px;
+}
+
+.endedText {
+  margin: 0;
+  font-size: 15.5px;
+}
+
+.officeLine {
+  margin: 0;
+  font-size: 14px;
+  text-align: center;
+  opacity: 0.9;
+}
+
+.officeLine a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #fff !important;
+  font-weight: 800;
+  text-decoration: none;
+  direction: ltr;
+}
+
+/* ---------- Mic explainer ---------- */
+.explainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.explainerTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.explainerText {
+  margin: 0;
+  font-size: 15px;
+  opacity: 0.92;
+}
+
+.notices {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 12px 14px;
+  list-style: none;
+  font-size: 13.5px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+}
+
+.continue {
+  min-height: 56px;
+  color: var(--brand-900);
+  font-weight: 800;
+  font-size: 17px;
+  background: #fff;
+  border: 0;
+  border-radius: 999px;
+}
+
+.continue:hover {
+  background: var(--gold-50);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb,
+  .speaking .orb::before,
+  .speaking .orb::after {
+    animation: none;
+    transition: none;
+  }
+}

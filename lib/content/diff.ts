@@ -21,6 +21,12 @@ export function summariseChanges(before: ContentDoc, after: ContentDoc): string[
     if (b !== a) lines.push(`${c} fee: ${b ?? "—"} → ${a ?? "—"}`);
   }
 
+  for (const c of after.facts.classes) {
+    const b = before.facts.admissionFeePerClass[c];
+    const a = after.facts.admissionFeePerClass[c];
+    if (b !== a) lines.push(`${c} admission fee: ${b ?? "—"} → ${a ?? "—"}`);
+  }
+
   const age = (x?: { minYears: number; maxYears: number }) =>
     x ? `${x.minYears}-${x.maxYears}` : "—";
   for (const c of after.facts.classes) {
@@ -55,6 +61,19 @@ export function summariseChanges(before: ContentDoc, after: ContentDoc): string[
     lines.push("Policy changed: document requirements");
   }
 
+  const changed = (b: unknown, a: unknown) => JSON.stringify(b) !== JSON.stringify(a);
+  if (changed(before.facts.schoolTimings, after.facts.schoolTimings)) lines.push("School timings changed");
+  if (changed(before.facts.stats, after.facts.stats)) lines.push("School figures changed");
+  for (const field of ["tagline", "about", "address"] as const) {
+    if (changed(before.profile[field], after.profile[field])) {
+      lines.push(`School profile changed: ${field}`);
+    }
+  }
+  if (before.profile.showSampleBanner !== after.profile.showSampleBanner) {
+    lines.push(`Sample-content banner turned ${after.profile.showSampleBanner ? "on" : "off"}`);
+  }
+
+  diffList("Program", before.programs, after.programs, (p) => p.title.en || p.title.ur || p.id, lines);
   diffList("FAQ", before.faqs, after.faqs, (f) => f.question.en || f.question.ur || f.id, lines);
   diffList(
     "Escalation topic",

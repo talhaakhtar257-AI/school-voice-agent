@@ -65,6 +65,28 @@ export function simulate(question: string, doc: ContentDoc): SimulationResult {
     });
   }
 
+  for (const p of doc.programs.filter((x) => x.archivedAt === null)) {
+    candidates.push({
+      kind: "answer",
+      text: [p.title.en || p.title.ur, p.description.en || p.description.ur].filter(Boolean).join(": "),
+      s: Math.max(
+        score(q, `${p.title.en} ${p.title.ur} ${p.classes.join(" ")}`),
+        score(q, p.description.en),
+      ),
+    });
+  }
+
+  if (doc.facts.schoolTimings.length > 0) {
+    const timingsScore = score(q, "school timing timings time times start starts end ends day days");
+    candidates.push({
+      kind: "answer",
+      text: doc.facts.schoolTimings
+        .map((t) => `${t.label.en || t.label.ur}: ${t.days} ${t.starts}–${t.ends}`)
+        .join("\n"),
+      s: timingsScore,
+    });
+  }
+
   // A fee / age / dates / hours question can hit the Facts directly.
   const factsKeywords = [
     ...doc.facts.classes,
@@ -75,8 +97,10 @@ export function simulate(question: string, doc: ContentDoc): SimulationResult {
   if (factsScore >= THRESHOLD) {
     const lines = doc.facts.classes.map((c) => {
       const fee = doc.facts.feePerClass[c] ?? "?";
+      const admissionFee = doc.facts.admissionFeePerClass[c];
       const age = doc.facts.ageCriteriaPerClass[c];
-      return `${c}: fee ${fee}, age ${age?.minYears ?? "?"}-${age?.maxYears ?? "?"} years`;
+      const admission = admissionFee === undefined ? "" : `, admission fee ${admissionFee}`;
+      return `${c}: monthly fee ${fee}${admission}, age ${age?.minYears ?? "?"}-${age?.maxYears ?? "?"} years`;
     });
     candidates.push({
       kind: "answer",

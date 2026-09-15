@@ -4,8 +4,9 @@ import { useState } from "react";
 import type { ContentDoc } from "@/lib/content/schema";
 import type { Lang } from "@/lib/language";
 import { simulate, type SimulationResult } from "@/lib/content/simulate";
+import { OFFICE_PHONE_DISPLAY, OFFICE_PHONE_E164 } from "@/lib/office";
 import { landingStrings as s } from "@/lib/strings/landing";
-import styles from "@/components/landing/sections.module.css";
+import styles from "@/components/landing/features.module.css";
 
 /**
  * A parent types a question and gets an answer looked up from the published
@@ -13,16 +14,20 @@ import styles from "@/components/landing/sections.module.css";
  * (feature 003, lib/content/simulate.ts). Runs entirely in the browser: no
  * network call, so it cannot write a lead or log anything (FR-018, FR-020).
  * An escalation-topic match shows the hand-off wording, never an answer
- * (FR-017).
+ * (FR-017). The surrounding band supplies the heading.
  */
 export function TextChat({ content, lang }: { content: ContentDoc; lang: Lang }) {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState<SimulationResult | null>(null);
 
+  const officeLink = (
+    <p className={styles.chatOffice}>
+      <a href={`tel:${OFFICE_PHONE_E164}`}>{OFFICE_PHONE_DISPLAY}</a>
+    </p>
+  );
+
   return (
-    <section className={styles.section} id="ask">
-      <h2 className={styles.title}>{s.textChatTitle[lang]}</h2>
-      <p className={styles.lead}>{s.textChatFromPublished[lang]}</p>
+    <div>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -38,29 +43,29 @@ export function TextChat({ content, lang }: { content: ContentDoc; lang: Lang })
           dir="auto"
           className={styles.chatInput}
         />
-        <button type="submit" className={styles.button} style={{ marginTop: 0, minHeight: "48px" }}>
+        <button type="submit" className={styles.chatButton}>
           {s.textChatSend[lang]}
         </button>
       </form>
 
       {result && (
-        <div className={`${styles.card} ${styles.chatResult}`} aria-live="polite">
-          {result.kind === "none" && <p>{s.textChatNoMatch[lang]}</p>}
-          {result.kind === "handoff" && (
+        <div className={styles.chatResult} aria-live="polite">
+          {result.kind === "none" && (
             <>
-              <strong className={styles.handoff}>{s.textChatHandoff[lang]}</strong>
-              <p dir="auto" style={{ marginTop: "0.4rem", whiteSpace: "pre-line" }}>
-                {result.text}
-              </p>
+              <p>{s.textChatNoMatch[lang]}</p>
+              {officeLink}
             </>
           )}
-          {result.kind === "answer" && (
-            <p dir="auto" style={{ whiteSpace: "pre-line" }}>
-              {result.text}
-            </p>
+          {result.kind === "handoff" && (
+            <>
+              <strong className={styles.chatHandoff}>{s.textChatHandoff[lang]}</strong>
+              <p dir="auto">{result.text}</p>
+              {officeLink}
+            </>
           )}
+          {result.kind === "answer" && <p dir="auto">{result.text}</p>}
         </div>
       )}
-    </section>
+    </div>
   );
 }

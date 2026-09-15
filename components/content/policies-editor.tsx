@@ -15,6 +15,9 @@ export function PoliciesEditor({
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+        One item per line — on the website each line becomes one numbered step or one checklist item.
+      </p>
       <BilingualField
         label="Admission process"
         value={value.admissionProcess}

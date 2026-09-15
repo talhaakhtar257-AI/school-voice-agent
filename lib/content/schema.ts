@@ -5,8 +5,9 @@ import { z } from "zod";
  *
  * A half-filled draft is valid to *store* (FR-009) — the DB seeds both `content`
  * rows with `{}`, and staff save partial drafts. `parseDoc` fills any missing
- * top-level branch from `emptyDoc`, and `bilingual` fills a missing language with
- * "". Completeness is enforced only at publish time (`lib/content/validate.ts`).
+ * branch from `emptyDoc`, and every field added after the first release has a
+ * default, so older stored documents still load. Completeness is enforced only
+ * at publish time (`lib/content/validate.ts`).
  */
 
 /** A sentence a parent hears — stored in both languages (FR-007). */
@@ -15,6 +16,7 @@ export const bilingual = z.object({
   ur: z.string().default(""),
 });
 export type Bilingual = z.infer<typeof bilingual>;
+const blankPair = { en: "", ur: "" };
 
 const ageRange = z.object({
   minYears: z.number().int().min(0),
@@ -33,13 +35,29 @@ const officeHours = z.object({
   closes: z.string(),
 });
 
+/** A school-day timing: a label parents read, around language-neutral times. */
+const schoolTiming = z.object({
+  label: bilingual,
+  days: z.string(),
+  starts: z.string(), // "HH:MM" 24h
+  ends: z.string(),
+});
+
+const count = z.number().int().min(0).nullable().default(null);
+const emptyStats = { studentsEnrolled: null, teachers: null, foundedYear: null };
+
 /** Facts — language-neutral values, stored once, formatted for display (FR-006). */
 export const facts = z.object({
   classes: z.array(z.string()),
-  feePerClass: z.record(z.string(), z.number()),
+  feePerClass: z.record(z.string(), z.number()), // monthly fee
   ageCriteriaPerClass: z.record(z.string(), ageRange),
   admissionDates: z.array(admissionDate),
   officeHours: z.array(officeHours),
+  admissionFeePerClass: z.record(z.string(), z.number()).default({}), // one-time fee
+  schoolTimings: z.array(schoolTiming).default([]),
+  stats: z
+    .object({ studentsEnrolled: count, teachers: count, foundedYear: count })
+    .default(emptyStats),
 });
 export type Facts = z.infer<typeof facts>;
 
@@ -59,6 +77,26 @@ export const escalationTopic = z.object({
 });
 export type EscalationTopic = z.infer<typeof escalationTopic>;
 
+/** A program card on the website, e.g. "Primary" covering several classes. */
+export const programItem = z.object({
+  id: z.string(),
+  title: bilingual,
+  classes: z.array(z.string()).default([]), // names from facts.classes
+  description: bilingual,
+  archivedAt: z.string().nullable(),
+});
+export type ProgramItem = z.infer<typeof programItem>;
+
+/** Who the school is — shown on the website and available to the agent. */
+export const profile = z.object({
+  tagline: bilingual.default(blankPair),
+  about: bilingual.default(blankPair),
+  address: bilingual.default(blankPair),
+  // Shows a "sample content" ribbon on the website while placeholder data is live.
+  showSampleBanner: z.boolean().default(false),
+});
+export type Profile = z.infer<typeof profile>;
+
 export const contentDoc = z.object({
   facts,
   policies: z.object({
@@ -67,6 +105,8 @@ export const contentDoc = z.object({
   }),
   faqs: z.array(faqItem),
   escalationTopics: z.array(escalationTopic),
+  profile: profile.default({ tagline: blankPair, about: blankPair, address: blankPair, showSampleBanner: false }),
+  programs: z.array(programItem).default([]),
 });
 export type ContentDoc = z.infer<typeof contentDoc>;
 
@@ -78,6 +118,9 @@ export const emptyDoc: ContentDoc = {
     ageCriteriaPerClass: {},
     admissionDates: [],
     officeHours: [],
+    admissionFeePerClass: {},
+    schoolTimings: [],
+    stats: emptyStats,
   },
   policies: {
     admissionProcess: { en: "", ur: "" },
@@ -85,14 +128,21 @@ export const emptyDoc: ContentDoc = {
   },
   faqs: [],
   escalationTopics: [],
+  profile: { tagline: blankPair, about: blankPair, address: blankPair, showSampleBanner: false },
+  programs: [],
 };
 
 /** Parse a stored jsonb value into a full ContentDoc, filling any missing branch. */
 export function parseDoc(raw: unknown): ContentDoc {
   const r = (raw ?? {}) as Record<string, unknown>;
+  const f = (r.facts ?? {}) as Record<string, unknown>;
   const p = (r.policies ?? {}) as Record<string, unknown>;
   const merged = {
-    facts: { ...emptyDoc.facts, ...((r.facts as object) ?? {}) },
+    facts: {
+      ...emptyDoc.facts,
+      ...f,
+      stats: { ...emptyDoc.facts.stats, ...((f.stats as object) ?? {}) },
+    },
     policies: {
       admissionProcess: {
         ...emptyDoc.policies.admissionProcess,
@@ -105,9 +155,13 @@ export function parseDoc(raw: unknown): ContentDoc {
     },
     faqs: Array.isArray(r.faqs) ? r.faqs : [],
     escalationTopics: Array.isArray(r.escalationTopics) ? r.escalationTopics : [],
+    profile: { ...emptyDoc.profile, ...((r.profile as object) ?? {}) },
+    programs: Array.isArray(r.programs) ? r.programs : [],
   };
   return contentDoc.parse(merged);
 }
+
+const blank = (v: Bilingual) => v.en === "" && v.ur === "";
 
 /** True when a document has no content at all — used to answer "nothing published". */
 export function isEmptyDoc(doc: ContentDoc): boolean {
@@ -116,25 +170,28 @@ export function isEmptyDoc(doc: ContentDoc): boolean {
     Object.keys(doc.facts.feePerClass).length === 0 &&
     doc.facts.admissionDates.length === 0 &&
     doc.facts.officeHours.length === 0 &&
-    doc.policies.admissionProcess.en === "" &&
-    doc.policies.admissionProcess.ur === "" &&
-    doc.policies.documentRequirements.en === "" &&
-    doc.policies.documentRequirements.ur === "" &&
+    doc.facts.schoolTimings.length === 0 &&
+    blank(doc.policies.admissionProcess) &&
+    blank(doc.policies.documentRequirements) &&
     doc.faqs.length === 0 &&
-    doc.escalationTopics.length === 0
+    doc.escalationTopics.length === 0 &&
+    doc.programs.length === 0 &&
+    blank(doc.profile.tagline) &&
+    blank(doc.profile.about) &&
+    blank(doc.profile.address)
   );
 }
 
 /** Strip archived items and the archivedAt marker — the shape the agent receives. */
 export function forPublicApi(doc: ContentDoc) {
+  const active = <T extends { archivedAt: string | null }>(items: T[]) =>
+    items.filter((item) => item.archivedAt === null).map(({ archivedAt: _drop, ...rest }) => rest);
   return {
     facts: doc.facts,
     policies: doc.policies,
-    faqs: doc.faqs
-      .filter((f) => f.archivedAt === null)
-      .map(({ archivedAt: _drop, ...rest }) => rest),
-    escalationTopics: doc.escalationTopics
-      .filter((t) => t.archivedAt === null)
-      .map(({ archivedAt: _drop, ...rest }) => rest),
+    profile: doc.profile,
+    faqs: active(doc.faqs),
+    escalationTopics: active(doc.escalationTopics),
+    programs: active(doc.programs),
   };
 }

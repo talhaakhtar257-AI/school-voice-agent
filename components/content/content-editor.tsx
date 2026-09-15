@@ -14,6 +14,8 @@ import {
 import ui from "@/components/dashboard/ui.module.css";
 import panels from "@/components/dashboard/panels.module.css";
 import { FactsEditor } from "./facts-editor";
+import { ProfileEditor } from "./profile-editor";
+import { ProgramsEditor } from "./programs-editor";
 import { PoliciesEditor } from "./policies-editor";
 import { FaqEditor } from "./faq-editor";
 import { EscalationEditor } from "./escalation-editor";
@@ -87,7 +89,24 @@ export function ContentEditor({
   }
 
   const sections = [
+    {
+      id: "profile",
+      title: s.profileTitle,
+      body: (
+        <ProfileEditor
+          profile={doc.profile}
+          stats={doc.facts.stats}
+          onProfileChange={(profile) => setDoc({ ...doc, profile })}
+          onStatsChange={(stats) => setDoc({ ...doc, facts: { ...doc.facts, stats } })}
+        />
+      ),
+    },
     { id: "facts", title: s.factsTitle, body: <FactsEditor value={doc.facts} onChange={(facts) => setDoc({ ...doc, facts })} /> },
+    {
+      id: "programs",
+      title: s.programsTitle,
+      body: <ProgramsEditor value={doc.programs} classes={doc.facts.classes} onChange={(programs) => setDoc({ ...doc, programs })} />,
+    },
     { id: "policies", title: s.policiesTitle, body: <PoliciesEditor value={doc.policies} onChange={(policies) => setDoc({ ...doc, policies })} /> },
     { id: "faqs", title: s.faqsTitle, body: <FaqEditor value={doc.faqs} onChange={(faqs) => setDoc({ ...doc, faqs })} /> },
     {

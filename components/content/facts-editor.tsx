@@ -2,6 +2,7 @@
 
 import type { Facts } from "@/lib/content/schema";
 import { FactsSchedulesEditor } from "./facts-schedules-editor";
+import { TimingsEditor } from "./timings-editor";
 
 const input = {
   padding: "0.4rem",
@@ -26,12 +27,14 @@ export function FactsEditor({
   function setClasses(classes: string[]) {
     // keep fee/age maps in step with the class list
     const feePerClass: Record<string, number> = {};
+    const admissionFeePerClass: Record<string, number> = {};
     const ageCriteriaPerClass: Record<string, { minYears: number; maxYears: number }> = {};
     for (const c of classes) {
       feePerClass[c] = value.feePerClass[c] ?? 0;
+      admissionFeePerClass[c] = value.admissionFeePerClass[c] ?? 0;
       ageCriteriaPerClass[c] = value.ageCriteriaPerClass[c] ?? { minYears: 0, maxYears: 0 };
     }
-    onChange({ ...value, classes, feePerClass, ageCriteriaPerClass });
+    onChange({ ...value, classes, feePerClass, admissionFeePerClass, ageCriteriaPerClass });
   }
 
   return (
@@ -50,7 +53,7 @@ export function FactsEditor({
               style={input}
             />
             <span style={{ fontSize: "0.9rem" }}>
-              Fee&nbsp;
+              Monthly fee&nbsp;
               <input
                 type="number"
                 inputMode="numeric"
@@ -59,6 +62,21 @@ export function FactsEditor({
                   onChange({
                     ...value,
                     feePerClass: { ...value.feePerClass, [c]: Number(e.target.value) },
+                  })
+                }
+                style={{ ...input, width: "6rem" }}
+              />
+            </span>
+            <span style={{ fontSize: "0.9rem" }}>
+              Admission fee (one time)&nbsp;
+              <input
+                type="number"
+                inputMode="numeric"
+                value={value.admissionFeePerClass[c] ?? 0}
+                onChange={(e) =>
+                  onChange({
+                    ...value,
+                    admissionFeePerClass: { ...value.admissionFeePerClass, [c]: Number(e.target.value) },
                   })
                 }
                 style={{ ...input, width: "6rem" }}
@@ -113,6 +131,7 @@ export function FactsEditor({
       </div>
 
       <FactsSchedulesEditor value={value} onChange={onChange} />
+      <TimingsEditor value={value.schoolTimings} onChange={(schoolTimings) => onChange({ ...value, schoolTimings })} />
     </div>
   );
 }

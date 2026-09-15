@@ -2,19 +2,27 @@
 
 import type { Lang } from "@/lib/language";
 import { landingStrings as s } from "@/lib/strings/landing";
-import styles from "@/components/landing/talk-card.module.css";
+import styles from "@/components/landing/call/call.module.css";
 
 /**
- * Shown before the browser's microphone permission prompt (FR-013). A step the
- * parent confirms, not a passive notice — talk-panel.tsx only calls the SDK
- * after this is confirmed, so the explanation is strictly first.
+ * Shown inside the call window before the browser's microphone permission
+ * prompt (FR-013). A step the parent confirms, not a passive notice — the call
+ * provider only contacts Retell after Continue, so the explanation is strictly
+ * first. The AI, recording, privacy and decision notices sit here too, so they
+ * are seen before any conversation starts (FR-005, FR-014).
  */
 export function MicExplainer({ lang, onContinue }: { lang: Lang; onContinue: () => void }) {
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="mic-explainer-title" className={styles.explainer}>
-      <strong id="mic-explainer-title">{s.micExplainerTitle[lang]}</strong>
-      <p>{s.micExplainerBody[lang]}</p>
-      <button type="button" onClick={onContinue} className={styles.continueButton}>
+    <div className={styles.explainer}>
+      <p className={styles.explainerTitle}>{s.micExplainerTitle[lang]}</p>
+      <p className={styles.explainerText}>{s.micExplainerBody[lang]}</p>
+      <ul className={styles.notices}>
+        <li>{s.aiDisclosure[lang]}</li>
+        <li>{s.recordingNotice[lang]}</li>
+        <li>{s.privacyLine[lang]}</li>
+        <li>{s.decisionNotice[lang]}</li>
+      </ul>
+      <button type="button" onClick={onContinue} className={styles.continue}>
         {s.micExplainerContinue[lang]}
       </button>
     </div>
