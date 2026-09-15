@@ -1,10 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Placeholder school logo">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Al-Noor Public School logo">
   <!--
-    PLACEHOLDER — replace with the school's real logo before any demo.
-    Deliberately plain so it cannot be mistaken for real branding
-    (same rule as the placeholder office phone number in lib/office.ts).
+    School brand mark: a green shield with a gold eight-point star (Al-Noor,
+    "the light") above an open book. Drawn for this project in the site's own
+    colours. If the school has an official logo, replace this file with it.
   -->
-  <circle cx="60" cy="60" r="56" fill="#e5e5e5" stroke="#9a9a9a" stroke-width="3" stroke-dasharray="6 5"/>
-  <text x="60" y="56" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" fill="#6b6b6b">LOGO</text>
-  <text x="60" y="76" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#6b6b6b">placeholder</text>
+  <defs>
+    <linearGradient id="shieldFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#147A62"/>
+      <stop offset="1" stop-color="#0B3F33"/>
+    </linearGradient>
+    <linearGradient id="goldFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F2C866"/>
+      <stop offset="1" stop-color="#C98500"/>
+    </linearGradient>
+  </defs>
+  <path d="M60 4 L106 18 V58 C106 86 86 106 60 116 C34 106 14 86 14 58 V18 Z" fill="url(#shieldFill)"/>
+  <path d="M60 11 L99.5 23 V58 C99.5 81.5 83 98.5 60 108 C37 98.5 20.5 81.5 20.5 58 V23 Z" fill="none" stroke="url(#goldFill)" stroke-width="2.5"/>
+  <g transform="translate(60 43)">
+    <rect x="-11" y="-11" width="22" height="22" fill="url(#goldFill)"/>
+    <rect x="-11" y="-11" width="22" height="22" fill="url(#goldFill)" transform="rotate(45)"/>
+    <circle r="5.5" fill="#0B3F33"/>
+  </g>
+  <path d="M31 74 C41 69 51 70 60 76 C69 70 79 69 89 74 V94 C79 89 69 90 60 96 C51 90 41 89 31 94 Z" fill="#FFFFFF"/>
+  <path d="M60 76 V96" stroke="#0B3F33" stroke-width="2.2" stroke-linecap="round"/>
 </svg>

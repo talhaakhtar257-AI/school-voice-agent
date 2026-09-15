@@ -2,8 +2,12 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Al-Noor Public School",
-  description: "Admissions Assistant",
+  title: {
+    default: "Al-Noor Public School — Admissions",
+    template: "%s · Al-Noor Public School",
+  },
+  description:
+    "Ask Al-Noor Public School's AI admissions assistant about classes, fees, documents and the admission process — in English or Urdu.",
 };
 
 /**

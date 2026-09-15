@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import type { Lang } from "@/lib/language";
 import { createClient } from "@/lib/supabase/client";
 import { staffLoginStrings as s } from "@/lib/strings/staff-login";
+import styles from "@/components/login/login.module.css";
 
 type MessageKey =
   | "wrongCredentials"
@@ -15,18 +17,13 @@ type MessageKey =
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** Both languages of one message, stacked, announced to screen readers. */
-function Message({ messageKey }: { messageKey: MessageKey }) {
+function EyeIcon({ open }: { open: boolean }) {
   return (
-    <p
-      role="alert"
-      dir="auto"
-      style={{ margin: 0, color: "var(--failure-border)", fontSize: "0.9rem" }}
-    >
-      {s[messageKey].en}
-      <br />
-      {s[messageKey].ur}
-    </p>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+      <circle cx="12" cy="12" r="3" />
+      {!open && <path d="M3 3l18 18" />}
+    </svg>
   );
 }
 
@@ -37,14 +34,19 @@ function Message({ messageKey }: { messageKey: MessageKey }) {
  * the browser so @supabase/ssr writes the session cookie, then moves to
  * /dashboard and refreshes so the server re-reads it.
  *
- * Every failure has its own bilingual message (T020-T024). Native browser
- * validation is off (noValidate) so every message is ours and in both languages.
- * An unknown email and a wrong password produce the SAME message (FR-006).
+ * Every failure has its own message in the chosen language (T020-T024). Native
+ * browser validation is off (noValidate) so every message is ours. An unknown
+ * email and a wrong password produce the SAME message (FR-006).
+ *
+ * The Show / Hide button reveals the password while typing on a phone. It is a
+ * plain button (type="button"), so it can never submit the form, and it resets
+ * to hidden after each sign-in attempt so the password is not left on screen.
  */
-export function LoginForm() {
+export function LoginForm({ lang }: { lang: Lang }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState<MessageKey | null>(null);
   const [passwordError, setPasswordError] = useState<MessageKey | null>(null);
@@ -57,6 +59,7 @@ export function LoginForm() {
     setEmailError(null);
     setPasswordError(null);
     setFormError(null);
+    setShowPassword(false);
 
     const trimmedEmail = email.trim();
     let stop = false;
@@ -89,11 +92,7 @@ export function LoginForm() {
         // Same message for an unknown email and a wrong password (FR-006).
         // Anything else the server returned is a server-side failure, distinct
         // from bad credentials (T023).
-        setFormError(
-          error.code === "invalid_credentials"
-            ? "wrongCredentials"
-            : "networkFailure",
-        );
+        setFormError(error.code === "invalid_credentials" ? "wrongCredentials" : "networkFailure");
         setLoading(false);
         return;
       }
@@ -106,69 +105,77 @@ export function LoginForm() {
     }
   }
 
-  const cell = { minHeight: "44px", padding: "0.5rem", fontSize: "1rem" };
-
   return (
-    <form
-      onSubmit={handleSubmit}
-      noValidate
-      dir="auto"
-      style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}
-    >
-      <label style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-        <span>
-          {s.emailLabel.en} · {s.emailLabel.ur}
-        </span>
+    <form onSubmit={handleSubmit} noValidate className={styles.form}>
+      <label className={styles.field}>
+        {s.emailLabel[lang]}
         <input
           type="email"
           name="email"
           autoComplete="email"
           inputMode="email"
+          dir="ltr"
           value={email}
           onChange={(e) => {
             setEmail(e.target.value);
             setEmailError(null);
           }}
           aria-invalid={emailError !== null}
-          style={cell}
+          aria-describedby={emailError ? "email-error" : undefined}
+          className={styles.input}
         />
-        {emailError && <Message messageKey={emailError} />}
+        {emailError && (
+          <span id="email-error" role="alert" className={styles.error}>
+            {s[emailError][lang]}
+          </span>
+        )}
       </label>
 
-      <label style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-        <span>
-          {s.passwordLabel.en} · {s.passwordLabel.ur}
-        </span>
-        <input
-          type="password"
-          name="password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-            setPasswordError(null);
-          }}
-          aria-invalid={passwordError !== null}
-          style={cell}
-        />
-        {passwordError && <Message messageKey={passwordError} />}
-      </label>
+      <div className={styles.field}>
+        <label htmlFor="password">{s.passwordLabel[lang]}</label>
+        <div className={styles.passwordWrap}>
+          <input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            name="password"
+            autoComplete="current-password"
+            dir="ltr"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setPasswordError(null);
+            }}
+            aria-invalid={passwordError !== null}
+            aria-describedby={passwordError ? "password-error" : undefined}
+            className={styles.input}
+          />
+          <button
+            type="button"
+            className={styles.reveal}
+            onClick={() => setShowPassword((shown) => !shown)}
+            aria-pressed={showPassword}
+            aria-controls="password"
+            aria-label={showPassword ? s.hidePasswordLabel[lang] : s.showPasswordLabel[lang]}
+          >
+            <EyeIcon open={!showPassword} />
+            {showPassword ? s.hidePassword[lang] : s.showPassword[lang]}
+          </button>
+        </div>
+        {passwordError && (
+          <span id="password-error" role="alert" className={styles.error}>
+            {s[passwordError][lang]}
+          </span>
+        )}
+      </div>
 
-      {formError && <Message messageKey={formError} />}
+      {formError && (
+        <p role="alert" className={styles.formError}>
+          {s[formError][lang]}
+        </p>
+      )}
 
-      <button
-        type="submit"
-        disabled={loading}
-        style={{
-          minHeight: "44px",
-          padding: "0.6rem",
-          fontSize: "1rem",
-          fontWeight: 600,
-        }}
-      >
-        {loading
-          ? `${s.signingIn.en} · ${s.signingIn.ur}`
-          : `${s.signInButton.en} · ${s.signInButton.ur}`}
+      <button type="submit" disabled={loading} className={styles.submit}>
+        {loading ? s.signingIn[lang] : s.signInButton[lang]}
       </button>
     </form>
   );

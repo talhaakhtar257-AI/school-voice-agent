@@ -43,6 +43,21 @@ export const staffLoginStrings = {
     en: "Your browser is blocking cookies, which are needed to stay signed in. Allow cookies for this site and try again.",
     ur: "آپ کا براؤزر کوکیز روک رہا ہے، جو سائن اِن رہنے کے لیے ضروری ہیں۔ اس سائٹ کے لیے کوکیز کی اجازت دے کر دوبارہ کوشش کریں۔",
   },
+  screenSubtitle: {
+    en: "Sign in to see parent enquiries, update school content and check the assistant.",
+    ur: "والدین کی درخواستیں دیکھنے، اسکول کا مواد اپ ڈیٹ کرنے اور اسسٹنٹ کی حالت جانچنے کے لیے سائن اِن کریں۔",
+  },
+  brandLine: { en: "Admissions console", ur: "داخلہ کنسول" },
+  brandBody: {
+    en: "Every parent enquiry the assistant captures arrives here, ready for your call back.",
+    ur: "اسسٹنٹ کی حاصل کردہ والدین کی ہر درخواست یہاں آتی ہے، آپ کی واپسی کال کے لیے تیار۔",
+  },
+  showPassword: { en: "Show", ur: "دکھائیں" },
+  hidePassword: { en: "Hide", ur: "چھپائیں" },
+  showPasswordLabel: { en: "Show password", ur: "پاس ورڈ دکھائیں" },
+  hidePasswordLabel: { en: "Hide password", ur: "پاس ورڈ چھپائیں" },
+  backToSite: { en: "Back to the website", ur: "ویب سائٹ پر واپس جائیں" },
+  officeLabel: { en: "School office", ur: "اسکول کا دفتر" },
   forgotPassword: {
     en: "Forgotten your password? Call the school office.",
     ur: "پاس ورڈ بھول گئے؟ اسکول کے دفتر کو کال کریں۔",

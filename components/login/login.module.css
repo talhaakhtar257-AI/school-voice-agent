@@ -1,0 +1,267 @@
+/*
+  Staff sign-in screen in the landing design's style. Renders inside the
+  landing .page wrapper, so its colour tokens and fonts apply here.
+*/
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* ---------- Brand panel (a band on phones, a column on wide screens) ---------- */
+.brandPanel {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 16px 24px;
+  color: #fff;
+  background: linear-gradient(168deg, var(--brand-900), var(--brand-700) 60%, #12604d);
+}
+
+.brandPanel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 10%, rgba(233, 185, 73, 0.22), transparent 50%);
+  pointer-events: none;
+}
+
+.brandPanel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.brandTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.brandLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  color: #fff !important;
+  text-decoration: none;
+}
+
+.brandName {
+  display: block;
+  font-weight: 800;
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.brandLine {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.brandBody {
+  display: none;
+  max-width: 34ch;
+  margin: 0;
+  font-size: 17px;
+  opacity: 0.9;
+}
+
+/* ---------- Form side ---------- */
+.formSide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 16px 40px;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  padding: 28px 22px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.title {
+  font-size: 26px;
+  line-height: 1.25;
+}
+
+.subtitle {
+  margin: 8px 0 22px;
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.input {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 14px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  font: inherit;
+  font-family: var(--font-en), system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px rgba(18, 166, 123, 0.18);
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.passwordWrap {
+  position: relative;
+}
+
+.passwordWrap .input {
+  padding-inline-end: 96px;
+}
+
+.reveal {
+  position: absolute;
+  inset-block: 4px;
+  inset-inline-end: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 84px;
+  padding: 0 12px;
+  color: var(--brand-700);
+  background: var(--brand-50);
+  border: 0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.reveal:hover {
+  background: var(--brand-100);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.formError {
+  margin: 0;
+  padding: 12px 14px;
+  color: var(--danger);
+  background: #fdf1f0;
+  border: 1px solid #f1c9c5;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.submit {
+  width: 100%;
+  min-height: 54px;
+  margin-top: 4px;
+  color: #fff;
+  background: var(--brand-700);
+  border: 0;
+  border-radius: var(--r-pill);
+  box-shadow: 0 6px 18px rgba(15, 92, 74, 0.28);
+  font-weight: 800;
+  font-size: 16.5px;
+}
+
+.submit:hover:not(:disabled) {
+  background: var(--brand-900);
+}
+
+.submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.help {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 18px;
+  color: var(--ink-2);
+  font-size: 14px;
+  text-align: center;
+}
+
+.help p {
+  margin: 0;
+}
+
+.helpLinks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px 18px;
+  margin-top: 6px;
+}
+
+.helpLinks a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.phone {
+  color: var(--brand-700) !important;
+  direction: ltr;
+}
+
+@media (min-width: 900px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  }
+  .brandPanel {
+    justify-content: space-between;
+    padding: 40px clamp(32px, 5vw, 64px);
+  }
+  .brandBody {
+    display: block;
+  }
+  .formSide {
+    padding: 40px;
+  }
+  .card {
+    padding: 36px 34px;
+  }
+}

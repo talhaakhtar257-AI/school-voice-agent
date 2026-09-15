@@ -242,14 +242,18 @@
   font-size: 15px;
 }
 
-.phoneRow {
-  display: flex;
+.announcePhone {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  color: var(--ink-2);
-  font-size: 14px;
+  gap: 7px;
+  min-height: 44px;
+  color: #fff !important;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.announcePhone:hover {
+  color: var(--gold-400) !important;
 }
 
 .phoneLink {
@@ -456,9 +460,6 @@
 }
 
 @media (min-width: 700px) {
-  .phoneRow {
-    width: auto;
-  }
   .footGrid {
     grid-template-columns: 1.5fr 1fr 1fr;
     gap: 40px;

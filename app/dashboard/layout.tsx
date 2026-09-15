@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { dirFor } from "@/lib/language";
@@ -8,6 +9,8 @@ import { DocumentLanguage } from "@/components/landing/document-language";
 import { Sidebar, navItems } from "@/components/dashboard/sidebar";
 import { Topbar } from "@/components/dashboard/topbar";
 import shell from "@/components/dashboard/shell.module.css";
+
+export const metadata: Metadata = { title: "Dashboard" };
 
 /**
  * The shell around every dashboard screen: sidebar, top bar, language.

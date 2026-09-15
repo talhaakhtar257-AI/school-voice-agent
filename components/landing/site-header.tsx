@@ -1,6 +1,5 @@
 import Image from "next/image";
 import type { Lang } from "@/lib/language";
-import { OFFICE_PHONE_DISPLAY, OFFICE_PHONE_E164 } from "@/lib/office";
 import { landingStrings } from "@/lib/strings/landing";
 import { heroStrings as h } from "@/lib/strings/landing-hero";
 import { CallButton } from "./call/call-button";
@@ -9,16 +8,16 @@ import { LanguageToggle } from "./language-toggle";
 import styles from "./landing.module.css";
 
 /**
- * Sticky header, as in the design. The office phone lives here so it is
- * visible without scrolling at every screen width (FR-004); on phones it
- * wraps to its own row, and the Talk button moves to the floating button.
+ * Sticky header, as in the design: logo and name, section links, language
+ * switch and a Talk button. The office phone sits in the announcement bar
+ * directly above, so it stays visible without making this row wrap.
  */
 export function SiteHeader({ lang, tagline }: { lang: Lang; tagline: string }) {
   return (
     <header className={styles.header}>
       <div className={`${styles.wrap} ${styles.nav}`}>
         <a className={styles.brand} href="#top">
-          <Image src="/school-logo.svg" alt="" width={40} height={40} />
+          <Image src="/school-logo.svg" alt="" width={42} height={42} priority />
           <span className={styles.brandText}>
             <span className={styles.brandName}>{landingStrings.schoolName[lang]}</span>
             {tagline && (
@@ -42,13 +41,6 @@ export function SiteHeader({ lang, tagline }: { lang: Lang; tagline: string }) {
           <MicIcon size={16} />
           {h.headerCall[lang]}
         </CallButton>
-
-        <div className={styles.phoneRow}>
-          <span>{h.officeLabel[lang]}</span>
-          <a href={`tel:${OFFICE_PHONE_E164}`} className={`${styles.phoneLink} ${styles.latin}`}>
-            {OFFICE_PHONE_DISPLAY}
-          </a>
-        </div>
       </div>
     </header>
   );

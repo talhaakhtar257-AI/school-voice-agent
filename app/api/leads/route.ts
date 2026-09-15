@@ -19,6 +19,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { incomingEnquiry } from "@/lib/leads/schema";
 import { insertLead } from "@/lib/leads/queries";
+import { hasValidAgentSecret } from "@/lib/api/secret";
 
 export const dynamic = "force-dynamic";
 
@@ -31,9 +32,7 @@ function methodNotAllowed() {
 }
 
 export async function POST(request: NextRequest) {
-  const provided = request.headers.get("x-agent-secret");
-  const expected = process.env.RETELL_WEBHOOK_SECRET;
-  if (!expected || !provided || provided !== expected) {
+  if (!hasValidAgentSecret(request)) {
     return unauthorized();
   }
 
