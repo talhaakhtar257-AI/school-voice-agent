@@ -10,7 +10,7 @@ import styles from "./landing.module.css";
 
 /**
  * Keeps a Talk control in reach while scrolling. On wide screens a compact
- * card floats at the inline start (left in English, right in Urdu) once the
+ * card floats at the inline end (right in English, left in Urdu) once the
  * hero's agent card has scrolled away, and hides again as the footer arrives.
  * On phones a floating Talk button does the same job. Visibility comes from
  * IntersectionObserver — no scroll listeners.
