@@ -1,19 +1,25 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { SignOutButton } from "@/components/sign-out-button";
+import { dirFor } from "@/lib/language";
+import { readLang } from "@/lib/language-server";
+import { dashboardUrduFont, englishFont } from "@/lib/fonts";
+import { runHealthChecks } from "@/lib/dashboard/health";
+import { DocumentLanguage } from "@/components/landing/document-language";
+import { Sidebar, navItems } from "@/components/dashboard/sidebar";
+import { Topbar } from "@/components/dashboard/topbar";
+import shell from "@/components/dashboard/shell.module.css";
 
 /**
- * The shell around every dashboard screen.
+ * The shell around every dashboard screen: sidebar, top bar, language.
  *
- * Reads the signed-in user with the server Supabase client and shows their email
- * in the header. proxy.ts (T014) is the real gate - it also refreshes the
- * session and stops any dashboard HTML being sent to a signed-out visitor. This
- * redirect is a second guard in one place (the layout, not each page) for the
- * window before proxy.ts exists and for any request it does not match. A
+ * Reads the signed-in user with the server Supabase client. proxy.ts is the
+ * real gate - it also refreshes the session and stops any dashboard HTML being
+ * sent to a signed-out visitor. This redirect is a second guard in one place
+ * (the layout, not each page) for any request the proxy does not match. A
  * dashboard screen must never finish rendering for someone not signed in.
  *
- * The sign-out button (T027) joins this header in Phase 6.
+ * Every read below happens on the server with the staff session; the browser
+ * never talks to Supabase except to sign out.
  */
 export default async function DashboardLayout({
   children,
@@ -29,50 +35,22 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const lang = await readLang();
+  const items = navItems(lang);
+  const checks = await runHealthChecks();
+
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <header
-        dir="auto"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "1rem",
-          flexWrap: "wrap",
-          padding: "0.75rem 1rem",
-          borderBottom: "1px solid rgba(128,128,128,0.3)",
-        }}
-      >
-        <strong style={{ fontSize: "0.95rem" }}>Al-Noor Public School</strong>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.75rem",
-            flexWrap: "wrap",
-          }}
-        >
-          <span style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-            {user.email}
-          </span>
-          <SignOutButton />
-        </div>
-      </header>
-      <nav
-        style={{
-          display: "flex",
-          gap: "1rem",
-          padding: "0.5rem 1rem",
-          borderBottom: "1px solid rgba(128,128,128,0.3)",
-          fontSize: "0.9rem",
-        }}
-      >
-        <Link href="/dashboard">Home</Link>
-        <Link href="/dashboard/leads">Leads</Link>
-        <Link href="/dashboard/unanswered">Unanswered</Link>
-        <Link href="/dashboard/content">Content</Link>
-      </nav>
-      <main style={{ flex: 1, padding: "1rem" }}>{children}</main>
+    <div
+      lang={lang}
+      dir={dirFor(lang)}
+      className={`${shell.app} ${englishFont.variable} ${dashboardUrduFont.variable}`}
+    >
+      <DocumentLanguage lang={lang} />
+      <Sidebar lang={lang} email={user.email} items={items} />
+      <div className={shell.main}>
+        <Topbar lang={lang} items={items} allOk={checks.every((check) => check.ok)} />
+        <main className={shell.content}>{children}</main>
+      </div>
     </div>
   );
 }

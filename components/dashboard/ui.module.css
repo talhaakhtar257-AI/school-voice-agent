@@ -1,0 +1,338 @@
+/*
+  Shared dashboard building blocks: cards, tiles, tables, tags, buttons, bar
+  rows, empty state. Tokens come from .app in shell.module.css.
+*/
+
+.num {
+  font-family: var(--font-en), system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--ink-3);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ---------- Cards ---------- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-sm);
+  min-width: 0;
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 800;
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+
+.headAction {
+  margin-inline-start: auto;
+}
+
+.cardBody {
+  padding: 18px 20px;
+}
+
+/* ---------- Tiles ---------- */
+.tiles {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+.tile {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-sm);
+  padding: 18px 20px;
+}
+
+.tileLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.tileValue {
+  margin-top: 6px;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.tileHint {
+  margin-top: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+/* ---------- Bars ---------- */
+.barTrack {
+  height: 7px;
+  margin-top: 8px;
+  background: #edf1ee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: var(--brand-500);
+  border-radius: 4px;
+}
+
+.barList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.barRow {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.barRow:last-child {
+  border-bottom: 0;
+}
+
+.barRowHead {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.barLabel {
+  font-weight: 700;
+  font-size: 14.5px;
+  overflow-wrap: anywhere;
+}
+
+.barRowHead .num {
+  margin-inline-start: auto;
+  font-weight: 700;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+/* ---------- Tables ---------- */
+.tscroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 560px;
+}
+
+.table th,
+.table td {
+  text-align: start;
+  padding: 12px 18px;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.table thead th {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--ink-3);
+  background: #fbfcfb;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid var(--line);
+}
+
+.table tbody tr:last-child {
+  border-bottom: 0;
+}
+
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:hover {
+  background: #fafcfb;
+}
+
+/* ---------- Tags ---------- */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--r-pill);
+  padding: 3px 11px;
+  font-size: 12.5px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.tagNew {
+  background: #e8f1fd;
+  color: #1b5aa8;
+  border-color: #c7dcf7;
+}
+
+.tagContacted {
+  background: var(--gold-50);
+  color: var(--gold-700);
+  border-color: #f2dfb6;
+}
+
+.tagApplied {
+  background: #e6f7e6;
+  color: #046904;
+  border-color: #bee8be;
+}
+
+.tagClosed,
+.tagNone {
+  background: #f3f4f3;
+  color: #5f6e68;
+  border-color: #e0e5e2;
+}
+
+.tagEn {
+  background: #e6f7f1;
+  color: #0a6b4f;
+  border-color: #bee8d9;
+}
+
+.tagUr {
+  background: var(--gold-50);
+  color: var(--gold-700);
+  border-color: #f2dfb6;
+}
+
+/* ---------- Buttons and inputs ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: var(--r-pill);
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: 14.5px;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnPrimary {
+  background: var(--brand-700);
+  color: #fff !important;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: var(--brand-900);
+}
+
+.btnGhost {
+  background: #fff;
+  color: var(--ink) !important;
+  border-color: var(--line-strong);
+}
+
+.btnGhost:hover:not(:disabled) {
+  border-color: var(--brand-500);
+}
+
+.btnSmall {
+  padding: 0 14px;
+  font-size: 13.5px;
+}
+
+.select {
+  min-height: 44px;
+  padding: 0 10px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+}
+
+/* ---------- Empty and error states ---------- */
+.empty {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--ink-3);
+}
+
+.empty svg {
+  color: var(--brand-600);
+}
+
+.empty p {
+  margin: 6px auto 0;
+  max-width: 46ch;
+}
+
+.emptyTitle {
+  font-weight: 700;
+  color: var(--ink-2);
+  font-size: 15.5px;
+}
+
+.emptyError svg,
+.emptyError .emptyTitle {
+  color: var(--crit);
+}
+
+@media (min-width: 560px) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1080px) {
+  .tiles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .row2 {
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  }
+}

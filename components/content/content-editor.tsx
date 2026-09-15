@@ -3,42 +3,36 @@
 import { useState } from "react";
 import type { ContentDoc } from "@/lib/content/schema";
 import type { Problem } from "@/lib/content/validate";
+import type { Lang } from "@/lib/language";
 import { contentAdminStrings as s } from "@/lib/strings/content-admin";
+import { dashboardStrings } from "@/lib/strings/dashboard";
 import {
   confirmPublishAction,
   preparePublishAction,
   saveDraftAction,
 } from "@/app/dashboard/content/actions";
+import ui from "@/components/dashboard/ui.module.css";
+import panels from "@/components/dashboard/panels.module.css";
 import { FactsEditor } from "./facts-editor";
 import { PoliciesEditor } from "./policies-editor";
 import { FaqEditor } from "./faq-editor";
 import { EscalationEditor } from "./escalation-editor";
 import { PublishDialog } from "./publish-dialog";
 
-const section = {
-  border: "1px solid rgba(128,128,128,0.3)",
-  borderRadius: "0.6rem",
-  padding: "1rem",
-  marginBottom: "1rem",
-};
-const btn = {
-  minHeight: "44px",
-  padding: "0.5rem 1rem",
-  fontSize: "1rem",
-  fontWeight: 600,
-};
-
 /**
  * The content editor. Holds the working document; Save writes it to the draft
  * (FR-009); Publish is disabled until saved, then goes through the confirm
- * dialog (FR-010, FR-011).
+ * dialog (FR-010, FR-011). Each section has an id so other screens can link
+ * straight to it — the gap list links to #faqs.
  */
 export function ContentEditor({
   initialDoc,
   initialUpdatedAt,
+  lang,
 }: {
   initialDoc: ContentDoc;
   initialUpdatedAt: string;
+  lang: Lang;
 }) {
   const [doc, setDoc] = useState(initialDoc);
   const [savedDoc, setSavedDoc] = useState(initialDoc);
@@ -61,11 +55,11 @@ export function ContentEditor({
     if (r.ok) {
       setSavedDoc(doc);
       setUpdatedAt(r.updatedAt);
-      setStatus(`${s.draftSaved.en} · ${s.draftSaved.ur}`);
+      setStatus(s.draftSaved[lang]);
     } else if (r.reason === "conflict") {
-      setStatus(`${s.draftConflict.en}\n${s.draftConflict.ur}`);
+      setStatus(s.draftConflict[lang]);
     } else {
-      setStatus(`${s.loadError.en} · ${s.loadError.ur}`);
+      setStatus(s.loadError[lang]);
     }
   }
 
@@ -74,7 +68,7 @@ export function ContentEditor({
     const r = await preparePublishAction();
     setBusy(false);
     if (r.ok) setDialog({ changes: r.changes, problems: r.problems });
-    else setStatus(`${s.loadError.en} · ${s.loadError.ur}`);
+    else setStatus(s.loadError[lang]);
   }
 
   async function doPublish() {
@@ -82,93 +76,51 @@ export function ContentEditor({
     const r = await confirmPublishAction();
     setPublishing(false);
     if (r.ok) {
-      setStatus(
-        r.outcome === "published"
-          ? `${s.published.en} · ${s.published.ur}`
-          : `${s.nothingToPublish.en} · ${s.nothingToPublish.ur}`,
-      );
+      setStatus(r.outcome === "published" ? s.published[lang] : s.nothingToPublish[lang]);
       setDialog(null);
     } else if (r.reason === "blocked" && r.problems) {
       setDialog({ changes: [], problems: r.problems });
     } else {
-      setStatus(`${s.loadError.en} · ${s.loadError.ur}`);
+      setStatus(s.loadError[lang]);
       setDialog(null);
     }
   }
 
+  const sections = [
+    { id: "facts", title: s.factsTitle, body: <FactsEditor value={doc.facts} onChange={(facts) => setDoc({ ...doc, facts })} /> },
+    { id: "policies", title: s.policiesTitle, body: <PoliciesEditor value={doc.policies} onChange={(policies) => setDoc({ ...doc, policies })} /> },
+    { id: "faqs", title: s.faqsTitle, body: <FaqEditor value={doc.faqs} onChange={(faqs) => setDoc({ ...doc, faqs })} /> },
+    {
+      id: "escalation",
+      title: s.escalationTitle,
+      body: <EscalationEditor value={doc.escalationTopics} onChange={(escalationTopics) => setDoc({ ...doc, escalationTopics })} />,
+    },
+  ];
+
   return (
-    <div dir="auto" style={{ maxWidth: "48rem", margin: "0 auto" }}>
-      <section style={section}>
-        <h2>
-          {s.factsTitle.en} · {s.factsTitle.ur}
-        </h2>
-        <FactsEditor
-          value={doc.facts}
-          onChange={(facts) => setDoc({ ...doc, facts })}
-        />
-      </section>
+    <div className={ui.stack}>
+      {sections.map((section) => (
+        <section key={section.id} id={section.id} className={`${ui.card} ${panels.editorSection}`}>
+          <div className={ui.cardHead}>
+            <h2 className={ui.cardTitle}>{section.title[lang]}</h2>
+          </div>
+          {/* Field labels inside stay English · Urdu: these fields hold both languages. */}
+          <div className={ui.cardBody} dir="auto">
+            {section.body}
+          </div>
+        </section>
+      ))}
 
-      <section style={section}>
-        <h2>
-          {s.policiesTitle.en} · {s.policiesTitle.ur}
-        </h2>
-        <PoliciesEditor
-          value={doc.policies}
-          onChange={(policies) => setDoc({ ...doc, policies })}
-        />
-      </section>
-
-      <section style={section}>
-        <h2>
-          {s.faqsTitle.en} · {s.faqsTitle.ur}
-        </h2>
-        <FaqEditor value={doc.faqs} onChange={(faqs) => setDoc({ ...doc, faqs })} />
-      </section>
-
-      <section style={section}>
-        <h2>
-          {s.escalationTitle.en} · {s.escalationTitle.ur}
-        </h2>
-        <EscalationEditor
-          value={doc.escalationTopics}
-          onChange={(escalationTopics) => setDoc({ ...doc, escalationTopics })}
-        />
-      </section>
-
-      <div
-        style={{
-          position: "sticky",
-          bottom: 0,
-          background: "var(--page-background)",
-          padding: "0.75rem 0",
-          display: "flex",
-          gap: "0.75rem",
-          flexWrap: "wrap",
-          alignItems: "center",
-          borderTop: "1px solid rgba(128,128,128,0.3)",
-        }}
-      >
-        <button type="button" style={btn} disabled={busy || !dirty} onClick={save}>
-          {busy ? s.saving.en : `${s.save.en} · ${s.save.ur}`}
+      <div className={panels.actionBar}>
+        <button type="button" className={`${ui.btn} ${ui.btnGhost}`} disabled={busy || !dirty} onClick={save}>
+          {busy ? s.saving[lang] : s.save[lang]}
         </button>
-        <button
-          type="button"
-          style={btn}
-          disabled={busy || dirty}
-          onClick={openPublish}
-        >
-          {s.publish.en} · {s.publish.ur}
+        <button type="button" className={`${ui.btn} ${ui.btnPrimary}`} disabled={busy || dirty} onClick={openPublish}>
+          {s.publish[lang]}
         </button>
-        {dirty && (
-          <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-            Unsaved changes — save before publishing.
-          </span>
-        )}
+        {dirty && <span className={ui.muted}>{dashboardStrings.unsavedHint[lang]}</span>}
         {status && (
-          <span
-            role="status"
-            style={{ fontSize: "0.9rem", whiteSpace: "pre-line" }}
-          >
+          <span role="status" className={panels.statusText}>
             {status}
           </span>
         )}
