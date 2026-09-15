@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import type { ContentDoc } from "@/lib/content/schema";
+import type { Lang } from "@/lib/language";
 import { simulate, type SimulationResult } from "@/lib/content/simulate";
 import { landingStrings as s } from "@/lib/strings/landing";
-
-const box = { minHeight: "44px", padding: "0.5rem", fontSize: "1rem" };
+import styles from "@/components/landing/sections.module.css";
 
 /**
  * A parent types a question and gets an answer looked up from the published
@@ -15,74 +15,49 @@ const box = { minHeight: "44px", padding: "0.5rem", fontSize: "1rem" };
  * An escalation-topic match shows the hand-off wording, never an answer
  * (FR-017).
  */
-export function TextChat({ content }: { content: ContentDoc }) {
+export function TextChat({ content, lang }: { content: ContentDoc; lang: Lang }) {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState<SimulationResult | null>(null);
 
   return (
-    <section
-      dir="auto"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.6rem",
-        maxWidth: "32rem",
-        margin: "0 auto",
-      }}
-    >
-      <h2 style={{ margin: 0, fontSize: "1.05rem" }}>
-        {s.textChatTitle.en} · {s.textChatTitle.ur}
-      </h2>
-      <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-        {s.textChatFromPublished.en}
-        <br />
-        {s.textChatFromPublished.ur}
-      </p>
+    <section className={styles.section} id="ask">
+      <h2 className={styles.title}>{s.textChatTitle[lang]}</h2>
+      <p className={styles.lead}>{s.textChatFromPublished[lang]}</p>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           setResult(simulate(question, content));
         }}
-        style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}
+        className={styles.chatForm}
       >
         <input
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder={s.textChatPlaceholder.en}
-          style={{ ...box, flex: 1, minWidth: "10rem" }}
+          placeholder={s.textChatPlaceholder[lang]}
+          aria-label={s.textChatTitle[lang]}
+          dir="auto"
+          className={styles.chatInput}
         />
-        <button type="submit" style={{ ...box, fontWeight: 600 }}>
-          {s.textChatSend.en} · {s.textChatSend.ur}
+        <button type="submit" className={styles.button} style={{ marginTop: 0, minHeight: "48px" }}>
+          {s.textChatSend[lang]}
         </button>
       </form>
 
       {result && (
-        <div
-          style={{
-            border: "1px solid rgba(128,128,128,0.3)",
-            borderRadius: "0.5rem",
-            padding: "0.75rem",
-          }}
-        >
-          {result.kind === "none" && (
-            <p style={{ margin: 0 }}>
-              {s.textChatNoMatch.en}
-              <br />
-              {s.textChatNoMatch.ur}
-            </p>
-          )}
+        <div className={`${styles.card} ${styles.chatResult}`} aria-live="polite">
+          {result.kind === "none" && <p>{s.textChatNoMatch[lang]}</p>}
           {result.kind === "handoff" && (
             <>
-              <strong style={{ color: "var(--failure-border)" }}>
-                {s.textChatHandoff.en} · {s.textChatHandoff.ur}
-              </strong>
-              <p style={{ margin: "0.4rem 0 0", whiteSpace: "pre-line" }}>
+              <strong className={styles.handoff}>{s.textChatHandoff[lang]}</strong>
+              <p dir="auto" style={{ marginTop: "0.4rem", whiteSpace: "pre-line" }}>
                 {result.text}
               </p>
             </>
           )}
           {result.kind === "answer" && (
-            <p style={{ margin: 0, whiteSpace: "pre-line" }}>{result.text}</p>
+            <p dir="auto" style={{ whiteSpace: "pre-line" }}>
+              {result.text}
+            </p>
           )}
         </div>
       )}
