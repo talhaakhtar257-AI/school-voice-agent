@@ -293,6 +293,18 @@
   font-size: 13.5px;
 }
 
+/* Quieter green, for Remove: it belongs to the brand but should not outshine Add. */
+.btnSoft {
+  background: var(--brand-50);
+  color: var(--brand-700) !important;
+  border-color: var(--brand-100);
+}
+
+.btnSoft:hover:not(:disabled) {
+  background: var(--brand-100);
+  border-color: var(--brand-500);
+}
+
 .select {
   min-height: 44px;
   padding: 0 10px;

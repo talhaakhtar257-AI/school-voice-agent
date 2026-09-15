@@ -19,7 +19,7 @@ export default async function ContentTestPage() {
     <section className={ui.card}>
       {draft ? (
         <div className={ui.cardBody}>
-          <TestTool draft={draft.doc} />
+          <TestTool draft={draft.doc} lang={lang} />
         </div>
       ) : (
         <EmptyState tone="error" title={dashboardStrings.loadErrorTitle[lang]} body={s.loadError[lang]} />

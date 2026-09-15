@@ -1,7 +1,10 @@
 "use client";
 
 import type { Facts } from "@/lib/content/schema";
+import type { Lang } from "@/lib/language";
+import { contentAdminStrings as s } from "@/lib/strings/content-admin";
 import { BilingualField } from "./bilingual-field";
+import { addButton, removeButton } from "./button-classes";
 
 const input = {
   padding: "0.4rem",
@@ -10,7 +13,6 @@ const input = {
   boxSizing: "border-box" as const,
 };
 const row = { display: "flex", gap: "0.5rem", flexWrap: "wrap" as const, alignItems: "center" };
-const btn = { minHeight: "44px", padding: "0.3rem 0.6rem" };
 
 type Timing = Facts["schoolTimings"][number];
 
@@ -21,9 +23,11 @@ type Timing = Facts["schoolTimings"][number];
 export function TimingsEditor({
   value,
   onChange,
+  lang,
 }: {
   value: Timing[];
   onChange: (next: Timing[]) => void;
+  lang: Lang;
 }) {
   function update(index: number, patch: Partial<Timing>) {
     onChange(value.map((t, i) => (i === index ? { ...t, ...patch } : t)));
@@ -55,18 +59,19 @@ export function TimingsEditor({
             />
             <input type="time" value={t.starts} onChange={(e) => update(i, { starts: e.target.value })} style={input} />
             <input type="time" value={t.ends} onChange={(e) => update(i, { ends: e.target.value })} style={input} />
-            <button type="button" style={btn} onClick={() => onChange(value.filter((_, j) => j !== i))}>
-              Remove
+            <button type="button" className={removeButton} onClick={() => onChange(value.filter((_, j) => j !== i))}>
+              {s.remove[lang]}
             </button>
           </div>
         </div>
       ))}
       <button
         type="button"
-        style={{ ...btn, marginTop: "0.4rem" }}
+        className={addButton}
+        style={{ marginTop: "0.6rem" }}
         onClick={() => onChange([...value, { label: { en: "", ur: "" }, days: "", starts: "", ends: "" }])}
       >
-        Add school timing
+        {s.addTiming[lang]}
       </button>
     </div>
   );

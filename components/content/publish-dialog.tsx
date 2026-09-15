@@ -1,7 +1,9 @@
 "use client";
 
 import type { Problem } from "@/lib/content/validate";
+import type { Lang } from "@/lib/language";
 import { contentAdminStrings as s } from "@/lib/strings/content-admin";
+import { cancelButton, confirmButton } from "./button-classes";
 
 /**
  * The publish confirmation (FR-011). Shows either the blocking problems (Confirm
@@ -13,12 +15,14 @@ export function PublishDialog({
   busy,
   onConfirm,
   onCancel,
+  lang,
 }: {
   changes: string[];
   problems: Problem[];
   busy: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  lang: Lang;
 }) {
   const blocking = problems.filter((p) => p.severity === "block");
   const warnings = problems.filter((p) => p.severity === "warn");
@@ -100,21 +104,11 @@ export function PublishDialog({
         )}
 
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={!canConfirm}
-            style={{ minHeight: "44px", padding: "0.4rem 0.9rem", fontWeight: 600 }}
-          >
-            {busy ? `${s.saving.en}` : `${s.confirm.en} · ${s.confirm.ur}`}
+          <button type="button" className={confirmButton} onClick={onConfirm} disabled={!canConfirm}>
+            {busy ? s.saving[lang] : s.confirm[lang]}
           </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={busy}
-            style={{ minHeight: "44px", padding: "0.4rem 0.9rem" }}
-          >
-            {s.cancel.en} · {s.cancel.ur}
+          <button type="button" className={cancelButton} onClick={onCancel} disabled={busy}>
+            {s.cancel[lang]}
           </button>
         </div>
       </div>

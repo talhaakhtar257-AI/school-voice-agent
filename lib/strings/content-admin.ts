@@ -21,6 +21,14 @@ export const contentAdminStrings = {
   cancel: { en: "Cancel", ur: "منسوخ کریں" },
   add: { en: "Add", ur: "شامل کریں" },
   remove: { en: "Remove", ur: "ہٹا دیں" },
+  addFaq: { en: "Add FAQ", ur: "سوال شامل کریں" },
+  addProgram: { en: "Add program", ur: "مرحلہ شامل کریں" },
+  addTopic: { en: "Add topic", ur: "موضوع شامل کریں" },
+  addClass: { en: "Add class", ur: "کلاس شامل کریں" },
+  removeClass: { en: "Remove class", ur: "کلاس ہٹا دیں" },
+  addDateRange: { en: "Add date range", ur: "تاریخیں شامل کریں" },
+  addHours: { en: "Add office hours", ur: "دفتری اوقات شامل کریں" },
+  addTiming: { en: "Add school timing", ur: "اسکول کے اوقات شامل کریں" },
 
   // Messages
   draftSaved: { en: "Draft saved.", ur: "مسودہ محفوظ ہو گیا۔" },

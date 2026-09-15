@@ -3,7 +3,9 @@
 import { useState } from "react";
 import type { ContentDoc } from "@/lib/content/schema";
 import { simulate, type SimulationResult } from "@/lib/content/simulate";
+import type { Lang } from "@/lib/language";
 import { contentAdminStrings as s } from "@/lib/strings/content-admin";
+import { confirmButton, fitContent } from "./button-classes";
 
 const noticeBox = {
   margin: 0,
@@ -19,7 +21,7 @@ const noticeBox = {
  * a pure function — so testing cannot touch the draft, the live version, or the
  * history (FR-020). Every result carries the simulation notice (FR-018).
  */
-export function TestTool({ draft }: { draft: ContentDoc }) {
+export function TestTool({ draft, lang }: { draft: ContentDoc; lang: Lang }) {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState<SimulationResult | null>(null);
 
@@ -57,11 +59,8 @@ export function TestTool({ draft }: { draft: ContentDoc }) {
           placeholder={s.testPlaceholder.en}
           style={{ minHeight: "44px", padding: "0.5rem", fontSize: "1rem" }}
         />
-        <button
-          type="submit"
-          style={{ minHeight: "44px", padding: "0.5rem 1rem", fontWeight: 600 }}
-        >
-          {s.testRun.en} · {s.testRun.ur}
+        <button type="submit" className={confirmButton} style={fitContent}>
+          {s.testRun[lang]}
         </button>
       </form>
 

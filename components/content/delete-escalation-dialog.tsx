@@ -1,6 +1,8 @@
 "use client";
 
+import type { Lang } from "@/lib/language";
 import { contentAdminStrings as s } from "@/lib/strings/content-admin";
+import { cancelButton, confirmButton } from "./button-classes";
 
 /**
  * Removing an escalation topic needs the same deliberate confirmation as
@@ -11,10 +13,12 @@ export function DeleteEscalationDialog({
   topicLabel,
   onConfirm,
   onCancel,
+  lang,
 }: {
   topicLabel: string;
   onConfirm: () => void;
   onCancel: () => void;
+  lang: Lang;
 }) {
   return (
     <div
@@ -59,19 +63,11 @@ export function DeleteEscalationDialog({
           {s.removeEscalationWarning.ur}
         </p>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          <button
-            type="button"
-            onClick={onConfirm}
-            style={{ minHeight: "44px", padding: "0.4rem 0.9rem", fontWeight: 600 }}
-          >
-            {s.remove.en} · {s.remove.ur}
+          <button type="button" className={confirmButton} onClick={onConfirm}>
+            {s.remove[lang]}
           </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            style={{ minHeight: "44px", padding: "0.4rem 0.9rem" }}
-          >
-            {s.cancel.en} · {s.cancel.ur}
+          <button type="button" className={cancelButton} onClick={onCancel}>
+            {s.cancel[lang]}
           </button>
         </div>
       </div>

@@ -1,6 +1,9 @@
 "use client";
 
 import type { Facts } from "@/lib/content/schema";
+import type { Lang } from "@/lib/language";
+import { contentAdminStrings as s } from "@/lib/strings/content-admin";
+import { addButton, removeButton } from "./button-classes";
 import { FactsSchedulesEditor } from "./facts-schedules-editor";
 import { TimingsEditor } from "./timings-editor";
 
@@ -11,7 +14,6 @@ const input = {
   boxSizing: "border-box" as const,
 };
 const row = { display: "flex", gap: "0.5rem", flexWrap: "wrap" as const, alignItems: "center" };
-const smallBtn = { minHeight: "44px", padding: "0.3rem 0.6rem" };
 
 /**
  * The Facts section — language-neutral values, stored once (FR-006).
@@ -20,9 +22,11 @@ const smallBtn = { minHeight: "44px", padding: "0.3rem 0.6rem" };
 export function FactsEditor({
   value,
   onChange,
+  lang,
 }: {
   value: Facts;
   onChange: (next: Facts) => void;
+  lang: Lang;
 }) {
   function setClasses(classes: string[]) {
     // keep fee/age maps in step with the class list
@@ -120,18 +124,22 @@ export function FactsEditor({
                 style={{ ...input, width: "4rem" }}
               />
             </span>
-            <button type="button" style={smallBtn} onClick={() => setClasses(value.classes.filter((_, j) => j !== i))}>
-              Remove class
+            <button type="button" className={removeButton} onClick={() => setClasses(value.classes.filter((_, j) => j !== i))}>
+              {s.removeClass[lang]}
             </button>
           </div>
         ))}
-        <button type="button" style={{ ...smallBtn, marginTop: "0.4rem" }} onClick={() => setClasses([...value.classes, ""])}>
-          Add class
+        <button type="button" className={addButton} style={{ marginTop: "0.6rem" }} onClick={() => setClasses([...value.classes, ""])}>
+          {s.addClass[lang]}
         </button>
       </div>
 
-      <FactsSchedulesEditor value={value} onChange={onChange} />
-      <TimingsEditor value={value.schoolTimings} onChange={(schoolTimings) => onChange({ ...value, schoolTimings })} />
+      <FactsSchedulesEditor value={value} onChange={onChange} lang={lang} />
+      <TimingsEditor
+        value={value.schoolTimings}
+        onChange={(schoolTimings) => onChange({ ...value, schoolTimings })}
+        lang={lang}
+      />
     </div>
   );
 }

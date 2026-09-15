@@ -1,10 +1,10 @@
 "use client";
 
 import type { ProgramItem } from "@/lib/content/schema";
+import type { Lang } from "@/lib/language";
 import { contentAdminStrings as s } from "@/lib/strings/content-admin";
 import { BilingualField } from "./bilingual-field";
-
-const btn = { minHeight: "44px", padding: "0.4rem 0.75rem" };
+import { addButton, fitContent, removeButton } from "./button-classes";
 
 function newId() {
   return `prog_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
@@ -19,10 +19,12 @@ export function ProgramsEditor({
   value,
   classes,
   onChange,
+  lang,
 }: {
   value: ProgramItem[];
   classes: string[];
   onChange: (next: ProgramItem[]) => void;
+  lang: Lang;
 }) {
   const active = value.filter((p) => p.archivedAt === null);
 
@@ -82,15 +84,21 @@ export function ProgramsEditor({
               ))}
             </div>
           </fieldset>
-          <button type="button" style={btn} onClick={() => update(p.id, { archivedAt: new Date().toISOString() })}>
-            {s.remove.en} · {s.remove.ur}
+          <button
+            type="button"
+            className={removeButton}
+            style={fitContent}
+            onClick={() => update(p.id, { archivedAt: new Date().toISOString() })}
+          >
+            {s.remove[lang]}
           </button>
         </div>
       ))}
 
       <button
         type="button"
-        style={btn}
+        className={addButton}
+        style={fitContent}
         onClick={() =>
           onChange([
             ...value,
@@ -98,7 +106,7 @@ export function ProgramsEditor({
           ])
         }
       >
-        {s.add.en} program · {s.add.ur}
+        {s.addProgram[lang]}
       </button>
     </div>
   );

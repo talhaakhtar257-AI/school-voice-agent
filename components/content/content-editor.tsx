@@ -101,18 +101,35 @@ export function ContentEditor({
         />
       ),
     },
-    { id: "facts", title: s.factsTitle, body: <FactsEditor value={doc.facts} onChange={(facts) => setDoc({ ...doc, facts })} /> },
+    {
+      id: "facts",
+      title: s.factsTitle,
+      body: <FactsEditor value={doc.facts} onChange={(facts) => setDoc({ ...doc, facts })} lang={lang} />,
+    },
     {
       id: "programs",
       title: s.programsTitle,
-      body: <ProgramsEditor value={doc.programs} classes={doc.facts.classes} onChange={(programs) => setDoc({ ...doc, programs })} />,
+      body: (
+        <ProgramsEditor
+          value={doc.programs}
+          classes={doc.facts.classes}
+          onChange={(programs) => setDoc({ ...doc, programs })}
+          lang={lang}
+        />
+      ),
     },
     { id: "policies", title: s.policiesTitle, body: <PoliciesEditor value={doc.policies} onChange={(policies) => setDoc({ ...doc, policies })} /> },
-    { id: "faqs", title: s.faqsTitle, body: <FaqEditor value={doc.faqs} onChange={(faqs) => setDoc({ ...doc, faqs })} /> },
+    { id: "faqs", title: s.faqsTitle, body: <FaqEditor value={doc.faqs} onChange={(faqs) => setDoc({ ...doc, faqs })} lang={lang} /> },
     {
       id: "escalation",
       title: s.escalationTitle,
-      body: <EscalationEditor value={doc.escalationTopics} onChange={(escalationTopics) => setDoc({ ...doc, escalationTopics })} />,
+      body: (
+        <EscalationEditor
+          value={doc.escalationTopics}
+          onChange={(escalationTopics) => setDoc({ ...doc, escalationTopics })}
+          lang={lang}
+        />
+      ),
     },
   ];
 
@@ -152,6 +169,7 @@ export function ContentEditor({
           busy={publishing}
           onCancel={() => setDialog(null)}
           onConfirm={doPublish}
+          lang={lang}
         />
       )}
     </div>

@@ -1,10 +1,10 @@
 "use client";
 
 import type { FaqItem } from "@/lib/content/schema";
+import type { Lang } from "@/lib/language";
 import { contentAdminStrings as s } from "@/lib/strings/content-admin";
 import { BilingualField } from "./bilingual-field";
-
-const btn = { minHeight: "44px", padding: "0.4rem 0.75rem" };
+import { addButton, fitContent, removeButton } from "./button-classes";
 
 function newId() {
   return `faq_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
@@ -18,9 +18,11 @@ function newId() {
 export function FaqEditor({
   value,
   onChange,
+  lang,
 }: {
   value: FaqItem[];
   onChange: (next: FaqItem[]) => void;
+  lang: Lang;
 }) {
   const active = value.filter((f) => f.archivedAt === null);
 
@@ -61,17 +63,19 @@ export function FaqEditor({
           />
           <button
             type="button"
-            style={btn}
+            className={removeButton}
+            style={fitContent}
             onClick={() => update(f.id, { archivedAt: new Date().toISOString() })}
           >
-            {s.remove.en} · {s.remove.ur}
+            {s.remove[lang]}
           </button>
         </div>
       ))}
 
       <button
         type="button"
-        style={btn}
+        className={addButton}
+        style={fitContent}
         onClick={() =>
           onChange([
             ...value,
@@ -84,7 +88,7 @@ export function FaqEditor({
           ])
         }
       >
-        {s.add.en} FAQ · {s.add.ur}
+        {s.addFaq[lang]}
       </button>
     </div>
   );

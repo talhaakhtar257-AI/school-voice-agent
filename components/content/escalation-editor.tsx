@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import type { EscalationTopic } from "@/lib/content/schema";
+import type { Lang } from "@/lib/language";
 import { contentAdminStrings as s } from "@/lib/strings/content-admin";
 import { BilingualField } from "./bilingual-field";
+import { addButton, fitContent, removeButton } from "./button-classes";
 import { DeleteEscalationDialog } from "./delete-escalation-dialog";
-
-const btn = { minHeight: "44px", padding: "0.4rem 0.75rem" };
 
 function newId() {
   return `esc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
@@ -20,9 +20,11 @@ function newId() {
 export function EscalationEditor({
   value,
   onChange,
+  lang,
 }: {
   value: EscalationTopic[];
   onChange: (next: EscalationTopic[]) => void;
+  lang: Lang;
 }) {
   const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
   const active = value.filter((t) => t.archivedAt === null);
@@ -64,15 +66,16 @@ export function EscalationEditor({
             value={t.handoffWording}
             onChange={(handoffWording) => update(t.id, { handoffWording })}
           />
-          <button type="button" style={btn} onClick={() => setPendingRemoveId(t.id)}>
-            {s.remove.en} · {s.remove.ur}
+          <button type="button" className={removeButton} style={fitContent} onClick={() => setPendingRemoveId(t.id)}>
+            {s.remove[lang]}
           </button>
         </div>
       ))}
 
       <button
         type="button"
-        style={btn}
+        className={addButton}
+        style={fitContent}
         onClick={() =>
           onChange([
             ...value,
@@ -85,11 +88,12 @@ export function EscalationEditor({
           ])
         }
       >
-        {s.add.en} topic · {s.add.ur}
+        {s.addTopic[lang]}
       </button>
 
       {pending && (
         <DeleteEscalationDialog
+          lang={lang}
           topicLabel={pending.topic.en || pending.topic.ur || "(untitled)"}
           onCancel={() => setPendingRemoveId(null)}
           onConfirm={() => {

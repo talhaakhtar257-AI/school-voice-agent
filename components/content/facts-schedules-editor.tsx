@@ -1,6 +1,9 @@
 "use client";
 
 import type { Facts } from "@/lib/content/schema";
+import type { Lang } from "@/lib/language";
+import { contentAdminStrings as s } from "@/lib/strings/content-admin";
+import { addButton, removeButton } from "./button-classes";
 
 const input = {
   padding: "0.4rem",
@@ -14,15 +17,16 @@ const row = {
   flexWrap: "wrap" as const,
   alignItems: "center",
 };
-const btn = { minHeight: "44px", padding: "0.3rem 0.6rem" };
 
 /** The date-range and office-hours parts of Facts — repeatable rows. */
 export function FactsSchedulesEditor({
   value,
   onChange,
+  lang,
 }: {
   value: Facts;
   onChange: (next: Facts) => void;
+  lang: Lang;
 }) {
   return (
     <>
@@ -62,7 +66,7 @@ export function FactsSchedulesEditor({
             />
             <button
               type="button"
-              style={btn}
+              className={removeButton}
               onClick={() =>
                 onChange({
                   ...value,
@@ -70,13 +74,14 @@ export function FactsSchedulesEditor({
                 })
               }
             >
-              Remove
+              {s.remove[lang]}
             </button>
           </div>
         ))}
         <button
           type="button"
-          style={{ ...btn, marginTop: "0.4rem" }}
+          className={addButton}
+          style={{ marginTop: "0.6rem" }}
           onClick={() =>
             onChange({
               ...value,
@@ -87,7 +92,7 @@ export function FactsSchedulesEditor({
             })
           }
         >
-          Add date range
+          {s.addDateRange[lang]}
         </button>
       </div>
 
@@ -127,7 +132,7 @@ export function FactsSchedulesEditor({
             />
             <button
               type="button"
-              style={btn}
+              className={removeButton}
               onClick={() =>
                 onChange({
                   ...value,
@@ -135,13 +140,14 @@ export function FactsSchedulesEditor({
                 })
               }
             >
-              Remove
+              {s.remove[lang]}
             </button>
           </div>
         ))}
         <button
           type="button"
-          style={{ ...btn, marginTop: "0.4rem" }}
+          className={addButton}
+          style={{ marginTop: "0.6rem" }}
           onClick={() =>
             onChange({
               ...value,
@@ -152,7 +158,7 @@ export function FactsSchedulesEditor({
             })
           }
         >
-          Add hours
+          {s.addHours[lang]}
         </button>
       </div>
     </>
