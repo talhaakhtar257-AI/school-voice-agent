@@ -15,10 +15,8 @@ export default async function ContentTestPage() {
   const draft = await orNull("content-draft", readDraft());
 
   return (
+    // No card heading here: TestTool renders its own "Try a question" heading.
     <section className={ui.card}>
-      <div className={ui.cardHead}>
-        <h2 className={ui.cardTitle}>{s.testHeading[lang]}</h2>
-      </div>
       {draft ? (
         <div className={ui.cardBody}>
           <TestTool draft={draft.doc} />

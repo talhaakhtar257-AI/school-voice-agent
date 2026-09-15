@@ -56,6 +56,13 @@
   padding: 18px 20px;
 }
 
+/* Older editor fields set their own widths; never let one poke past a phone screen. */
+.cardBody input,
+.cardBody select,
+.cardBody textarea {
+  max-width: 100%;
+}
+
 /* ---------- Tiles ---------- */
 .tiles {
   display: grid;
