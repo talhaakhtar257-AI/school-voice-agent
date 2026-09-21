@@ -15,6 +15,25 @@ export const callStrings = {
     en: "Keep this page open until the call ends.",
     ur: "کال ختم ہونے تک یہ صفحہ کھلا رکھیں۔",
   },
+  emailLabel: {
+    en: "Want a summary by email? (optional)",
+    ur: "خلاصہ ای میل پر چاہیے؟ (اختیاری)",
+  },
+  emailPlaceholder: { en: "your@email.com", ur: "your@email.com" },
+  emailSend: { en: "Send", ur: "بھیجیں" },
+  emailSending: { en: "Sending…", ur: "بھیجا جا رہا ہے…" },
+  emailSaved: {
+    en: "Thank you. We will email you a summary of this call.",
+    ur: "شکریہ۔ اس کال کا خلاصہ آپ کو ای میل کر دیا جائے گا۔",
+  },
+  emailInvalid: {
+    en: "That email address doesn't look right. Please check it.",
+    ur: "یہ ای میل ایڈریس درست نہیں لگتا۔ براہ کرم دوبارہ دیکھیں۔",
+  },
+  emailFailed: {
+    en: "Sorry, we couldn't save your email. You can tell the office instead.",
+    ur: "معذرت، ای میل محفوظ نہیں ہو سکی۔ آپ دفتر کو بتا سکتے ہیں۔",
+  },
   assistant: { en: "Assistant", ur: "اسسٹنٹ" },
   you: { en: "You", ur: "آپ" },
   mute: { en: "Mute", ur: "آواز بند" },

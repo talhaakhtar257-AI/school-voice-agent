@@ -11,8 +11,8 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Add `RETELL_API_KEY`, `RETELL_STAFF_PUBLIC_KEY`, `RESEND_API_KEY`, `EMAIL_FROM` and `SCHOOL_NOTIFY_EMAIL` (empty) to `.env.example`, each with a one-line comment on where it comes from
-- [ ] T002 Update `.claude/rules/api.md`, section "Saving leads":
+- [x] T001 Add `RETELL_API_KEY`, `RETELL_STAFF_PUBLIC_KEY`, `RESEND_API_KEY`, `EMAIL_FROM` and `SCHOOL_NOTIFY_EMAIL` (empty) to `.env.example`, each with a one-line comment on where it comes from
+- [x] T002 Update `.claude/rules/api.md`, section "Saving leads":
   - replace "Never overwrite an existing lead. Each call creates a new row." with: one lead per call; a later save in the **same** call updates it; never replace a stored value with an empty one, or a confirmed name or phone with an unconfirmed one;
   - add a note that `/api/leads/email` and `/api/retell/web-call` are browser-called and are protected by the visitor cookie instead of the agent secret;
   - add a note that `/api/retell/webhook` takes the secret in the query string.
@@ -21,23 +21,23 @@
 
 ## Phase 2: Foundational (blocks US1, US2, US4, US5)
 
-- [ ] T003 Write migration `supabase/migrations/20260921100000_calls_and_lead_fields.sql` per data-model.md Migration 1:
+- [x] T003 Write migration `supabase/migrations/20260921100000_calls_and_lead_fields.sql` per data-model.md Migration 1:
   - the `calls` table, its check constraints, indexes, the `updated_at` trigger (reuse the `leads` trigger function), RLS on with a select policy for `authenticated`;
   - on `leads`: `email` (with a shape check), `summary`, `call_duration_seconds`;
   - de-duplicate `retell_call_id`, then add a partial unique index where it is not null.
 
   Apply it with the Supabase MCP `apply_migration`, and verify with `list_tables`.
-- [ ] T004 [P] Create `lib/calls/mask.ts`:
+- [x] T004 [P] Create `lib/calls/mask.ts`:
   - `maskIdNumbers(text)` replaces `\d{5}-?\d{7}-?\d` with asterisks of the same length;
   - `maskTranscript(turns)` applies it to every `content`.
-- [ ] T005 [P] Create `lib/calls/retell-api.ts`:
+- [x] T005 [P] Create `lib/calls/retell-api.ts`:
   - `getRetellCall(callId)` does a `fetch` to `https://api.retellai.com/v2/get-call/{id}` with `Authorization: Bearer ${process.env.RETELL_API_KEY}` and an 8 s timeout (`AbortSignal.timeout`);
   - it returns a Zod-parsed subset: `call_id`, `agent_id`, `call_status`, `start_timestamp`, `end_timestamp`, `duration_ms`, `transcript_object` (role and content only), `call_analysis.call_summary`;
   - a 404 returns `null`; any other failure throws.
-- [ ] T006 [P] Create `lib/calls/schema.ts` with Zod schemas:
+- [x] T006 [P] Create `lib/calls/schema.ts` with Zod schemas:
   - the webhook body `{ event, call: { call_id } }`;
   - the email box body `{ callId, email }`.
-- [ ] T007 Create `lib/calls/queries.ts` (service-role client for writes, user session for reads):
+- [x] T007 Create `lib/calls/queries.ts` (service-role client for writes, user session for reads):
   - `upsertCallFromRetell(retellCall, event)`: the state rules from data-model.md, and it masks before writing;
   - `linkLeadToCall(callId, leadId)`: copies `parent_email`, `summary` and `duration` to the lead;
   - `copyCallSummaryToLead(callId)`.
@@ -51,49 +51,49 @@
 **Goal**: one lead per call, saved early and updated later, carrying email, summary, call length and the full conversation, with a details page.
 **Independent test**: quickstart.md, stage 2, steps 1–4.
 
-- [ ] T008 [US1] Update `lib/leads/schema.ts`: add `parseAgentBody(body)`, which returns `{ enquiry, callId }` from either the flat shape or the `{ name, call, args }` shape (contracts/api.md §1).
-- [ ] T009 [US1] Update `lib/leads/queries.ts`: add `upsertLeadForCall(enquiry, callId)`.
+- [x] T008 [US1] Update `lib/leads/schema.ts`: add `parseAgentBody(body)`, which returns `{ enquiry, callId }` from either the flat shape or the `{ name, call, args }` shape (contracts/api.md §1).
+- [x] T009 [US1] Update `lib/leads/queries.ts`: add `upsertLeadForCall(enquiry, callId)`.
   - insert when the call id is new, otherwise update;
   - the merge rules: never an empty value over a stored one, never unconfirmed over confirmed;
   - `status` is untouched;
   - it returns `{ id, updated }` and then calls `linkLeadToCall`.
   - `insertLead` stays for enquiries with no call id.
-- [ ] T010 [US1] Update `app/api/leads/route.ts` to use `parseAgentBody` and `upsertLeadForCall`. Update the curl examples in its header comment to show both shapes.
-- [ ] T011 [US1] Create `app/api/retell/webhook/route.ts` per contracts/api.md §2:
+- [x] T010 [US1] Update `app/api/leads/route.ts` to use `parseAgentBody` and `upsertLeadForCall`. Update the curl examples in its header comment to show both shapes.
+- [x] T011 [US1] Create `app/api/retell/webhook/route.ts` per contracts/api.md §2:
   - check the query secret (reuse the comparison in `lib/api/secret.ts`, adding a `hasValidQuerySecret` helper there);
   - ignore unknown events;
   - `getRetellCall`, then check the agent id against `NEXT_PUBLIC_RETELL_AGENT_ID`;
   - `upsertCallFromRetell`; on `call_analyzed`, `copyCallSummaryToLead`;
   - status codes 200 / 401 / 502 / 500;
   - logs carry the event, the call id and the outcome only.
-- [ ] T012 [US1] Create `app/api/leads/email/route.ts` per contracts/api.md §3:
+- [x] T012 [US1] Create `app/api/leads/email/route.ts` per contracts/api.md §3:
   - read the visitor cookie with the existing helper in `lib/voice/`;
   - create or claim the call row, 403 on a different visitor;
   - save `calls.parent_email` and the linked `leads.email`.
-- [ ] T013 [US1] Update `components/landing/call/call-provider.tsx`: keep `session.callId` in state and expose `callId` in the context value.
-- [ ] T014 [P] [US1] Add strings to `lib/strings/landing-call.ts`: `emailLabel`, `emailPlaceholder`, `emailSend`, `emailSaved`, `emailInvalid`, `emailFailed`, in EN and UR.
-- [ ] T015 [US1] Create `components/landing/call/email-box.tsx`:
+- [x] T013 [US1] Update `components/landing/call/call-provider.tsx`: keep `session.callId` in state and expose `callId` in the context value.
+- [x] T014 [P] [US1] Add strings to `lib/strings/landing-call.ts`: `emailLabel`, `emailPlaceholder`, `emailSend`, `emailSaved`, `emailInvalid`, `emailFailed`, in EN and UR.
+- [x] T015 [US1] Create `components/landing/call/email-box.tsx`:
   - an optional email input and a Send button, 44 px touch targets, `type="email"`, `dir="ltr"`;
   - posts to `/api/leads/email`;
   - shows the saved, invalid and failed states bilingually.
 
   Render it in `components/landing/call/call-overlay.tsx` during a live call, and once more on the ended screen, below the transcript and above the office line. Style it in `components/landing/call/call.module.css`, and check the office phone stays visible at 360 px.
-- [ ] T016 [US1] Update `lib/leads/rows.ts` (`LEAD_COLUMNS` and `LeadRow`) to include `email`, `summary` and `call_duration_seconds`. Add `getLeadWithCall(id)` in `lib/leads/queries.ts`: the lead, plus its call's transcript and summary, through the staff session.
-- [ ] T017 [P] [US1] Create `components/leads/conversation.tsx`:
+- [x] T016 [US1] Update `lib/leads/rows.ts` (`LEAD_COLUMNS` and `LeadRow`) to include `email`, `summary` and `call_duration_seconds`. Add `getLeadWithCall(id)` in `lib/leads/queries.ts`: the lead, plus its call's transcript and summary, through the staff session.
+- [x] T017 [P] [US1] Create `components/leads/conversation.tsx`:
   - transcript bubbles, one `<p dir="auto">` per turn, labelled Parent or Assistant in the dashboard language;
   - the empty states "still being processed" (a call exists but has no transcript) and "No conversation saved for this lead" (no call).
-- [ ] T018 [P] [US1] Create `components/leads/lead-summary.tsx`: a summary card for the top of the details page, with an empty state.
-- [ ] T019 [US1] Create `app/dashboard/leads/[id]/page.tsx`:
+- [x] T018 [P] [US1] Create `components/leads/lead-summary.tsx`: a summary card for the top of the details page, with an empty state.
+- [x] T019 [US1] Create `app/dashboard/leads/[id]/page.tsx`:
   - summary on top, then the details grid (reuse the field layout from `components/dashboard/lead-drawer.tsx`) with the status control (reuse `app/dashboard/leads/actions.ts`), then the conversation;
   - `notFound()` for an unknown id, an error state on a read failure, and a back link.
-- [ ] T020 [US1] Update `components/leads/leads-table.tsx`:
+- [x] T020 [US1] Update `components/leads/leads-table.tsx`:
   - columns Name, Contact, Email, Summary (first line, CSS clamp, no fixed character cut), Status, Date;
   - a row opens `/dashboard/leads/[id]` instead of the drawer;
   - keep the empty and error states.
 
   Delete `components/dashboard/lead-drawer.tsx` once nothing imports it.
-- [ ] T021 [P] [US1] Add the new dashboard strings (column names, details-page headings, conversation labels, empty states) to `lib/strings/dashboard-screens.ts` in EN and UR. Split into a new `lib/strings/lead-details.ts` if the file passes about 200 lines.
-- [ ] T022 [US1] Update `docs/retell-agent-prompt.md` to **prompt v5**:
+- [x] T021 [P] [US1] Add the new dashboard strings (column names, details-page headings, conversation labels, empty states) to `lib/strings/dashboard-screens.ts` in EN and UR. Split into a new `lib/strings/lead-details.ts` if the file passes about 200 lines.
+- [x] T022 [US1] Update `docs/retell-agent-prompt.md` to **prompt v5**:
   - step 3 calls `save_lead` straight after the phone is confirmed, and step 12 calls it again with everything;
   - add the email-box sentence;
   - the tools section: args-only **OFF** for `save_lead`, plus the webhook URL and events.
@@ -110,10 +110,10 @@
 **Goal**: an analytics strip and the last 10 leads on the Overview.
 **Independent test**: quickstart.md, stage 2, step 5.
 
-- [ ] T023 [P] [US2] Create `lib/dashboard/pk-time.ts`: `startOfTodayPk()` and `startOfWeekPk()` (6 days before today's 00:00 at UTC+5), returned as UTC `Date`s.
-- [ ] T024 [US2] Update `lib/dashboard/overview.ts`: `getPeriodStats()` returns, for today and the week, calls (from `calls.started_at`), leads, average `duration_seconds` of ended calls, and new unanswered questions (`created_at`); and `getRecentLeads(10)`.
-- [ ] T025 [P] [US2] Create `components/dashboard/stats-strip.tsx`: two columns, Today and This week, with 4 figures each. Average length is shown as m:ss, or "—" when there is none. It fits 360 px.
-- [ ] T026 [US2] Update `app/dashboard/page.tsx`: the stats strip at the top; the recent-leads table limited to 10, each row linking to the details page, plus a "See all leads" link; keep the existing chart and gaps panels below. Add the strings to `lib/strings/dashboard.ts`.
+- [x] T023 [P] [US2] Create `lib/dashboard/pk-time.ts`: `startOfTodayPk()` and `startOfWeekPk()` (6 days before today's 00:00 at UTC+5), returned as UTC `Date`s.
+- [x] T024 [US2] Update `lib/dashboard/overview.ts`: `getPeriodStats()` returns, for today and the week, calls (from `calls.started_at`), leads, average `duration_seconds` of ended calls, and new unanswered questions (`created_at`); and `getRecentLeads(10)`.
+- [x] T025 [P] [US2] Create `components/dashboard/stats-strip.tsx`: two columns, Today and This week, with 4 figures each. Average length is shown as m:ss, or "—" when there is none. It fits 360 px.
+- [x] T026 [US2] Update `app/dashboard/page.tsx`: the stats strip at the top; the recent-leads table limited to 10, each row linking to the details page, plus a "See all leads" link; keep the existing chart and gaps panels below. Add the strings to `lib/strings/dashboard.ts`.
 
 **Checkpoint**: the Overview figures match a manual count; the empty database shows zeros and the empty state.
 

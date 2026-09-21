@@ -22,6 +22,8 @@ type CallContextValue = {
   transcript: Turn[];
   fallback: Bilingual | null;
   elapsedSeconds: number;
+  /** Retell's id for the current or last call, once it is live; the email box needs it. */
+  callId: string | null;
   maxSeconds: number | null;
   openCall: () => void;
   closeCall: () => void;
@@ -55,6 +57,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const [fallback, setFallback] = useState<Bilingual | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [maxSeconds, setMaxSeconds] = useState<number | null>(null);
+  const [callId, setCallId] = useState<string | null>(null);
 
   const sessionRef = useRef<WebCallSession | null>(null);
   const limitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -88,6 +91,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     setTranscript([]);
     setElapsedSeconds(0);
     setMaxSeconds(null);
+    setCallId(null);
     setPhase("connecting");
 
     let gate: { ok: true; maxCallSeconds: number } | { reason: string };
@@ -121,6 +125,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
           if (!isCurrent()) return;
           if (status === "live") {
             setPhase("listening");
+            setCallId(session.callId ?? null);
             const startedAt = Date.now();
             tickRef.current = setInterval(() => {
               setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000));
@@ -230,10 +235,10 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<CallContextValue>(
     () => ({
-      phase, muted, transcript, fallback, elapsedSeconds, maxSeconds,
+      phase, muted, transcript, fallback, elapsedSeconds, maxSeconds, callId,
       openCall, closeCall, startCall, endCall, toggleMute,
     }),
-    [phase, muted, transcript, fallback, elapsedSeconds, maxSeconds, openCall, closeCall, startCall, endCall, toggleMute],
+    [phase, muted, transcript, fallback, elapsedSeconds, maxSeconds, callId, openCall, closeCall, startCall, endCall, toggleMute],
   );
 
   return <CallContext.Provider value={value}>{children}</CallContext.Provider>;

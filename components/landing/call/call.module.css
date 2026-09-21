@@ -246,6 +246,65 @@
   font-size: 15.5px;
 }
 
+/* ---------- Email box ---------- */
+.emailBox {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.emailRow {
+  display: flex;
+  gap: 8px;
+}
+
+.emailRow input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.18);
+  font: inherit;
+  font-size: 15px;
+}
+
+.emailRow input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.emailRow button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  color: #0b3f33;
+  background: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.emailRow button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.emailError {
+  margin: 0;
+  color: #ffd2cc;
+}
+
+.emailDone {
+  margin: 0;
+  font-size: 13px;
+  text-align: center;
+  opacity: 0.9;
+}
+
 .keepOpen {
   margin: 0;
   font-size: 13px;

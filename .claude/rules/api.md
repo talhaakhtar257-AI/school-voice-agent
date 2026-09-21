@@ -13,6 +13,13 @@ every request as untrusted.
 
 - Every endpoint checks a shared secret header before doing anything else.
   Reject with 401 if it is missing or wrong.
+- Exceptions, because the caller cannot send our header:
+  - `/api/retell/web-call` and `/api/leads/email` are called by the parent's
+    browser, which cannot hold a secret. They are protected by the visitor
+    cookie instead.
+  - `/api/retell/webhook` is called by Retell's webhook, which sends no custom
+    headers. The secret goes in the `secret` query parameter, and every call is
+    read back from Retell's own API before anything is stored.
 - Validate every field with Zod before touching the database.
 - Never trust a field's type or length because the agent "should" send it right.
 
@@ -26,7 +33,11 @@ every request as untrusted.
 - Save the consent flag with every lead. If consent is false, still save the
   lead but leave the phone number empty.
 - Set status to `new` on creation. Never set any other status from the API.
-- Never overwrite an existing lead. Each call creates a new row.
+- One lead per call. A later save in the **same** call (same Retell call id)
+  updates that call's lead. Never touch another call's lead.
+- An update never replaces a stored value with an empty one, and never replaces
+  a confirmed name or phone with an unconfirmed one.
+- A save with no call id creates a new row, as before.
 
 ## Logging
 

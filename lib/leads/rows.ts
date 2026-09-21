@@ -21,6 +21,9 @@ export type LeadRow = {
   previous_school: string | null;
   admission_type: "fresh" | "transfer" | null;
   language: "ur" | "en" | null;
+  email: string | null;
+  summary: string | null;
+  call_duration_seconds: number | null;
 };
 
 /**
@@ -30,4 +33,23 @@ export type LeadRow = {
  */
 export const LEAD_COLUMNS =
   "id, created_at, status, parent_name, student_name, class_wanted, " +
-  "student_age, phone, current_class, previous_school, admission_type, language";
+  "student_age, phone, current_class, previous_school, admission_type, language, " +
+  "email, summary, call_duration_seconds";
+
+export type TranscriptTurn = { role: "agent" | "user"; content: string };
+
+/**
+ * One lead with its call, for the details page. `call` is null for leads saved
+ * before calls were recorded; `transcript` is null while Retell is still
+ * processing a call that has ended.
+ */
+export type LeadWithCall = LeadRow & {
+  call: {
+    status: "ongoing" | "ended";
+    transcript: TranscriptTurn[] | null;
+    summary: string | null;
+    email_error: string | null;
+    school_email_sent_at: string | null;
+    parent_email_sent_at: string | null;
+  } | null;
+};
