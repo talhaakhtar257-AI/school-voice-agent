@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Lang } from "@/lib/language";
@@ -10,21 +10,24 @@ import { LEAD_STATUSES, type LeadRow, type LeadStatus } from "@/lib/leads/rows";
 import { formatDate } from "@/lib/dashboard/format";
 import { refreshLeadsAction, updateLeadStatusAction } from "@/app/dashboard/leads/actions";
 import { EmptyState } from "@/components/dashboard/empty-state";
-import { STATUS_LABEL } from "@/components/dashboard/status-tag";
+import { STATUS_CLASS, STATUS_LABEL } from "@/components/dashboard/status-tag";
 import ui from "@/components/dashboard/ui.module.css";
+import { LeadAvatar } from "./lead-avatar";
+import { LeadsToolbar, type LeadFilter } from "./leads-toolbar";
 import styles from "./lead-details.module.css";
 
 /**
  * The Leads screen's table: Name, Contact, Email, Summary, Status, Date
- * (FR-008). Starts from the rows the server already fetched, then polls every
- * 10 seconds so a lead saved during a call appears without a reload. A row
- * opens the lead's own details page. Renders its own empty state, so it stays
- * correct if polling takes the list from populated back to empty.
+ * (FR-008), with status tabs and a search box above it. Starts from the rows
+ * the server already fetched, then polls every 10 seconds so a lead saved
+ * during a call appears without a reload. A row opens the lead's own page.
  */
 export function LeadsTable({ initialLeads, lang }: { initialLeads: LeadRow[]; lang: Lang }) {
   const router = useRouter();
   const [leads, setLeads] = useState(initialLeads);
   const [rowError, setRowError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<LeadFilter>("all");
+  const [query, setQuery] = useState("");
   const [, startTransition] = useTransition();
 
   useEffect(() => {
@@ -38,6 +41,25 @@ export function LeadsTable({ initialLeads, lang }: { initialLeads: LeadRow[]; la
     }, 10_000);
     return () => clearInterval(interval);
   }, []);
+
+  const counts = useMemo(() => {
+    const result = { all: leads.length, new: 0, contacted: 0, applied: 0, closed: 0 } as Record<LeadFilter, number>;
+    for (const lead of leads) result[lead.status] += 1;
+    return result;
+  }, [leads]);
+
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    const digits = needle.replace(/\D/g, "");
+    return leads.filter((lead) => {
+      if (filter !== "all" && lead.status !== filter) return false;
+      if (!needle) return true;
+      return (
+        [lead.parent_name, lead.student_name, lead.email, lead.class_wanted].some((v) => v?.toLowerCase().includes(needle)) ||
+        (digits.length >= 3 && (lead.phone ?? "").replace(/\D/g, "").includes(digits))
+      );
+    });
+  }, [leads, filter, query]);
 
   function handleStatusChange(id: string, next: LeadStatus) {
     const previous = leads.find((lead) => lead.id === id)?.status;
@@ -57,93 +79,103 @@ export function LeadsTable({ initialLeads, lang }: { initialLeads: LeadRow[]; la
     return <EmptyState title={s.emptyTitle[lang]} body={s.emptyBody[lang]} />;
   }
 
-  const dash = s.notGiven[lang];
-  const headings = [t.name, t.contact, t.email, t.summary, s.status, s.date];
+  const dash = <span className={ui.muted}>{s.notGiven[lang]}</span>;
+  const headings = [t.name, t.contact, t.email, t.summary, s.status, t.received];
 
   return (
-    <div className={ui.tscroll}>
-      <table className={ui.table}>
-        <thead>
-          <tr>
-            {headings.map((heading) => (
-              <th key={heading.en} scope="col">
-                {heading[lang]}
-              </th>
-            ))}
-            <th scope="col">
-              <span style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
-                {t.open[lang]}
-              </span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {leads.map((lead) => {
-            const href = `/dashboard/leads/${lead.id}`;
-            return (
-              <tr key={lead.id} className={ui.clickableRow} onClick={() => router.push(href)}>
-                {/* <bdi> keeps an Urdu name reading right-to-left without pushing
-                    it to the far edge of an English table (and vice versa). */}
-                <td style={{ minWidth: 160 }}>
-                  {lead.parent_name ? (
-                    <b><bdi>{lead.parent_name}</bdi></b>
-                  ) : (
-                    <span className={ui.muted} style={{ fontStyle: "italic" }}>{t.noName[lang]}</span>
-                  )}
-                  {(lead.student_name || lead.class_wanted) && (
-                    <div className={ui.muted} style={{ fontSize: "0.8rem" }}>
-                      {lead.student_name && <bdi>{lead.student_name}</bdi>}
-                      {lead.student_name && lead.class_wanted && " · "}
-                      {lead.class_wanted && <bdi>{lead.class_wanted}</bdi>}
-                    </div>
-                  )}
-                </td>
-                <td className={ui.num} style={{ whiteSpace: "nowrap" }}>
-                  {lead.phone ? <bdi dir="ltr">{lead.phone}</bdi> : <span className={ui.muted}>{dash}</span>}
-                </td>
-                <td>
-                  {lead.email ? <bdi dir="ltr">{lead.email}</bdi> : <span className={ui.muted}>{dash}</span>}
-                </td>
-                <td>
-                  {lead.summary ? (
-                    <span className={styles.clamp} dir="auto">{lead.summary}</span>
-                  ) : (
-                    <span className={ui.muted} style={{ fontStyle: "italic" }}>{t.noSummary[lang]}</span>
-                  )}
-                </td>
-                {/* The menu must not also open the details page. */}
-                <td onClick={(event) => event.stopPropagation()}>
-                  <select
-                    className={ui.select}
-                    aria-label={s.status[lang]}
-                    value={lead.status}
-                    onChange={(event) => handleStatusChange(lead.id, event.target.value as LeadStatus)}
-                  >
-                    {LEAD_STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {STATUS_LABEL[status][lang]}
-                      </option>
-                    ))}
-                  </select>
-                  {rowError === lead.id && (
-                    <p role="alert" style={{ color: "var(--crit)", fontSize: "0.75rem", margin: "0.25rem 0 0" }}>
-                      {s.saveFailed[lang]}
-                    </p>
-                  )}
-                </td>
-                <td className={ui.num} style={{ whiteSpace: "nowrap" }}>
-                  {formatDate(lead.created_at, lang)}
-                </td>
-                <td onClick={(event) => event.stopPropagation()}>
-                  <Link href={href} className={`${ui.btn} ${ui.btnGhost} ${ui.btnSmall}`}>
+    <>
+      <LeadsToolbar lang={lang} filter={filter} onFilter={setFilter} counts={counts} query={query} onQuery={setQuery} />
+      {visible.length === 0 ? (
+        <EmptyState title={t.noMatchesTitle[lang]} body={t.noMatchesBody[lang]} />
+      ) : (
+        <div className={ui.tscroll}>
+          <table className={ui.table}>
+            <thead>
+              <tr>
+                {headings.map((heading) => (
+                  <th key={heading.en} scope="col">
+                    {heading[lang]}
+                  </th>
+                ))}
+                <th scope="col">
+                  <span style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
                     {t.open[lang]}
-                  </Link>
-                </td>
+                  </span>
+                </th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+            </thead>
+            <tbody>
+              {visible.map((lead) => {
+                const href = `/dashboard/leads/${lead.id}`;
+                return (
+                  <tr key={lead.id} className={ui.clickableRow} onClick={() => router.push(href)}>
+                    {/* <bdi> keeps an Urdu name reading right-to-left without pushing
+                        it to the far edge of an English table (and vice versa). */}
+                    <td style={{ minWidth: 200 }}>
+                      <div className={styles.person}>
+                        <LeadAvatar name={lead.parent_name} />
+                        <div className={styles.personText}>
+                          {lead.parent_name ? (
+                            <b><bdi>{lead.parent_name}</bdi></b>
+                          ) : (
+                            <span className={ui.muted} style={{ fontStyle: "italic" }}>{t.noName[lang]}</span>
+                          )}
+                          {(lead.student_name || lead.class_wanted) && (
+                            <div className={ui.muted} style={{ fontSize: "0.8rem" }}>
+                              {lead.student_name && <bdi>{lead.student_name}</bdi>}
+                              {lead.student_name && lead.class_wanted && " · "}
+                              {lead.class_wanted && <bdi>{lead.class_wanted}</bdi>}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className={ui.num} style={{ whiteSpace: "nowrap" }}>
+                      {lead.phone ? <bdi dir="ltr">{lead.phone}</bdi> : dash}
+                    </td>
+                    <td>{lead.email ? <bdi dir="ltr">{lead.email}</bdi> : dash}</td>
+                    <td>
+                      {lead.summary ? (
+                        <span className={styles.clamp} dir="auto">{lead.summary}</span>
+                      ) : (
+                        <span className={ui.muted} style={{ fontStyle: "italic" }}>{t.noSummary[lang]}</span>
+                      )}
+                    </td>
+                    {/* The menu must not also open the details page. */}
+                    <td onClick={(event) => event.stopPropagation()}>
+                      <select
+                        className={`${styles.statusSelect} ${ui.tag} ${STATUS_CLASS[lead.status]}`}
+                        aria-label={s.status[lang]}
+                        value={lead.status}
+                        onChange={(event) => handleStatusChange(lead.id, event.target.value as LeadStatus)}
+                      >
+                        {LEAD_STATUSES.map((status) => (
+                          <option key={status} value={status}>
+                            {STATUS_LABEL[status][lang]}
+                          </option>
+                        ))}
+                      </select>
+                      {rowError === lead.id && (
+                        <p role="alert" style={{ color: "var(--crit)", fontSize: "0.75rem", margin: "0.25rem 0 0" }}>
+                          {s.saveFailed[lang]}
+                        </p>
+                      )}
+                    </td>
+                    <td className={ui.num} style={{ whiteSpace: "nowrap" }}>
+                      {formatDate(lead.created_at, lang)}
+                    </td>
+                    <td onClick={(event) => event.stopPropagation()}>
+                      <Link href={href} className={`${ui.btn} ${ui.btnGhost} ${ui.btnSmall}`}>
+                        {t.open[lang]} <span aria-hidden="true">{lang === "ur" ? "←" : "→"}</span>
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
   );
 }

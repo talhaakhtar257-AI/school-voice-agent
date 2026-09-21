@@ -10,7 +10,7 @@ export const STATUS_LABEL: Record<LeadStatus, { en: string; ur: string }> = {
   closed: s.statusClosed,
 };
 
-const STATUS_CLASS: Record<LeadStatus, string> = {
+export const STATUS_CLASS: Record<LeadStatus, string> = {
   new: ui.tagNew,
   contacted: ui.tagContacted,
   applied: ui.tagApplied,

@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/dashboard/empty-state";
 import { LeadSummary } from "@/components/leads/lead-summary";
 import { Conversation } from "@/components/leads/conversation";
 import { LeadStatusControl } from "@/components/leads/lead-status-control";
+import { LeadAvatar } from "@/components/leads/lead-avatar";
 import ui from "@/components/dashboard/ui.module.css";
 import styles from "@/components/leads/lead-details.module.css";
 
@@ -56,9 +57,7 @@ export default async function LeadDetailsPage({ params }: { params: Promise<{ id
     lead.admission_type === "fresh" ? l.fresh[lang] : lead.admission_type === "transfer" ? l.transfer[lang] : dash;
   const language = lead.language === "ur" ? l.urdu[lang] : lead.language === "en" ? l.english[lang] : dash;
   const fields: [{ en: string; ur: string }, string, "ltr" | "auto"][] = [
-    [l.date, formatDateTime(lead.created_at, lang), "auto"],
-    [l.parentName, lead.parent_name ?? dash, "auto"],
-    [l.phone, lead.phone ?? dash, "ltr"],
+    // Name, phone and date are in the header above.
     [s.email, lead.email ?? dash, "ltr"],
     [l.studentName, lead.student_name ?? dash, "auto"],
     [l.classWanted, lead.class_wanted ?? dash, "auto"],
@@ -70,9 +69,40 @@ export default async function LeadDetailsPage({ params }: { params: Promise<{ id
     [s.callLength, lead.call_duration_seconds !== null ? formatDuration(lead.call_duration_seconds) : dash, "ltr"],
   ];
 
+  const subParts = [formatDateTime(lead.created_at, lang), lead.class_wanted].filter(Boolean);
+
   return (
     <div className={styles.stack}>
       <div>{backLink}</div>
+
+      <section className={ui.card}>
+        <div className={styles.header}>
+          <LeadAvatar name={lead.parent_name} large />
+          <div className={styles.personText}>
+            <h2 className={styles.headerName}>
+              {lead.parent_name ? <bdi>{lead.parent_name}</bdi> : <span className={ui.muted}>{s.noName[lang]}</span>}
+            </h2>
+            <div className={styles.headerSub}>
+              {s.enquiry[lang]} · {subParts.map((part, i) => (
+                <span key={i}>
+                  {i > 0 && " · "}
+                  <bdi>{part}</bdi>
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className={styles.headerActions}>
+            {lead.phone ? (
+              <a className={`${ui.btn} ${ui.btnPrimary}`} href={`tel:${lead.phone.replace(/s/g, "")}`}>
+                {d.callBack[lang]} <bdi dir="ltr">{lead.phone}</bdi>
+              </a>
+            ) : (
+              <span className={ui.muted}>{d.noPhone[lang]}</span>
+            )}
+            <LeadStatusControl id={lead.id} initial={lead.status} lang={lang} />
+          </div>
+        </div>
+      </section>
 
       <LeadSummary lead={lead} lang={lang} />
 
@@ -80,7 +110,7 @@ export default async function LeadDetailsPage({ params }: { params: Promise<{ id
         <div className={ui.cardHead}>
           <h2 className={ui.cardTitle}>{s.detailsTitle[lang]}</h2>
         </div>
-        <dl className={styles.meta}>
+        <dl className={`${styles.meta} ${ui.cardBody}`}>
           {fields.map(([label, value, dir]) => (
             <div key={label.en}>
               <dt>{label[lang]}</dt>
@@ -90,16 +120,6 @@ export default async function LeadDetailsPage({ params }: { params: Promise<{ id
             </div>
           ))}
         </dl>
-        <div className={styles.actions}>
-          {lead.phone ? (
-            <a className={`${ui.btn} ${ui.btnPrimary}`} href={`tel:${lead.phone.replace(/\s/g, "")}`}>
-              {d.callBack[lang]}
-            </a>
-          ) : (
-            <span className={ui.muted}>{d.noPhone[lang]}</span>
-          )}
-          <LeadStatusControl id={lead.id} initial={lead.status} lang={lang} />
-        </div>
       </section>
 
       <section className={ui.card}>

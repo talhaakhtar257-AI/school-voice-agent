@@ -12,7 +12,9 @@ import { BarRows } from "@/components/dashboard/bar-rows";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { LeadsChart } from "@/components/dashboard/leads-chart";
 import { StatusTag } from "@/components/dashboard/status-tag";
+import { LeadAvatar } from "@/components/leads/lead-avatar";
 import ui from "@/components/dashboard/ui.module.css";
+import people from "@/components/leads/lead-details.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -64,11 +66,12 @@ export default async function DashboardOverviewPage() {
                   <tr key={lead.id}>
                     <td className={ui.num}>{formatDate(lead.created_at, lang)}</td>
                     <td>
-                      <Link href={`/dashboard/leads/${lead.id}`}>
+                      <Link href={`/dashboard/leads/${lead.id}`} className={people.person} style={{ color: "inherit", textDecoration: "none" }}>
+                        <LeadAvatar name={lead.parent_name} />
                         {lead.parent_name ? (
                           <b><bdi>{lead.parent_name}</bdi></b>
                         ) : (
-                          <span style={{ fontStyle: "italic" }}>{t.noName[lang]}</span>
+                          <span className={ui.muted} style={{ fontStyle: "italic" }}>{t.noName[lang]}</span>
                         )}
                       </Link>
                     </td>

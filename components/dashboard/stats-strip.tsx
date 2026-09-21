@@ -28,12 +28,39 @@ export function StatsStrip({ stats, lang }: { stats: PeriodStats | null; lang: L
   );
 }
 
+const ICONS = {
+  calls: <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z" />,
+  leads: (
+    <>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M19 8v6M22 11h-6" />
+    </>
+  ),
+  length: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 6v6l4 2" />
+    </>
+  ),
+  questions: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01" />
+    </>
+  ),
+};
+
 function Period({ title, hint, figures, lang }: { title: string; hint?: string; figures: PeriodFigures; lang: Lang }) {
-  const items: [string, string][] = [
-    [s.statsCalls[lang], figures.calls.toLocaleString("en-US")],
-    [s.statsLeads[lang], figures.leads.toLocaleString("en-US")],
-    [s.statsAvgLength[lang], figures.averageCallSeconds === null ? "—" : formatDuration(figures.averageCallSeconds)],
-    [s.statsNewQuestions[lang], figures.newQuestions.toLocaleString("en-US")],
+  const items: { key: keyof typeof ICONS; label: string; value: string; gold?: boolean }[] = [
+    { key: "calls", label: s.statsCalls[lang], value: figures.calls.toLocaleString("en-US") },
+    { key: "leads", label: s.statsLeads[lang], value: figures.leads.toLocaleString("en-US") },
+    {
+      key: "length",
+      label: s.statsAvgLength[lang],
+      value: figures.averageCallSeconds === null ? "—" : formatDuration(figures.averageCallSeconds),
+    },
+    { key: "questions", label: s.statsNewQuestions[lang], value: figures.newQuestions.toLocaleString("en-US"), gold: true },
   ];
   return (
     <section className={ui.card}>
@@ -44,13 +71,20 @@ function Period({ title, hint, figures, lang }: { title: string; hint?: string; 
         </div>
       </div>
       <dl className={styles.figures}>
-        {items.map(([label, value]) => (
-          <div key={label}>
-            <dt>{label}</dt>
-            <dd className={ui.num}>
-              {/* Isolated LTR so "3:05" never reorders inside an Urdu page. */}
-              <span dir="ltr">{value}</span>
-            </dd>
+        {items.map((item) => (
+          <div key={item.key} className={styles.figure}>
+            <span className={`${styles.icon} ${item.gold ? styles.iconGold : ""}`} aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                {ICONS[item.key]}
+              </svg>
+            </span>
+            <div>
+              <dt>{item.label}</dt>
+              <dd className={ui.num}>
+                {/* Isolated LTR so "3:05" never reorders inside an Urdu page. */}
+                <span dir="ltr">{item.value}</span>
+              </dd>
+            </div>
           </div>
         ))}
       </dl>
