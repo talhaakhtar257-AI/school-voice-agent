@@ -27,3 +27,29 @@ export const incomingEnquiry = z.object({
 });
 
 export type IncomingEnquiry = z.infer<typeof incomingEnquiry>;
+
+const wrappedBody = z.object({
+  args: z.unknown(),
+  call: z.object({ call_id: z.string().max(200).optional() }).passthrough().optional(),
+});
+
+/**
+ * Retell sends a custom function's arguments either flat ("Payload: args only"
+ * ON) or wrapped as { name, call, args } (OFF). Accepting both means that
+ * toggle can no longer silently break saving, and the wrapped form carries the
+ * real call id, which the model cannot be trusted to invent (research R-001).
+ */
+export function parseAgentBody(
+  body: unknown,
+): { success: true; enquiry: IncomingEnquiry; callId: string | null } | { success: false; message: string } {
+  const wrapped = wrappedBody.safeParse(body);
+  const isWrapped = wrapped.success && typeof wrapped.data.args === "object" && wrapped.data.args !== null;
+  const args = isWrapped ? wrapped.data.args : body;
+
+  const parsed = incomingEnquiry.safeParse(args);
+  if (!parsed.success) {
+    return { success: false, message: parsed.error.issues[0]?.message ?? "invalid enquiry" };
+  }
+  const callId = (isWrapped ? wrapped.data.call?.call_id : undefined) ?? parsed.data.retellCallId ?? null;
+  return { success: true, enquiry: parsed.data, callId };
+}

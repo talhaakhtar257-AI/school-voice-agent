@@ -4,8 +4,16 @@ The voice agent lives on Retell, outside this codebase. This file keeps the exac
 prompt and tool settings under version control, so a change in Retell can be
 traced. **When you change the prompt in Retell, change it here too.**
 
-The prompt in section 3 is **version 4**, written after the client's testing
-team reported three problems with version 3:
+The prompt in section 3 is **version 5**. It keeps everything in version 4 and
+adds two things (feature 010, stage 2):
+
+- `save_lead` is called **twice**: once as soon as the phone number is
+  confirmed, so a dropped call still leaves an enquiry, and again at the end
+  with everything. The website updates the same lead; it never makes two.
+- It tells the parent about the **email box** on their screen.
+
+Version 4 was written after the client's testing team reported three problems
+with version 3:
 
 - It answered only in Urdu. Now it replies in the language the parent last
   spoke, and switches when they switch.
@@ -14,10 +22,6 @@ team reported three problems with version 3:
   (beta / beti / bacha).
 - The team wants the parent's name and phone number **first**, read back and
   confirmed, and then the admission help.
-
-`save_lead` is still called **once**, at the end, with everything. Calling it
-twice would create two leads until the website learns to update a lead by call
-id (feature 010, stage 2).
 
 ---
 
@@ -29,8 +33,23 @@ Every tool sends the header `X-Agent-Secret` with the value of
 Use **only** `https://alnoor-school-admissions.vercel.app`. The old
 `school-voice-agent-2usd` link answers "307 moved" and the tool silently fails.
 
-`save_lead` and `log_unanswered_question` must have **Payload: args only** turned
-ON, or the website receives an empty body and saves an empty lead.
+**Payload: args only:**
+
+- `save_lead`: **OFF**. Retell then sends the real call id with the details, and
+  the website uses it to keep one lead per call. (The website accepts either
+  setting, but with ON it cannot tell two saves of the same call apart.)
+- `log_unanswered_question`: **ON**.
+
+### Webhook (Retell → agent → Webhook settings)
+
+- Webhook URL:
+  `https://alnoor-school-admissions.vercel.app/api/retell/webhook?secret=<the RETELL_WEBHOOK_SECRET value>`
+- Events: **call started, call ended, call analyzed**.
+- Post-call analysis: keep **Call summary** on.
+
+This is how the dashboard gets the full conversation, the summary and the call
+length. The website checks every event with Retell before saving anything,
+using `RETELL_API_KEY` in Vercel.
 
 ### `get_school_content`
 
@@ -44,8 +63,8 @@ ON, or the website receives an empty body and saves an empty lead.
 ### `save_lead`
 
 - Method `POST`, URL `https://alnoor-school-admissions.vercel.app/api/leads`
-- Description: `Save the parent's enquiry for the school office. Always call this before saying goodbye, even if some details are missing.`
-- Speak during execution: **off** (it runs just before goodbye)
+- Description: `Save the parent's enquiry for the school office. Call it as soon as the phone number is confirmed, and again before saying goodbye with everything you learned. Both calls update the same enquiry. Always call it before goodbye, even if details are missing.`
+- Speak during execution: **off**
 - Parameters (JSON schema):
 
 ```json
@@ -107,7 +126,7 @@ version; the Test button uses the draft.
 
 ---
 
-## 3. Prompt, version 4 (paste into Retell → agent → prompt)
+## 3. Prompt, version 5 (paste into Retell → agent → prompt)
 
 Set Retell → agent → **Language: Multilingual**, or English speech is heard as
 Urdu before the prompt ever sees it.
@@ -158,6 +177,8 @@ STEP 3 — Phone number. "What is the best number for the school office to call 
 Read it back ONCE, digit by digit: "0-3-0-0, 1-2-3, 4-5-6-7 — is that correct?"
 Yes -> confirmed. Correction -> use it and read it back once more. If they do not want to give it, carry on.
 Then ask: "May the school office call you on this number?" — that answer is consent.
+Right away, call save_lead with parentName, phone, their confirmed flags, consent and language — nothing else yet. Do not tell the parent you are saving.
+Then say once: "If you'd like a summary of this call by email, you can type your email in the box on your screen."
 
 STEP 4 — "How can I help you today?" Find out which class.
 If they name a class, use it. Always also ask the child's age in years.
@@ -181,7 +202,7 @@ If the question matches an escalation topic in the content, use the hand-off wor
 
 STEP 11 — The child's name, if not given yet. Read it back once, like the parent's name.
 
-STEP 12 — Call save_lead. Always, even if details are missing.
+STEP 12 — Call save_lead again, with EVERYTHING you know (the name and phone again too). It updates the same enquiry. Always, even if details are missing.
 - parentNameConfirmed, phoneConfirmed and studentNameConfirmed are true only if the parent said yes to that read-back.
 - classWanted exactly as the class is named in the content, e.g. "Class 1", never "1st".
 - studentAge as a whole number. language "en" or "ur" — the language the parent mostly used. admissionType "fresh" or "transfer".
@@ -197,7 +218,7 @@ Answer whatever they ask, then return to the step you were on. If they ask a que
 - Never offer, suggest or agree to a discount, concession or scholarship. Those go to the office.
 - Never ask for or accept CNIC or B-Form numbers. If a parent starts reading one, stop them politely and say it is not needed on this call.
 - Never invent a class name, fee, date, document or rule that is not in the content.
-- Never collect or spell out an email address by voice.
+- Never collect or spell out an email address by voice. If the parent starts saying one, ask them to type it in the box on their screen.
 
 ## Always
 Every call can reach a human: whenever the parent asks for a person, give the office number 021-000-000-000.

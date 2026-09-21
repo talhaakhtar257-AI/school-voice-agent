@@ -1,29 +1,30 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { Lang } from "@/lib/language";
 import { leadsAdminStrings as s } from "@/lib/strings/leads-admin";
-import { screenStrings as d } from "@/lib/strings/dashboard-screens";
+import { leadDetailStrings as t } from "@/lib/strings/lead-details";
 import { LEAD_STATUSES, type LeadRow, type LeadStatus } from "@/lib/leads/rows";
 import { formatDate } from "@/lib/dashboard/format";
 import { refreshLeadsAction, updateLeadStatusAction } from "@/app/dashboard/leads/actions";
 import { EmptyState } from "@/components/dashboard/empty-state";
-import { LanguageTag, STATUS_LABEL } from "@/components/dashboard/status-tag";
-import { LeadDrawer } from "@/components/dashboard/lead-drawer";
+import { STATUS_LABEL } from "@/components/dashboard/status-tag";
 import ui from "@/components/dashboard/ui.module.css";
+import styles from "./lead-details.module.css";
 
 /**
- * The Leads screen's table. Starts from the rows the server already fetched
- * (no loading flash on open), then polls every 10 seconds so a lead captured
- * by the voice agent appears without a manual reload (FR-006, SC-002) —
- * chosen over Supabase Realtime to avoid a database change for this screen.
- * Renders its own empty state so it stays correct even if polling takes the
- * list from populated back to empty. Tapping a row opens the lead drawer.
+ * The Leads screen's table: Name, Contact, Email, Summary, Status, Date
+ * (FR-008). Starts from the rows the server already fetched, then polls every
+ * 10 seconds so a lead saved during a call appears without a reload. A row
+ * opens the lead's own details page. Renders its own empty state, so it stays
+ * correct if polling takes the list from populated back to empty.
  */
 export function LeadsTable({ initialLeads, lang }: { initialLeads: LeadRow[]; lang: Lang }) {
+  const router = useRouter();
   const [leads, setLeads] = useState(initialLeads);
   const [rowError, setRowError] = useState<string | null>(null);
-  const [openId, setOpenId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   useEffect(() => {
@@ -37,8 +38,6 @@ export function LeadsTable({ initialLeads, lang }: { initialLeads: LeadRow[]; la
     }, 10_000);
     return () => clearInterval(interval);
   }, []);
-
-  const closeDrawer = useCallback(() => setOpenId(null), []);
 
   function handleStatusChange(id: string, next: LeadStatus) {
     const previous = leads.find((lead) => lead.id === id)?.status;
@@ -59,56 +58,48 @@ export function LeadsTable({ initialLeads, lang }: { initialLeads: LeadRow[]; la
   }
 
   const dash = s.notGiven[lang];
-  const openLead = leads.find((lead) => lead.id === openId) ?? null;
-  const headings = [
-    s.date, s.parentName, s.studentName, s.classWanted, s.currentClass, s.age,
-    s.phone, s.previousSchool, s.admissionType, s.language, s.status,
-  ];
+  const headings = [t.name, t.contact, t.email, t.summary, s.status, s.date];
 
   return (
-    <>
-      <div className={ui.tscroll}>
-        <table className={ui.table}>
-          <thead>
-            <tr>
-              {headings.map((heading) => (
-                <th key={heading.en} scope="col">
-                  {heading[lang]}
-                </th>
-              ))}
-              <th scope="col">
-                <span style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
-                  {d.details[lang]}
-                </span>
+    <div className={ui.tscroll}>
+      <table className={ui.table}>
+        <thead>
+          <tr>
+            {headings.map((heading) => (
+              <th key={heading.en} scope="col">
+                {heading[lang]}
               </th>
-            </tr>
-          </thead>
-          <tbody>
-            {leads.map((lead) => (
-              <tr key={lead.id} className={ui.clickableRow} onClick={() => setOpenId(lead.id)}>
-                <td className={ui.num} style={{ whiteSpace: "nowrap" }}>
-                  {formatDate(lead.created_at, lang)}
+            ))}
+            <th scope="col">
+              <span style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
+                {t.open[lang]}
+              </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {leads.map((lead) => {
+            const href = `/dashboard/leads/${lead.id}`;
+            return (
+              <tr key={lead.id} className={ui.clickableRow} onClick={() => router.push(href)}>
+                <td dir="auto">
+                  <b>{lead.parent_name ?? dash}</b>
+                  {(lead.student_name || lead.class_wanted) && (
+                    <div className={ui.muted} style={{ fontSize: "0.8rem" }}>
+                      {[lead.student_name, lead.class_wanted].filter(Boolean).join(" · ")}
+                    </div>
+                  )}
                 </td>
-                <td dir="auto"><b>{lead.parent_name ?? dash}</b></td>
-                <td dir="auto">{lead.student_name ?? dash}</td>
-                <td dir="auto">{lead.class_wanted ?? dash}</td>
-                <td dir="auto">{lead.current_class ?? dash}</td>
-                <td className={ui.num}>{lead.student_age ?? dash}</td>
                 <td className={ui.num} dir="ltr" style={{ whiteSpace: "nowrap", textAlign: "start" }}>
                   {lead.phone ?? dash}
                 </td>
-                <td dir="auto">{lead.previous_school ?? dash}</td>
-                <td>
-                  {lead.admission_type === "fresh"
-                    ? s.fresh[lang]
-                    : lead.admission_type === "transfer"
-                      ? s.transfer[lang]
-                      : dash}
+                <td dir="ltr" style={{ textAlign: "start" }}>
+                  {lead.email ?? dash}
                 </td>
-                <td>
-                  <LanguageTag language={lead.language} lang={lang} />
+                <td dir="auto">
+                  <span className={styles.clamp}>{lead.summary ?? dash}</span>
                 </td>
-                {/* The menu must not also open the drawer. */}
+                {/* The menu must not also open the details page. */}
                 <td onClick={(event) => event.stopPropagation()}>
                   <select
                     className={ui.select}
@@ -128,33 +119,19 @@ export function LeadsTable({ initialLeads, lang }: { initialLeads: LeadRow[]; la
                     </p>
                   )}
                 </td>
-                <td>
-                  <button
-                    type="button"
-                    className={`${ui.btn} ${ui.btnGhost} ${ui.btnSmall}`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setOpenId(lead.id);
-                    }}
-                  >
-                    {d.details[lang]}
-                  </button>
+                <td className={ui.num} style={{ whiteSpace: "nowrap" }}>
+                  {formatDate(lead.created_at, lang)}
+                </td>
+                <td onClick={(event) => event.stopPropagation()}>
+                  <Link href={href} className={`${ui.btn} ${ui.btnGhost} ${ui.btnSmall}`}>
+                    {t.open[lang]}
+                  </Link>
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {openLead && (
-        <LeadDrawer
-          lead={openLead}
-          lang={lang}
-          saveFailed={rowError === openLead.id}
-          onClose={closeDrawer}
-          onStatusChange={handleStatusChange}
-        />
-      )}
-    </>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }

@@ -56,3 +56,9 @@ export function formatDayLabel(dateKey: string, lang: Lang): string {
 export function utcDateKey(instant = new Date()): string {
   return instant.toISOString().slice(0, 10);
 }
+
+/** A call length as m:ss, e.g. 185 -> "3:05". */
+export function formatDuration(seconds: number): string {
+  const whole = Math.max(0, Math.round(seconds));
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
+}

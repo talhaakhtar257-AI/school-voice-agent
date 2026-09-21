@@ -1,37 +1,32 @@
 import Link from "next/link";
 import { readLang } from "@/lib/language-server";
-import { callsStartedOn } from "@/lib/dashboard/usage";
-import { countNewLeads, leadsLast7Days, orNull, recentLeads } from "@/lib/dashboard/overview";
-import { formatDate, utcDateKey } from "@/lib/dashboard/format";
+import { leadsLast7Days, orNull, recentLeads } from "@/lib/dashboard/overview";
+import { getPeriodStats } from "@/lib/dashboard/period-stats";
+import { formatDate } from "@/lib/dashboard/format";
 import { listUnansweredQuestions } from "@/lib/unanswered/list";
 import { dashboardStrings as s } from "@/lib/strings/dashboard";
 import { leadsAdminStrings as l } from "@/lib/strings/leads-admin";
-import { StatTile } from "@/components/dashboard/stat-tile";
+import { StatsStrip } from "@/components/dashboard/stats-strip";
 import { BarRows } from "@/components/dashboard/bar-rows";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { LeadsChart } from "@/components/dashboard/leads-chart";
-import { LanguageTag, StatusTag } from "@/components/dashboard/status-tag";
+import { StatusTag } from "@/components/dashboard/status-tag";
 import ui from "@/components/dashboard/ui.module.css";
 
 export const dynamic = "force-dynamic";
 
-function show(value: number | null) {
-  return value === null ? "—" : value.toLocaleString("en-US");
-}
-
 /**
- * Overview. Every figure is real data: there is no calls table, so call counts
- * come from the voice usage tables and the chart shows leads, not calls. Each
+ * Overview. Today / This week figures on top (FR-010), then the leads chart,
+ * the top gaps, and the 10 newest leads, each opening its details page. Each
  * card reads independently, so one failed query shows one error card.
  */
 export default async function DashboardOverviewPage() {
   const lang = await readLang();
-  const [days, recent, newLeads, gaps, callsToday] = await Promise.all([
+  const [days, recent, gaps, stats] = await Promise.all([
     orNull("leads-7-days", leadsLast7Days()),
-    orNull("recent-leads", recentLeads()),
-    orNull("new-leads", countNewLeads()),
+    orNull("recent-leads", recentLeads(10)),
     orNull("gaps", listUnansweredQuestions()),
-    orNull("calls-today", callsStartedOn(utcDateKey())),
+    orNull("period-stats", getPeriodStats()),
   ]);
 
   const leads7 = days ? days.reduce((sum, day) => sum + day.en + day.ur + day.none, 0) : null;
@@ -40,12 +35,50 @@ export default async function DashboardOverviewPage() {
 
   return (
     <div className={ui.stack}>
-      <div className={ui.tiles}>
-        <StatTile label={s.tileCallsToday[lang]} value={show(callsToday)} hint={callsToday === null ? s.notAvailable[lang] : s.tileCallsTodayHint[lang]} />
-        <StatTile label={s.tileLeads7[lang]} value={show(leads7)} hint={leads7 === null ? s.notAvailable[lang] : undefined} />
-        <StatTile label={s.tileNewLeads[lang]} value={show(newLeads)} hint={newLeads === null ? s.notAvailable[lang] : s.tileNewLeadsHint[lang]} />
-        <StatTile label={s.tileGaps[lang]} value={show(gaps?.length ?? null)} hint={gaps === null ? s.notAvailable[lang] : s.tileGapsHint[lang]} />
-      </div>
+      <StatsStrip stats={stats} lang={lang} />
+
+      <section className={ui.card}>
+        <div className={ui.cardHead}>
+          <h2 className={ui.cardTitle}>{s.recentTitle[lang]}</h2>
+          <Link href="/dashboard/leads" className={smallGhost}>
+            {s.seeAllLeads[lang]}
+          </Link>
+        </div>
+        {recent === null ? loadError : recent.length === 0 ? (
+          <EmptyState title={l.emptyTitle[lang]} body={l.emptyBody[lang]} />
+        ) : (
+          <div className={ui.tscroll}>
+            <table className={ui.table}>
+              <thead>
+                <tr>
+                  <th scope="col">{l.date[lang]}</th>
+                  <th scope="col">{l.parentName[lang]}</th>
+                  <th scope="col">{l.phone[lang]}</th>
+                  <th scope="col">{l.classWanted[lang]}</th>
+                  <th scope="col">{l.status[lang]}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recent.map((lead) => (
+                  <tr key={lead.id}>
+                    <td className={ui.num}>{formatDate(lead.created_at, lang)}</td>
+                    <td dir="auto">
+                      <Link href={`/dashboard/leads/${lead.id}`}>
+                        <b>{lead.parent_name ?? l.notGiven[lang]}</b>
+                      </Link>
+                    </td>
+                    <td className={ui.num} dir="ltr" style={{ textAlign: "start", whiteSpace: "nowrap" }}>
+                      {lead.phone ?? l.notGiven[lang]}
+                    </td>
+                    <td dir="auto">{lead.class_wanted ?? l.notGiven[lang]}</td>
+                    <td><StatusTag status={lead.status} lang={lang} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       <div className={ui.row2}>
         <section className={ui.card}>
@@ -83,43 +116,6 @@ export default async function DashboardOverviewPage() {
           )}
         </section>
       </div>
-
-      <section className={ui.card}>
-        <div className={ui.cardHead}>
-          <h2 className={ui.cardTitle}>{s.recentTitle[lang]}</h2>
-          <Link href="/dashboard/leads" className={smallGhost}>
-            {s.seeAllLeads[lang]}
-          </Link>
-        </div>
-        {recent === null ? loadError : recent.length === 0 ? (
-          <EmptyState title={l.emptyTitle[lang]} body={l.emptyBody[lang]} />
-        ) : (
-          <div className={ui.tscroll}>
-            <table className={ui.table}>
-              <thead>
-                <tr>
-                  <th scope="col">{l.date[lang]}</th>
-                  <th scope="col">{l.parentName[lang]}</th>
-                  <th scope="col">{l.classWanted[lang]}</th>
-                  <th scope="col">{l.language[lang]}</th>
-                  <th scope="col">{l.status[lang]}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recent.map((lead) => (
-                  <tr key={lead.id}>
-                    <td className={ui.num}>{formatDate(lead.created_at, lang)}</td>
-                    <td dir="auto"><b>{lead.parent_name ?? l.notGiven[lang]}</b></td>
-                    <td dir="auto">{lead.class_wanted ?? l.notGiven[lang]}</td>
-                    <td><LanguageTag language={lead.language} lang={lang} /></td>
-                    <td><StatusTag status={lead.status} lang={lang} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
     </div>
   );
 }

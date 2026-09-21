@@ -8,6 +8,7 @@ import { callStrings as c } from "@/lib/strings/landing-call";
 import { MicExplainer } from "@/components/voice/mic-explainer";
 import { CloseIcon, MicIcon } from "../icons";
 import { useCall } from "./call-provider";
+import { EmailBox } from "./email-box";
 import styles from "./call.module.css";
 
 function clock(totalSeconds: number) {
@@ -24,7 +25,7 @@ function clock(totalSeconds: number) {
  */
 export function CallOverlay({ lang }: { lang: Lang }) {
   const {
-    phase, muted, transcript, fallback, elapsedSeconds, maxSeconds,
+    phase, muted, transcript, fallback, elapsedSeconds, maxSeconds, callId,
     openCall, closeCall, startCall, endCall, toggleMute,
   } = useCall();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -130,6 +131,7 @@ export function CallOverlay({ lang }: { lang: Lang }) {
                   ))
                 )}
               </div>
+              <EmailBox lang={lang} callId={callId} />
               <p className={styles.keepOpen}>{c.keepOpen[lang]}</p>
               {officeLine}
             </div>
@@ -154,6 +156,7 @@ export function CallOverlay({ lang }: { lang: Lang }) {
               ) : (
                 <p className={styles.endedText}>{c.endedBody[lang]}</p>
               )}
+              <EmailBox lang={lang} callId={callId} />
               {officeLine}
             </div>
             <div className={styles.foot}>
