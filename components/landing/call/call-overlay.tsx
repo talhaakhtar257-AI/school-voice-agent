@@ -130,6 +130,7 @@ export function CallOverlay({ lang }: { lang: Lang }) {
                   ))
                 )}
               </div>
+              <p className={styles.keepOpen}>{c.keepOpen[lang]}</p>
               {officeLine}
             </div>
             <div className={styles.foot}>

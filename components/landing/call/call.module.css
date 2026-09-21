@@ -246,6 +246,13 @@
   font-size: 15.5px;
 }
 
+.keepOpen {
+  margin: 0;
+  font-size: 13px;
+  text-align: center;
+  opacity: 0.75;
+}
+
 .officeLine {
   margin: 0;
   font-size: 14px;

@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { RetellClient, type WebCallSession } from "retell-client-js-sdk";
 import { landingStrings as s } from "@/lib/strings/landing";
+import { useWakeLock } from "./use-wake-lock";
 
 export type CallPhase = "closed" | "explaining" | "connecting" | "listening" | "speaking" | "ended";
 export type Turn = { role: "agent" | "user"; content: string };
@@ -215,6 +216,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       document.body.style.overflow = previous;
     };
   }, [phase]);
+
+  useWakeLock(phase === "connecting" || phase === "listening" || phase === "speaking");
 
   // Leaving the page must never leave a call running.
   useEffect(
