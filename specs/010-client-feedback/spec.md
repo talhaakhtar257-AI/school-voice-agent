@@ -3,7 +3,7 @@
 **Feature Branch**: `010-client-feedback`
 **Created**: 2026-09-21
 **Status**: Draft
-**Input**: User description: "Changes the client's testing team asked for after testing the demo: leads with email, summary and full conversation; Today / This week analytics; lead details page; Gap list renamed Knowledge with one page per entry and import from PDF and website; live calls monitor with call-back instead of voice takeover; summary email to the school and the parent."
+**Input**: User description: "Changes the client's testing team asked for after testing the demo: leads with email, summary and full conversation; Today / This week analytics; lead details page; Gap list renamed Knowledge with one page per entry and import from PDF and website; live calls monitor with takeover; summary email to the school and the parent."
 
 ## Context
 
@@ -17,7 +17,7 @@ stories below, and each story can be shown to the client on its own.
 
 **Decisions already made by the user:**
 
-- **No voice takeover.** Staff can see live calls and phone the parent, but cannot join the voice of a website call. The voice provider does not allow it.
+- **Live takeover.** The user first chose watch plus callback, because takeover was believed impossible. Planning found that the installed voice library supports watching, listening and taking over web calls. The spec now includes real takeover, with callback kept as a fallback.
 - **Imports go to the draft.** Knowledge imported from a PDF or a website goes into the draft content. Staff review it before it can reach parents.
 - **Build order:** agent fixes first, then these stories in order.
 - **Email:** sent through Resend.
@@ -111,17 +111,27 @@ documents answer, and it answers from them.
 
 ---
 
-### User Story 4 - Live calls: see who is talking now and call them (Priority: P3)
+### User Story 4 - Live calls: see, listen and take over (Priority: P3)
 
 The dashboard menu shows a badge with the number of calls happening right now,
 such as "2 live". The Live calls screen lists each one: how long it has run, its
-language, and the parent's name and phone if already confirmed. A **Call parent
-now** button starts a phone call to that parent, and marks the lead Contacted.
-The screen updates by itself about every 10 seconds. It says plainly that staff
-cannot join the voice of a website call.
+language, and the parent's name and phone if already confirmed. The screen
+updates by itself about every 10 seconds.
 
-**Why this priority**: The testers asked for takeover. This is the part that can
-be delivered with web calls. It depends on story 1's call records.
+For each live call, staff can:
+
+- **Watch** the conversation as it happens.
+- **Listen** to the audio.
+- **Take over**: after a confirmation, the assistant goes silent and the staff
+  member speaks to the parent through their own microphone. This cannot be undone.
+- **Call parent now**: a phone-call fallback that marks the lead Contacted.
+
+*Updated after planning:* the voice library already installed supports watching,
+listening and taking over web calls (research R-004). This replaces the earlier
+callback-only decision, which assumed takeover was impossible.
+
+**Why this priority**: The testers asked for takeover. It depends on story 1's
+call records.
 
 **Independent Test**: Start a call from the website. Within about 10 seconds the
 dashboard shows "1 live" with that call. After hanging up, it returns to 0.
@@ -221,6 +231,8 @@ receives one.
 - **FR-019**: The dashboard MUST show the number of live calls in the menu and on a Live calls screen. Both update about every 10 seconds.
 - **FR-020**: A call with no reported end MUST stop counting as live 15 minutes after it started.
 - **FR-021**: "Call parent now" MUST start a phone call to the confirmed number and mark the lead Contacted. It MUST be shown only when a confirmed phone exists.
+- **FR-021a**: Staff MUST be able to watch a live call's conversation, listen to its audio, and take it over. Take over MUST ask for confirmation first, MUST say that it cannot be undone, and MUST leave the assistant untouched if the microphone is refused.
+- **FR-021b**: The key that allows monitoring MUST be available only to signed-in staff, never in the public page's code.
 
 **Emails (Story 5)**
 
@@ -260,7 +272,7 @@ receives one.
 
 ## Out of Scope
 
-- Joining or taking over the voice of a live call.
+- Transferring a call to a phone line. Takeover happens in the staff member's browser.
 - Parent accounts, WhatsApp, phone-number calling, payments, and parent document upload.
 - Emails with the full conversation. The summary only.
 - Reading scanned PDFs (text recognition).
