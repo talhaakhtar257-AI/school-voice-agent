@@ -21,14 +21,24 @@ export async function getPeriodStats(now = new Date()): Promise<PeriodStats> {
   const weekStart = startOfWeekPk(now).toISOString();
   const supabase = await createClient();
 
-  const [calls, leads, questions] = await Promise.all([
+  const [calls, leads, questions, usage] = await Promise.all([
     supabase.from("calls").select("started_at, duration_seconds").gte("started_at", weekStart),
     supabase.from("leads").select("created_at").gte("created_at", weekStart),
     supabase.from("unanswered_questions").select("created_at").gte("created_at", weekStart),
+    supabase.from("voice_usage_daily").select("usage_date, call_count").gte("usage_date", weekStart.slice(0, 10)),
   ]);
   if (calls.error) throw calls.error;
   if (leads.error) throw leads.error;
   if (questions.error) throw questions.error;
+  if (usage.error) throw usage.error;
+
+  // Calls reach the calls table only through Retell's webhook. The call gate
+  // counts every call it lets through (by UTC day), so it backs the figure up
+  // when the webhook is not connected, or for calls made before it existed.
+  const usageRows = (usage.data ?? []) as { usage_date: string; call_count: number }[];
+  const todayUtcKey = now.toISOString().slice(0, 10);
+  const gateCalls = (onlyToday: boolean) =>
+    usageRows.filter((r) => !onlyToday || r.usage_date === todayUtcKey).reduce((sum, r) => sum + r.call_count, 0);
 
   const callRows = (calls.data ?? []) as { started_at: string; duration_seconds: number | null }[];
   const leadRows = (leads.data ?? []) as { created_at: string }[];
@@ -40,7 +50,7 @@ export async function getPeriodStats(now = new Date()): Promise<PeriodStats> {
     const periodCalls = pick(callRows, (r) => r.started_at);
     const lengths = periodCalls.map((c) => c.duration_seconds).filter((d): d is number => d !== null);
     return {
-      calls: periodCalls.length,
+      calls: Math.max(periodCalls.length, gateCalls(onlyToday)),
       leads: pick(leadRows, (r) => r.created_at).length,
       averageCallSeconds: lengths.length > 0 ? lengths.reduce((a, b) => a + b, 0) / lengths.length : null,
       newQuestions: pick(questionRows, (r) => r.created_at).length,

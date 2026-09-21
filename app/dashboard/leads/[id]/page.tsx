@@ -84,7 +84,9 @@ export default async function LeadDetailsPage({ params }: { params: Promise<{ id
           {fields.map(([label, value, dir]) => (
             <div key={label.en}>
               <dt>{label[lang]}</dt>
-              <dd dir={dir}>{value}</dd>
+              <dd>
+                <bdi dir={dir}>{value}</bdi>
+              </dd>
             </div>
           ))}
         </dl>

@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/dashboard/format";
 import { listUnansweredQuestions } from "@/lib/unanswered/list";
 import { dashboardStrings as s } from "@/lib/strings/dashboard";
 import { leadsAdminStrings as l } from "@/lib/strings/leads-admin";
+import { leadDetailStrings as t } from "@/lib/strings/lead-details";
 import { StatsStrip } from "@/components/dashboard/stats-strip";
 import { BarRows } from "@/components/dashboard/bar-rows";
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -62,15 +63,19 @@ export default async function DashboardOverviewPage() {
                 {recent.map((lead) => (
                   <tr key={lead.id}>
                     <td className={ui.num}>{formatDate(lead.created_at, lang)}</td>
-                    <td dir="auto">
+                    <td>
                       <Link href={`/dashboard/leads/${lead.id}`}>
-                        <b>{lead.parent_name ?? l.notGiven[lang]}</b>
+                        {lead.parent_name ? (
+                          <b><bdi>{lead.parent_name}</bdi></b>
+                        ) : (
+                          <span style={{ fontStyle: "italic" }}>{t.noName[lang]}</span>
+                        )}
                       </Link>
                     </td>
-                    <td className={ui.num} dir="ltr" style={{ textAlign: "start", whiteSpace: "nowrap" }}>
-                      {lead.phone ?? l.notGiven[lang]}
+                    <td className={ui.num} style={{ whiteSpace: "nowrap" }}>
+                      {lead.phone ? <bdi dir="ltr">{lead.phone}</bdi> : <span className={ui.muted}>{l.notGiven[lang]}</span>}
                     </td>
-                    <td dir="auto">{lead.class_wanted ?? l.notGiven[lang]}</td>
+                    <td>{lead.class_wanted ? <bdi>{lead.class_wanted}</bdi> : <span className={ui.muted}>{l.notGiven[lang]}</span>}</td>
                     <td><StatusTag status={lead.status} lang={lang} /></td>
                   </tr>
                 ))}

@@ -1,6 +1,8 @@
 /** Strings for the lead details page and the new Leads table columns (feature 010). */
 export const leadDetailStrings = {
   name: { en: "Name", ur: "نام" },
+  noName: { en: "Name not given", ur: "نام نہیں دیا گیا" },
+  noSummary: { en: "No summary yet", ur: "ابھی خلاصہ نہیں" },
   contact: { en: "Contact", ur: "رابطہ" },
   email: { en: "Email", ur: "ای میل" },
   summary: { en: "Summary", ur: "خلاصہ" },
