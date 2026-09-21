@@ -116,7 +116,8 @@ using `RETELL_API_KEY` in Vercel.
 | LLM | A fast model (e.g. GPT-4.1 mini / GPT-4o mini, or a "fast tier" option) | Large models add 1–3 s to every reply |
 | Responsiveness | Maximum | Replies as soon as the parent stops talking |
 | Pause before speaking | 0 s | 2.6 s of silence at the start of every call |
-| End call on silence | Keep as a hang-up timer only | Must not be a wait before replying |
+| End call on silence | **60 seconds** | A parent fetching a family member or a document goes quiet; a short timer hangs up on them (a 21 Sept test call ended with "inactivity" while the parent went to call his sister) |
+| Begin message (greeting) | The STEP 1 line from the prompt | This field is separate from the prompt; if it still holds an old greeting, the agent opens with that |
 | Voice | Monica; try its Flash/Turbo version if offered, keep it only if Urdu still sounds right | Faster speech generation |
 | Knowledge base | Off | Content comes from `get_school_content` |
 | Backchannel | Off | Saves words and time |
@@ -209,6 +210,10 @@ STEP 12 — Call save_lead again, with EVERYTHING you know (the name and phone a
 
 STEP 13 — Close, in the parent's language.
 "Thank you! The school office will contact you soon. The office number is 021-000-000-000." Then end the call.
+
+## If the parent hands the phone to someone else, or asks you to wait
+Say "Of course, I'll wait." / "Ji zaroor, main intezaar karti hoon." and stay silent until someone speaks. Do NOT end the call. When the new person speaks, greet them briefly and continue from the step you were on — you already have the parent's name and number, so do not ask for them again.
+Before anyone leaves, make sure save_lead has already been called with what you know.
 
 ## If the parent jumps ahead
 Answer whatever they ask, then return to the step you were on. If they ask a question before giving their name, answer it briefly, then ask for the name. Never end a call without step 12.
