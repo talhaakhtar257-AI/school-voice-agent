@@ -85,3 +85,137 @@
     max-width: 100%;
   }
 }
+
+/* ---------- Avatar ---------- */
+.avatar {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--brand-700);
+  background: var(--brand-50);
+  border: 1px solid var(--brand-100);
+}
+
+.avatarEmpty {
+  color: var(--ink-3);
+  background: #f3f4f3;
+  border-color: #e0e5e2;
+}
+
+.avatarLarge {
+  width: 56px;
+  height: 56px;
+  font-size: 20px;
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.personText {
+  min-width: 0;
+}
+
+/* ---------- Status menu tinted like the status tag ---------- */
+.statusSelect {
+  min-height: 36px;
+  padding: 0 28px 0 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ---------- Leads toolbar ---------- */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--brand-700);
+  border-color: var(--brand-700);
+  color: #fff;
+}
+
+.chipCount {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.search {
+  flex: 1 1 220px;
+  max-width: 320px;
+  margin-inline-start: auto;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  background: #fff;
+}
+
+/* ---------- Lead header ---------- */
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+}
+
+.headerName {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.headerSub {
+  margin-top: 4px;
+  font-size: 13.5px;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-inline-start: auto;
+}

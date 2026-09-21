@@ -2,6 +2,7 @@ import type { Lang } from "@/lib/language";
 import type { LeadWithCall } from "@/lib/leads/rows";
 import { leadDetailStrings as s } from "@/lib/strings/lead-details";
 import { EmptyState } from "@/components/dashboard/empty-state";
+import ui from "@/components/dashboard/ui.module.css";
 import styles from "./lead-details.module.css";
 
 /**
@@ -15,7 +16,7 @@ export function Conversation({ call, lang }: { call: LeadWithCall["call"]; lang:
   }
 
   return (
-    <div className={styles.conversation}>
+    <div className={`${styles.conversation} ${ui.cardBody}`}>
       {call.transcript.map((turn, i) => (
         <p key={i} dir="auto" className={`${styles.turn} ${turn.role === "agent" ? styles.agent : styles.user}`}>
           <b>{turn.role === "agent" ? s.assistant[lang] : s.parent[lang]}</b>

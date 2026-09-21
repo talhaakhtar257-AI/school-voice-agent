@@ -5,8 +5,9 @@ import type { Lang } from "@/lib/language";
 import { LEAD_STATUSES, type LeadStatus } from "@/lib/leads/rows";
 import { leadsAdminStrings as l } from "@/lib/strings/leads-admin";
 import { updateLeadStatusAction } from "@/app/dashboard/leads/actions";
-import { STATUS_LABEL } from "@/components/dashboard/status-tag";
+import { STATUS_CLASS, STATUS_LABEL } from "@/components/dashboard/status-tag";
 import ui from "@/components/dashboard/ui.module.css";
+import styles from "./lead-details.module.css";
 
 /** The status menu on the lead details page. Goes back to the old value if saving fails. */
 export function LeadStatusControl({ id, initial, lang }: { id: string; initial: LeadStatus; lang: Lang }) {
@@ -29,10 +30,11 @@ export function LeadStatusControl({ id, initial, lang }: { id: string; initial: 
   }
 
   return (
-    <label style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 700 }}>
-      {l.status[lang]}
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
       <select
-        className={ui.select}
+        className={`${styles.statusSelect} ${ui.tag} ${STATUS_CLASS[status]}`}
+        style={{ minHeight: 44 }}
+        aria-label={l.status[lang]}
         value={status}
         disabled={pending}
         onChange={(event) => change(event.target.value as LeadStatus)}
@@ -48,6 +50,6 @@ export function LeadStatusControl({ id, initial, lang }: { id: string; initial: 
           {l.saveFailed[lang]}
         </span>
       )}
-    </label>
+    </span>
   );
 }
