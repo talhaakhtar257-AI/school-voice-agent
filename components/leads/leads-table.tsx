@@ -82,22 +82,34 @@ export function LeadsTable({ initialLeads, lang }: { initialLeads: LeadRow[]; la
             const href = `/dashboard/leads/${lead.id}`;
             return (
               <tr key={lead.id} className={ui.clickableRow} onClick={() => router.push(href)}>
-                <td dir="auto">
-                  <b>{lead.parent_name ?? dash}</b>
+                {/* <bdi> keeps an Urdu name reading right-to-left without pushing
+                    it to the far edge of an English table (and vice versa). */}
+                <td style={{ minWidth: 160 }}>
+                  {lead.parent_name ? (
+                    <b><bdi>{lead.parent_name}</bdi></b>
+                  ) : (
+                    <span className={ui.muted} style={{ fontStyle: "italic" }}>{t.noName[lang]}</span>
+                  )}
                   {(lead.student_name || lead.class_wanted) && (
                     <div className={ui.muted} style={{ fontSize: "0.8rem" }}>
-                      {[lead.student_name, lead.class_wanted].filter(Boolean).join(" · ")}
+                      {lead.student_name && <bdi>{lead.student_name}</bdi>}
+                      {lead.student_name && lead.class_wanted && " · "}
+                      {lead.class_wanted && <bdi>{lead.class_wanted}</bdi>}
                     </div>
                   )}
                 </td>
-                <td className={ui.num} dir="ltr" style={{ whiteSpace: "nowrap", textAlign: "start" }}>
-                  {lead.phone ?? dash}
+                <td className={ui.num} style={{ whiteSpace: "nowrap" }}>
+                  {lead.phone ? <bdi dir="ltr">{lead.phone}</bdi> : <span className={ui.muted}>{dash}</span>}
                 </td>
-                <td dir="ltr" style={{ textAlign: "start" }}>
-                  {lead.email ?? dash}
+                <td>
+                  {lead.email ? <bdi dir="ltr">{lead.email}</bdi> : <span className={ui.muted}>{dash}</span>}
                 </td>
-                <td dir="auto">
-                  <span className={styles.clamp}>{lead.summary ?? dash}</span>
+                <td>
+                  {lead.summary ? (
+                    <span className={styles.clamp} dir="auto">{lead.summary}</span>
+                  ) : (
+                    <span className={ui.muted} style={{ fontStyle: "italic" }}>{t.noSummary[lang]}</span>
+                  )}
                 </td>
                 {/* The menu must not also open the details page. */}
                 <td onClick={(event) => event.stopPropagation()}>
