@@ -11,6 +11,10 @@ export const callStrings = {
     ur: "کال کرنے کا شکریہ۔ آپ دوبارہ بات کر سکتے ہیں، یا دفتر کو کال کریں۔",
   },
   transcriptEmpty: { en: "The conversation will appear here.", ur: "گفتگو یہاں نظر آئے گی۔" },
+  keepOpen: {
+    en: "Keep this page open until the call ends.",
+    ur: "کال ختم ہونے تک یہ صفحہ کھلا رکھیں۔",
+  },
   assistant: { en: "Assistant", ur: "اسسٹنٹ" },
   you: { en: "You", ur: "آپ" },
   mute: { en: "Mute", ur: "آواز بند" },
