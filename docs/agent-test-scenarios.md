@@ -1,5 +1,13 @@
 # 50 test scenarios for the admissions agent
 
+> **Updated for prompt v5 (feature 010):** every call now starts with the
+> parent's name and phone number, each read back once, and the lead is saved
+> right then. The expected answers below are unchanged — they come after that
+> opening. Answers can now also come from **Knowledge** documents (imported
+> PDFs or website pages) once published; retest scenarios 7, 40 and 41 after
+> importing the school's fee policy or facilities page. The gap list is now
+> called **Knowledge**.
+
 Every expected answer below comes from the content published on
 **2026-09-15**. If the agent says something different, it is not reading your
 content — tell Claude and the call logs will show it.

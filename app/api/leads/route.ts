@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { id, updated } = await upsertLeadForCall(parsed.enquiry, parsed.callId);
-    await linkLeadToCall(parsed.callId, id);
+    await linkLeadToCall(parsed.callId, id, parsed.enquiry.language);
     console.info(`[api/leads] ${updated ? "updated" : "inserted"} ${id} for ${parsed.callId}`);
     return NextResponse.json({ ok: true, id, updated });
   } catch (error) {

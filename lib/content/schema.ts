@@ -97,6 +97,21 @@ export const profile = z.object({
 });
 export type Profile = z.infer<typeof profile>;
 
+/**
+ * Reference text imported from a PDF or a website (feature 010). Kept in the
+ * language it was written in: it is material the agent reads, not a sentence
+ * shown to parents, so it is not duplicated per language. The title is.
+ */
+export const knowledgeDoc = z.object({
+  id: z.string(),
+  title: bilingual,
+  source: z.object({ kind: z.enum(["pdf", "website"]), name: z.string() }),
+  text: z.string().max(60_000),
+  importedAt: z.string(),
+  archivedAt: z.string().nullable(),
+});
+export type KnowledgeDoc = z.infer<typeof knowledgeDoc>;
+
 export const contentDoc = z.object({
   facts,
   policies: z.object({
@@ -107,6 +122,7 @@ export const contentDoc = z.object({
   escalationTopics: z.array(escalationTopic),
   profile: profile.default({ tagline: blankPair, about: blankPair, address: blankPair, showSampleBanner: false }),
   programs: z.array(programItem).default([]),
+  knowledge: z.array(knowledgeDoc).default([]),
 });
 export type ContentDoc = z.infer<typeof contentDoc>;
 
@@ -130,6 +146,7 @@ export const emptyDoc: ContentDoc = {
   escalationTopics: [],
   profile: { tagline: blankPair, about: blankPair, address: blankPair, showSampleBanner: false },
   programs: [],
+  knowledge: [],
 };
 
 /** Parse a stored jsonb value into a full ContentDoc, filling any missing branch. */
@@ -157,6 +174,7 @@ export function parseDoc(raw: unknown): ContentDoc {
     escalationTopics: Array.isArray(r.escalationTopics) ? r.escalationTopics : [],
     profile: { ...emptyDoc.profile, ...((r.profile as object) ?? {}) },
     programs: Array.isArray(r.programs) ? r.programs : [],
+    knowledge: Array.isArray(r.knowledge) ? r.knowledge : [],
   };
   return contentDoc.parse(merged);
 }
@@ -176,6 +194,7 @@ export function isEmptyDoc(doc: ContentDoc): boolean {
     doc.faqs.length === 0 &&
     doc.escalationTopics.length === 0 &&
     doc.programs.length === 0 &&
+    doc.knowledge.length === 0 &&
     blank(doc.profile.tagline) &&
     blank(doc.profile.about) &&
     blank(doc.profile.address)
@@ -193,5 +212,6 @@ export function forPublicApi(doc: ContentDoc) {
     faqs: active(doc.faqs),
     escalationTopics: active(doc.escalationTopics),
     programs: active(doc.programs),
+    knowledge: active(doc.knowledge).map(({ title, source, text }) => ({ title, source: source.name, text })),
   };
 }

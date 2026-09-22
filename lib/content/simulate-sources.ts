@@ -128,5 +128,26 @@ export function factCandidates(q: string[], doc: ContentDoc, score: Score): Cand
     );
   }
 
+  // --- Imported knowledge documents (feature 010) ---
+  // A document can be pages long, so it is searched paragraph by paragraph and
+  // the best paragraph is what the test screen shows.
+  for (const k of doc.knowledge.filter((x) => x.archivedAt === null)) {
+    for (const paragraph of paragraphs(k.text)) {
+      add(paragraph, Math.min(score(q, paragraph), 0.9));
+    }
+  }
+
+  return out;
+}
+
+/** Split long text into paragraphs of at most ~600 characters. */
+function paragraphs(text: string): string[] {
+  const out: string[] = [];
+  for (const block of text.split(/\n\s*\n/)) {
+    const trimmed = block.trim();
+    if (trimmed.length < 20) continue;
+    if (trimmed.length <= 600) out.push(trimmed);
+    else for (let i = 0; i < trimmed.length; i += 600) out.push(trimmed.slice(i, i + 600));
+  }
   return out;
 }

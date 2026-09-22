@@ -97,10 +97,14 @@ async function copyCallToLead(call: CallRow): Promise<void> {
 }
 
 /** Called after save_lead: tie the lead to its call row, if Retell has reported it yet. */
-export async function linkLeadToCall(retellCallId: string, leadId: string): Promise<void> {
+export async function linkLeadToCall(
+  retellCallId: string,
+  leadId: string,
+  language?: "ur" | "en",
+): Promise<void> {
   const { data, error } = await createAdminClient()
     .from("calls")
-    .update({ lead_id: leadId })
+    .update(language ? { lead_id: leadId, language } : { lead_id: leadId })
     .eq("retell_call_id", retellCallId)
     .select(CALL_COLUMNS)
     .maybeSingle<CallRow>();

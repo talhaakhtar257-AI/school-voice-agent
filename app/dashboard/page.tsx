@@ -106,7 +106,7 @@ export default async function DashboardOverviewPage() {
         <section className={ui.card}>
           <div className={ui.cardHead}>
             <h2 className={ui.cardTitle}>{s.topGapsTitle[lang]}</h2>
-            <Link href="/dashboard/unanswered" className={smallGhost}>
+            <Link href="/dashboard/knowledge" className={smallGhost}>
               {s.seeAllGaps[lang]}
             </Link>
           </div>

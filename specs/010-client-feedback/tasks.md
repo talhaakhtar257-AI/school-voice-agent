@@ -124,27 +124,27 @@
 **Goal**: the Gap list becomes Knowledge, with a page per entry and PDF and website import into the draft.
 **Independent test**: quickstart.md, stage 3.
 
-- [ ] T027 [US3] Write and apply migration `supabase/migrations/20260921110000_unanswered_answered_at.sql`, adding `answered_at timestamptz null`. Update `lib/unanswered/schema.ts` and `lib/unanswered/queries.ts` to read it, plus `getQuestion(id)` and `markAnswered(id)`.
-- [ ] T028 [US3] Update `lib/content/schema.ts`: add `knowledgeDoc`, and `knowledge` in `contentDoc` (default `[]`), `emptyDoc`, `parseDoc`, `isEmptyDoc` and `forPublicApi` (active only).
-- [ ] T029 [US3] `npm install unpdf`, then create `lib/knowledge/pdf.ts`: `pdfToText(buffer)`, which refuses more than 10 MB and returns the trimmed text or `null`.
-- [ ] T030 [P] [US3] Create `lib/knowledge/html-text.ts`: `htmlToText(html)` drops script, style, nav, footer and header, strips tags, decodes common entities and collapses whitespace; and `extractLinks(html, baseUrl)`.
-- [ ] T031 [US3] Create `lib/knowledge/crawl.ts`: `crawlSite(url)`.
+- [x] T027 [US3] Write and apply migration `supabase/migrations/20260921110000_unanswered_answered_at.sql`, adding `answered_at timestamptz null`. Update `lib/unanswered/schema.ts` and `lib/unanswered/queries.ts` to read it, plus `getQuestion(id)` and `markAnswered(id)`.
+- [x] T028 [US3] Update `lib/content/schema.ts`: add `knowledgeDoc`, and `knowledge` in `contentDoc` (default `[]`), `emptyDoc`, `parseDoc`, `isEmptyDoc` and `forPublicApi` (active only).
+- [x] T029 [US3] `npm install unpdf`, then create `lib/knowledge/pdf.ts`: `pdfToText(buffer)`, which refuses more than 10 MB and returns the trimmed text or `null`.
+- [x] T030 [P] [US3] Create `lib/knowledge/html-text.ts`: `htmlToText(html)` drops script, style, nav, footer and header, strips tags, decodes common entities and collapses whitespace; and `extractLinks(html, baseUrl)`.
+- [x] T031 [US3] Create `lib/knowledge/crawl.ts`: `crawlSite(url)`.
   - http(s) only, and refuses localhost and private or link-local addresses;
   - breadth-first on the same host, at most 10 pages, each with an 8 s timeout, a 2 MB cap, and `text/html` only;
   - returns `[{ url, title, text }]`, and skips failing pages.
-- [ ] T032 [US3] Create `app/dashboard/knowledge/actions.ts` with `answerQuestion`, `importPdf`, `importWebsite`, `saveKnowledge` and `archiveKnowledge` (contracts/api.md §4). Each checks the staff session, writes the **draft** doc only, and revalidates `/dashboard/knowledge`. If needed, set `experimental.serverActions.bodySizeLimit` / `serverActions.bodySizeLimit` in `next.config.ts` to `11mb`, after checking the Next 16 docs in `node_modules/next/dist/docs`.
-- [ ] T033 [P] [US3] Create `lib/strings/knowledge.ts` with every Knowledge screen string in EN and UR: titles, tabs, import forms, errors, empty states.
-- [ ] T034 [US3] Create `app/dashboard/knowledge/page.tsx`:
+- [x] T032 [US3] Create `app/dashboard/knowledge/actions.ts` with `answerQuestion`, `importPdf`, `importWebsite`, `saveKnowledge` and `archiveKnowledge` (contracts/api.md §4). Each checks the staff session, writes the **draft** doc only, and revalidates `/dashboard/knowledge`. If needed, set `experimental.serverActions.bodySizeLimit` / `serverActions.bodySizeLimit` in `next.config.ts` to `11mb`, after checking the Next 16 docs in `node_modules/next/dist/docs`.
+- [x] T033 [P] [US3] Create `lib/strings/knowledge.ts` with every Knowledge screen string in EN and UR: titles, tabs, import forms, errors, empty states.
+- [x] T034 [US3] Create `app/dashboard/knowledge/page.tsx`:
   - two sections: "Asked by parents" (unanswered first, with an "Answered" filter) and "Documents";
   - "Add from PDF" and "Add from website" forms (`components/knowledge/import-forms.tsx`);
   - every row links to its own page;
   - empty and error states.
-- [ ] T035 [US3] Create `app/dashboard/knowledge/[id]/page.tsx`:
+- [x] T035 [US3] Create `app/dashboard/knowledge/[id]/page.tsx`:
   - a question id shows the question and times asked, plus `components/knowledge/answer-form.tsx` (EN and UR question and answer), which calls `answerQuestion`;
   - a knowledge id shows `components/knowledge/document-editor.tsx` (title EN and UR, text, source, Save, Remove, and a "draft — publish to use" note);
   - otherwise `notFound()`.
-- [ ] T036 [US3] Replace `app/dashboard/unanswered/page.tsx` with a `redirect("/dashboard/knowledge")`. Rename the nav item in `components/dashboard/sidebar.tsx` and the `navGaps` and `seeAllGaps` strings in `lib/strings/dashboard.ts` to Knowledge / معلومات. Update the Overview's gaps panel link.
-- [ ] T037 [US3] Update `lib/content/simulate-sources.ts` to add knowledge text as prose candidates, reusing `prose()` with the title as keywords.
+- [x] T036 [US3] Replace `app/dashboard/unanswered/page.tsx` with a `redirect("/dashboard/knowledge")`. Rename the nav item in `components/dashboard/sidebar.tsx` and the `navGaps` and `seeAllGaps` strings in `lib/strings/dashboard.ts` to Knowledge / معلومات. Update the Overview's gaps panel link.
+- [x] T037 [US3] Update `lib/content/simulate-sources.ts` to add knowledge text as prose candidates, reusing `prose()` with the title as keywords.
 
 **Checkpoint**: build passes; quickstart stage 3 click path; `/api/content` with the secret includes `knowledge` only after Publish.
 
@@ -156,21 +156,21 @@
 **Independent test**: quickstart.md, stage 4.
 
 - [ ] T038 [US4] **Spike (10 min)**, once the maintainer has created the staff public key: on a scratch page not committed, `new RetellClient({ key }).monitorCall({ call_id })` on a real live call; confirm the transcript streams, and `listen()` and `takeOver()` work. Record the result in research.md R-004. If refused, drop T041's listen and takeover buttons and keep watch plus call.
-- [ ] T039 [US4] Add `listLiveCalls()` and `countLiveCalls()` to `lib/calls/queries.ts`: `ongoing`, started less than 15 minutes ago, joined to the lead for the confirmed name and phone.
-- [ ] T040 [P] [US4] Create `components/live/auto-refresh.tsx`: a client component that calls `router.refresh()` every 10 s while the tab is visible.
-- [ ] T041 [US4] Create `components/live/monitor-panel.tsx` (a client component):
+- [x] T039 [US4] Add `listLiveCalls()` and `countLiveCalls()` to `lib/calls/queries.ts`: `ongoing`, started less than 15 minutes ago, joined to the lead for the confirmed name and phone.
+- [x] T040 [P] [US4] Create `components/live/auto-refresh.tsx`: a client component that calls `router.refresh()` every 10 s while the tab is visible.
+- [x] T041 [US4] Create `components/live/monitor-panel.tsx` (a client component):
   - receives `callId` and `staffKey` as props;
   - buttons Watch, Listen and Take over, the last behind a confirm dialog with the "cannot be undone" wording and in-page, never `window.confirm`;
   - live transcript bubbles with `dir="auto"`;
   - status text; disconnects when unmounted.
-- [ ] T042 [US4] Create `app/dashboard/live/page.tsx`:
+- [x] T042 [US4] Create `app/dashboard/live/page.tsx`:
   - staff only; reads `RETELL_STAFF_PUBLIC_KEY` on the server and passes it to the panel only;
   - lists live calls with duration, language, name and phone;
   - a "Call parent now" `tel:` link plus the `markContacted` action (add it to `app/dashboard/leads/actions.ts`);
   - the time-limit note;
   - the empty state "No one is talking to the assistant right now";
   - if the key isn't set, a "not configured" note.
-- [ ] T043 [US4] Update `components/dashboard/sidebar.tsx`: a "Live calls" nav item with a count badge (from `countLiveCalls()` in the dashboard layout), text plus colour, refreshed by `auto-refresh.tsx` on the dashboard layout. Add the strings to `lib/strings/live-calls.ts` in EN and UR.
+- [x] T043 [US4] Update `components/dashboard/sidebar.tsx`: a "Live calls" nav item with a count badge (from `countLiveCalls()` in the dashboard layout), text plus colour, refreshed by `auto-refresh.tsx` on the dashboard layout. Add the strings to `lib/strings/live-calls.ts` in EN and UR.
 
 **Checkpoint**: quickstart stage 4.
 
@@ -181,15 +181,15 @@
 **Goal**: one email to the school, and one to the parent if they gave an email, per analysed call.
 **Independent test**: quickstart.md, stage 5.
 
-- [ ] T044 [P] [US5] Create `lib/email/resend.ts`: `sendEmail({ to, subject, html, text })` with `fetch` to `https://api.resend.com/emails` and a 8 s timeout. It returns `{ ok }` or `{ error }`; it doesn't throw for API errors. It skips with "not configured" if any setting is missing.
-- [ ] T045 [P] [US5] Create `lib/email/templates.ts`:
+- [x] T044 [P] [US5] Create `lib/email/resend.ts`: `sendEmail({ to, subject, html, text })` with `fetch` to `https://api.resend.com/emails` and a 8 s timeout. It returns `{ ok }` or `{ error }`; it doesn't throw for API errors. It skips with "not configured" if any setting is missing.
+- [x] T045 [P] [US5] Create `lib/email/templates.ts`:
   - `schoolEnquiryEmail(lead, summary, link)` in English;
   - `parentSummaryEmail(summary, lang)` in both languages, with the Urdu section `dir="rtl"`; it has the office phone and hours from `lib/office.ts` and the content, the "this is not an admission confirmation" line, and no discount wording.
 
   Both are HTML plus plain text, and escape all interpolated values.
-- [ ] T046 [US5] Add `claimEmailSend(callId, "school" | "parent")` to `lib/calls/queries.ts`: a conditional update that sets `*_email_sent_at` where it is null, returning whether this caller won. Add `recordEmailError`.
-- [ ] T047 [US5] Update `app/api/retell/webhook/route.ts`: on `call_analyzed`, once the lead is linked, claim and send the school email, then claim and send the parent email if `parent_email` is set. Errors are recorded, and the response is still 200.
-- [ ] T048 [US5] Show "Email sent" or the email error on `app/dashboard/leads/[id]/page.tsx`, with the strings in `lib/strings/lead-details.ts`.
+- [x] T046 [US5] Add `claimEmailSend(callId, "school" | "parent")` to `lib/calls/queries.ts`: a conditional update that sets `*_email_sent_at` where it is null, returning whether this caller won. Add `recordEmailError`.
+- [x] T047 [US5] Update `app/api/retell/webhook/route.ts`: on `call_analyzed`, once the lead is linked, claim and send the school email, then claim and send the parent email if `parent_email` is set. Errors are recorded, and the response is still 200.
+- [x] T048 [US5] Show "Email sent" or the email error on `app/dashboard/leads/[id]/page.tsx`, with the strings in `lib/strings/lead-details.ts`.
 
 **Checkpoint**: quickstart stage 5.
 
@@ -197,8 +197,8 @@
 
 ## Phase 8: Polish
 
-- [ ] T049 Update the handbook sections and `docs/agent-test-scenarios.md` where the call flow changed. Record the new env vars in `specs/010-client-feedback/quickstart.md`, and confirm it matches what was built.
-- [ ] T050 Run `npx tsc --noEmit`, `npm run lint` and `npm run build`. Check every new screen at 360 px in EN and UR. Run the Supabase `get_advisors` security check for the new table.
+- [x] T049 Update the handbook sections and `docs/agent-test-scenarios.md` where the call flow changed. Record the new env vars in `specs/010-client-feedback/quickstart.md`, and confirm it matches what was built.
+- [x] T050 Run `npx tsc --noEmit`, `npm run lint` and `npm run build`. Check every new screen at 360 px in EN and UR. Run the Supabase `get_advisors` security check for the new table.
 
 ---
 

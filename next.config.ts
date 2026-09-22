@@ -27,6 +27,13 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Knowledge import sends a PDF of up to 4 MB to a Server Action (default
+  // limit 1 MB). Vercel caps request bodies at 4.5 MB whatever this says.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "4.5mb",
+    },
+  },
   // Don't advertise the framework to anyone probing the site.
   poweredByHeader: false,
   async headers() {

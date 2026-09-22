@@ -3,15 +3,23 @@ import Link from "next/link";
 import type { Lang } from "@/lib/language";
 import { landingStrings } from "@/lib/strings/landing";
 import { dashboardStrings as s } from "@/lib/strings/dashboard";
+import { liveStrings } from "@/lib/strings/live-calls";
 import { SignOutButton } from "@/components/sign-out-button";
 import { NavLinks, type NavItem } from "./nav-links";
 import shell from "./shell.module.css";
 
-export function navItems(lang: Lang): NavItem[] {
+/** `liveCalls` > 0 adds a badge such as "2 live" to Live calls. */
+export function navItems(lang: Lang, liveCalls = 0): NavItem[] {
   return [
     { href: "/dashboard", label: s.navOverview[lang], icon: "overview" },
     { href: "/dashboard/leads", label: s.navLeads[lang], icon: "leads" },
-    { href: "/dashboard/unanswered", label: s.navGaps[lang], icon: "gaps" },
+    {
+      href: "/dashboard/live",
+      label: liveStrings.nav[lang],
+      icon: "live",
+      badge: liveCalls > 0 ? `${liveCalls} ${liveStrings.live[lang]}` : undefined,
+    },
+    { href: "/dashboard/knowledge", label: s.navGaps[lang], icon: "gaps" },
     { href: "/dashboard/content", label: s.navContent[lang], icon: "content" },
     { href: "/dashboard/health", label: s.navHealth[lang], icon: "health" },
     { href: "/dashboard/settings", label: s.navSettings[lang], icon: "settings" },
