@@ -5,7 +5,8 @@ import { isDatabaseReachable } from "@/lib/supabase/health";
 import { retellConfigured, voiceLimits } from "./settings";
 
 export type CheckKey = "db" | "content" | "retell" | "limits" | "phone";
-export type Check = { key: CheckKey; ok: boolean };
+/** `demo` marks a check that passes only because the site is running as a demo. */
+export type Check = { key: CheckKey; ok: boolean; demo?: boolean };
 
 // lib/office.ts ships an all-zero placeholder until the school gives a number.
 const PLACEHOLDER_PHONE = /^\+920+$/;
@@ -25,12 +26,17 @@ export async function runHealthChecks(): Promise<Check[]> {
   }
 
   const live = await readLiveForApi();
+  // While the published content is marked as sample content, the school has
+  // not given its real number yet and the placeholder is deliberate. The
+  // screen still says which number is in use, so nobody mistakes it for real.
+  const demoMode = live?.doc.profile.showSampleBanner === true;
+  const realPhone = !PLACEHOLDER_PHONE.test(OFFICE_PHONE_E164);
 
   return [
     { key: "db", ok: db },
     { key: "content", ok: live !== null && !isEmptyDoc(live.doc) },
     { key: "retell", ok: retellConfigured() },
     { key: "limits", ok: voiceLimits().complete },
-    { key: "phone", ok: !PLACEHOLDER_PHONE.test(OFFICE_PHONE_E164) },
+    { key: "phone", ok: realPhone || demoMode, demo: !realPhone && demoMode },
   ];
 }

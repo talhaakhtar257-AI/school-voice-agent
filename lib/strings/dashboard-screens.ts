@@ -55,6 +55,10 @@ export const screenStrings = {
   },
   checkPhone: { en: "Office phone number", ur: "دفتر کا فون نمبر" },
   checkPhoneOk: { en: "A real number is set.", ur: "اصل نمبر موجود ہے۔" },
+  checkPhoneDemo: {
+    en: "Demo number in use (021-000-000-000), as expected while the content is marked as sample. Replace it with the school's number before launch.",
+    ur: "ڈیمو نمبر استعمال ہو رہا ہے (021-000-000-000)، جو نمونہ مواد کے دوران درست ہے۔ اجرا سے پہلے اسکول کا نمبر ڈالیں۔",
+  },
   checkPhoneBad: {
     en: "Still the placeholder number — replace it before the demo.",
     ur: "ابھی عارضی نمبر ہے — ڈیمو سے پہلے تبدیل کریں۔",
