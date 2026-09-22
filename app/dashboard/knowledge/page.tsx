@@ -73,7 +73,8 @@ export default async function KnowledgePage({ searchParams }: { searchParams: Pr
                   <tr key={q.id}>
                     <td style={{ minWidth: 220 }}>
                       <Link href={`/dashboard/knowledge/${q.id}`} style={{ color: "inherit", textDecoration: "none" }}>
-                        <b dir="auto" style={{ display: "block" }}>{q.question_text}</b>
+                        {/* <bdi> keeps Urdu reading right-to-left without pushing it to the far edge. */}
+                        <b><bdi>{q.question_text}</bdi></b>
                       </Link>
                     </td>
                     <td className={ui.num}><b>{q.times_asked}</b> {s.times[lang]}</td>
