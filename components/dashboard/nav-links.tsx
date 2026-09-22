@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import shell from "./shell.module.css";
 
-export type NavIcon = "overview" | "leads" | "gaps" | "content" | "health" | "settings";
-export type NavItem = { href: string; label: string; icon: NavIcon };
+export type NavIcon = "overview" | "leads" | "live" | "gaps" | "content" | "health" | "settings";
+/** `badge` is short text beside the label, e.g. "2 live". */
+export type NavItem = { href: string; label: string; icon: NavIcon; badge?: string };
 
 const ICONS: Record<NavIcon, React.ReactNode> = {
   overview: (
@@ -21,6 +22,12 @@ const ICONS: Record<NavIcon, React.ReactNode> = {
       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
       <path d="M22 21v-2a4 4 0 0 0-3-3.9" />
+    </>
+  ),
+  live: (
+    <>
+      <circle cx="12" cy="12" r="2" />
+      <path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19.1 4.9a10 10 0 0 1 0 14.2M4.9 19.1a10 10 0 0 1 0-14.2" />
     </>
   ),
   gaps: (
@@ -63,6 +70,7 @@ export function NavLinks({ items, label }: { items: NavItem[]; label: string }) 
               {ICONS[item.icon]}
             </svg>
             <span>{item.label}</span>
+            {item.badge && <span className={shell.navBadge}>{item.badge}</span>}
           </Link>
         );
       })}

@@ -156,21 +156,21 @@
 **Independent test**: quickstart.md, stage 4.
 
 - [ ] T038 [US4] **Spike (10 min)**, once the maintainer has created the staff public key: on a scratch page not committed, `new RetellClient({ key }).monitorCall({ call_id })` on a real live call; confirm the transcript streams, and `listen()` and `takeOver()` work. Record the result in research.md R-004. If refused, drop T041's listen and takeover buttons and keep watch plus call.
-- [ ] T039 [US4] Add `listLiveCalls()` and `countLiveCalls()` to `lib/calls/queries.ts`: `ongoing`, started less than 15 minutes ago, joined to the lead for the confirmed name and phone.
-- [ ] T040 [P] [US4] Create `components/live/auto-refresh.tsx`: a client component that calls `router.refresh()` every 10 s while the tab is visible.
-- [ ] T041 [US4] Create `components/live/monitor-panel.tsx` (a client component):
+- [x] T039 [US4] Add `listLiveCalls()` and `countLiveCalls()` to `lib/calls/queries.ts`: `ongoing`, started less than 15 minutes ago, joined to the lead for the confirmed name and phone.
+- [x] T040 [P] [US4] Create `components/live/auto-refresh.tsx`: a client component that calls `router.refresh()` every 10 s while the tab is visible.
+- [x] T041 [US4] Create `components/live/monitor-panel.tsx` (a client component):
   - receives `callId` and `staffKey` as props;
   - buttons Watch, Listen and Take over, the last behind a confirm dialog with the "cannot be undone" wording and in-page, never `window.confirm`;
   - live transcript bubbles with `dir="auto"`;
   - status text; disconnects when unmounted.
-- [ ] T042 [US4] Create `app/dashboard/live/page.tsx`:
+- [x] T042 [US4] Create `app/dashboard/live/page.tsx`:
   - staff only; reads `RETELL_STAFF_PUBLIC_KEY` on the server and passes it to the panel only;
   - lists live calls with duration, language, name and phone;
   - a "Call parent now" `tel:` link plus the `markContacted` action (add it to `app/dashboard/leads/actions.ts`);
   - the time-limit note;
   - the empty state "No one is talking to the assistant right now";
   - if the key isn't set, a "not configured" note.
-- [ ] T043 [US4] Update `components/dashboard/sidebar.tsx`: a "Live calls" nav item with a count badge (from `countLiveCalls()` in the dashboard layout), text plus colour, refreshed by `auto-refresh.tsx` on the dashboard layout. Add the strings to `lib/strings/live-calls.ts` in EN and UR.
+- [x] T043 [US4] Update `components/dashboard/sidebar.tsx`: a "Live calls" nav item with a count badge (from `countLiveCalls()` in the dashboard layout), text plus colour, refreshed by `auto-refresh.tsx` on the dashboard layout. Add the strings to `lib/strings/live-calls.ts` in EN and UR.
 
 **Checkpoint**: quickstart stage 4.
 

@@ -282,3 +282,15 @@
     padding: clamp(18px, 2.4vw, 30px);
   }
 }
+
+/* "2 live" beside Live calls: text plus colour, never colour alone. */
+.navBadge {
+  margin-inline-start: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #10201b;
+  background: #7bf0c8;
+  white-space: nowrap;
+}

@@ -5,6 +5,8 @@ import { dirFor } from "@/lib/language";
 import { readLang } from "@/lib/language-server";
 import { dashboardUrduFont, englishFont } from "@/lib/fonts";
 import { runHealthChecks } from "@/lib/dashboard/health";
+import { orNull } from "@/lib/dashboard/overview";
+import { countLiveCalls } from "@/lib/calls/live";
 import { DocumentLanguage } from "@/components/landing/document-language";
 import { Sidebar, navItems } from "@/components/dashboard/sidebar";
 import { Topbar } from "@/components/dashboard/topbar";
@@ -39,8 +41,8 @@ export default async function DashboardLayout({
   }
 
   const lang = await readLang();
-  const items = navItems(lang);
-  const checks = await runHealthChecks();
+  const [checks, liveCalls] = await Promise.all([runHealthChecks(), orNull("live-count", countLiveCalls())]);
+  const items = navItems(lang, liveCalls ?? 0);
 
   return (
     <div
