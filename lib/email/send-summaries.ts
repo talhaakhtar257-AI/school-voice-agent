@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { readLiveForApi } from "@/lib/content/queries";
-import { emailConfigured, sendEmail } from "./resend";
+import { emailConfigured, sendEmail } from "./send";
 import { parentSummaryEmail, schoolEnquiryEmail } from "./templates";
 
 type Which = "school" | "parent";

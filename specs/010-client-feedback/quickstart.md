@@ -6,7 +6,8 @@
 |---|---|---|
 | `RETELL_API_KEY` | 2 | Retell → Settings → API Keys (secret, never `NEXT_PUBLIC_`) |
 | `RETELL_STAFF_PUBLIC_KEY` | 4 | Retell → a **second** public key, allowed domain `alnoor-school-admissions.vercel.app`, with call monitoring allowed |
-| `RESEND_API_KEY` | 5 | resend.com → API Keys |
+| `BREVO_API_KEY` | 5 | brevo.com → SMTP & API → API Keys. No domain needed: verify one sender address (e.g. the school Gmail) under Senders. Chosen over Resend on 2026-09-22 because Resend without a domain only delivers to the account owner |
+| `RESEND_API_KEY` | 5 | Optional fallback, used only if `BREVO_API_KEY` is empty; needs a verified domain |
 | `EMAIL_FROM` | 5 | e.g. `Al-Noor Admissions <onboarding@resend.dev>` for the demo |
 | `SCHOOL_NOTIFY_EMAIL` | 5 | the school's admissions inbox |
 
