@@ -181,15 +181,15 @@
 **Goal**: one email to the school, and one to the parent if they gave an email, per analysed call.
 **Independent test**: quickstart.md, stage 5.
 
-- [ ] T044 [P] [US5] Create `lib/email/resend.ts`: `sendEmail({ to, subject, html, text })` with `fetch` to `https://api.resend.com/emails` and a 8 s timeout. It returns `{ ok }` or `{ error }`; it doesn't throw for API errors. It skips with "not configured" if any setting is missing.
-- [ ] T045 [P] [US5] Create `lib/email/templates.ts`:
+- [x] T044 [P] [US5] Create `lib/email/resend.ts`: `sendEmail({ to, subject, html, text })` with `fetch` to `https://api.resend.com/emails` and a 8 s timeout. It returns `{ ok }` or `{ error }`; it doesn't throw for API errors. It skips with "not configured" if any setting is missing.
+- [x] T045 [P] [US5] Create `lib/email/templates.ts`:
   - `schoolEnquiryEmail(lead, summary, link)` in English;
   - `parentSummaryEmail(summary, lang)` in both languages, with the Urdu section `dir="rtl"`; it has the office phone and hours from `lib/office.ts` and the content, the "this is not an admission confirmation" line, and no discount wording.
 
   Both are HTML plus plain text, and escape all interpolated values.
-- [ ] T046 [US5] Add `claimEmailSend(callId, "school" | "parent")` to `lib/calls/queries.ts`: a conditional update that sets `*_email_sent_at` where it is null, returning whether this caller won. Add `recordEmailError`.
-- [ ] T047 [US5] Update `app/api/retell/webhook/route.ts`: on `call_analyzed`, once the lead is linked, claim and send the school email, then claim and send the parent email if `parent_email` is set. Errors are recorded, and the response is still 200.
-- [ ] T048 [US5] Show "Email sent" or the email error on `app/dashboard/leads/[id]/page.tsx`, with the strings in `lib/strings/lead-details.ts`.
+- [x] T046 [US5] Add `claimEmailSend(callId, "school" | "parent")` to `lib/calls/queries.ts`: a conditional update that sets `*_email_sent_at` where it is null, returning whether this caller won. Add `recordEmailError`.
+- [x] T047 [US5] Update `app/api/retell/webhook/route.ts`: on `call_analyzed`, once the lead is linked, claim and send the school email, then claim and send the parent email if `parent_email` is set. Errors are recorded, and the response is still 200.
+- [x] T048 [US5] Show "Email sent" or the email error on `app/dashboard/leads/[id]/page.tsx`, with the strings in `lib/strings/lead-details.ts`.
 
 **Checkpoint**: quickstart stage 5.
 
@@ -197,8 +197,8 @@
 
 ## Phase 8: Polish
 
-- [ ] T049 Update the handbook sections and `docs/agent-test-scenarios.md` where the call flow changed. Record the new env vars in `specs/010-client-feedback/quickstart.md`, and confirm it matches what was built.
-- [ ] T050 Run `npx tsc --noEmit`, `npm run lint` and `npm run build`. Check every new screen at 360 px in EN and UR. Run the Supabase `get_advisors` security check for the new table.
+- [x] T049 Update the handbook sections and `docs/agent-test-scenarios.md` where the call flow changed. Record the new env vars in `specs/010-client-feedback/quickstart.md`, and confirm it matches what was built.
+- [x] T050 Run `npx tsc --noEmit`, `npm run lint` and `npm run build`. Check every new screen at 360 px in EN and UR. Run the Supabase `get_advisors` security check for the new table.
 
 ---
 

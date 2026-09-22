@@ -21,6 +21,7 @@ import { hasValidQuerySecret } from "@/lib/api/secret";
 import { isHandledEvent, webhookBody } from "@/lib/calls/schema";
 import { getRetellCall } from "@/lib/calls/retell-api";
 import { upsertCallFromRetell } from "@/lib/calls/queries";
+import { sendCallSummaries } from "@/lib/email/send-summaries";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +62,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const saved = await upsertCallFromRetell(retellCall);
+    // Stage 5: once the summary exists, email the school (and the parent if
+    // they typed an email). Sent at most once per call; never throws.
+    if (saved.summary) await sendCallSummaries(saved, new URL(request.url).origin);
     console.info(`[api/retell/webhook] ${event} ${call.call_id}: ${saved.status}, lead ${saved.lead_id ?? "none"}`);
     return NextResponse.json({ ok: true });
   } catch (error) {

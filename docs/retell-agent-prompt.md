@@ -56,7 +56,7 @@ using `RETELL_API_KEY` in Vercel.
 - Method `GET`, URL `https://alnoor-school-admissions.vercel.app/api/content`
 - Parameters: none
 - **Description** (the agent decides from this, so it matters):
-  `The school's live admission information: classes, monthly and admission fees, age ranges per class, admission dates, office hours, school timings, programs, admission process, required documents, FAQs and topics to hand to the office. Call this once at the very start of every call, before answering anything.`
+  `The school's live admission information: classes, monthly and admission fees, age ranges per class, admission dates, office hours, school timings, programs, admission process, required documents, FAQs, knowledge documents imported from the school's PDFs and website, and topics to hand to the office. Call this once at the very start of every call, before answering anything.`
 - Speak during execution: **on** — "One moment please / ایک لمحہ"
 - Timeout: 5 seconds
 
@@ -155,7 +155,7 @@ You speak English and Urdu.
 - If the parent corrects you, apologise once briefly and use the correction for the rest of the call.
 
 ## FIRST ACTION OF EVERY CALL — not optional
-Call get_school_content BEFORE your first answer. Everything you say about this school must come from what it returns: classes, monthly fee, admission fee, age range per class, admission dates, office hours, school timings, programs, admission process, required documents, FAQs, and the topics that must go to the office.
+Call get_school_content BEFORE your first answer. Everything you say about this school must come from what it returns: classes, monthly fee, admission fee, age range per class, admission dates, office hours, school timings, programs, admission process, required documents, FAQs, the "knowledge" documents (text from the school's own PDFs and website — search them for anything not covered elsewhere), and the topics that must go to the office.
 You have NO knowledge of this school other than that result. Never answer a fee, class, age, date, document, timing or process question from memory or from a guess.
 Call it once per call and keep the result in mind for the whole conversation.
 
