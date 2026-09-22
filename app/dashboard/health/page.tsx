@@ -15,12 +15,12 @@ export const dynamic = "force-dynamic";
 
 type Text = { en: string; ur: string };
 
-const CHECK_TEXT: Record<CheckKey, { name: Text; ok: Text; bad: Text }> = {
+const CHECK_TEXT: Record<CheckKey, { name: Text; ok: Text; bad: Text; demo?: Text }> = {
   db: { name: h.checkDb, ok: h.checkDbOk, bad: h.checkDbBad },
   content: { name: h.checkContent, ok: h.checkContentOk, bad: h.checkContentBad },
   retell: { name: h.checkRetell, ok: h.checkRetellOk, bad: h.checkRetellBad },
   limits: { name: h.checkLimits, ok: h.checkLimitsOk, bad: h.checkLimitsBad },
-  phone: { name: h.checkPhone, ok: h.checkPhoneOk, bad: h.checkPhoneBad },
+  phone: { name: h.checkPhone, ok: h.checkPhoneOk, bad: h.checkPhoneBad, demo: h.checkPhoneDemo },
 };
 
 /**
@@ -82,7 +82,9 @@ export default async function DashboardHealthPage() {
                   </svg>
                   {check.ok ? h.ok[lang] : h.attention[lang]}
                 </span>
-                <span className={panels.hdetail}>{check.ok ? text.ok[lang] : text.bad[lang]}</span>
+                <span className={panels.hdetail}>
+                  {check.demo && text.demo ? text.demo[lang] : check.ok ? text.ok[lang] : text.bad[lang]}
+                </span>
               </li>
             );
           })}
