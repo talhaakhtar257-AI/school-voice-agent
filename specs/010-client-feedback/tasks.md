@@ -124,27 +124,27 @@
 **Goal**: the Gap list becomes Knowledge, with a page per entry and PDF and website import into the draft.
 **Independent test**: quickstart.md, stage 3.
 
-- [ ] T027 [US3] Write and apply migration `supabase/migrations/20260921110000_unanswered_answered_at.sql`, adding `answered_at timestamptz null`. Update `lib/unanswered/schema.ts` and `lib/unanswered/queries.ts` to read it, plus `getQuestion(id)` and `markAnswered(id)`.
-- [ ] T028 [US3] Update `lib/content/schema.ts`: add `knowledgeDoc`, and `knowledge` in `contentDoc` (default `[]`), `emptyDoc`, `parseDoc`, `isEmptyDoc` and `forPublicApi` (active only).
-- [ ] T029 [US3] `npm install unpdf`, then create `lib/knowledge/pdf.ts`: `pdfToText(buffer)`, which refuses more than 10 MB and returns the trimmed text or `null`.
-- [ ] T030 [P] [US3] Create `lib/knowledge/html-text.ts`: `htmlToText(html)` drops script, style, nav, footer and header, strips tags, decodes common entities and collapses whitespace; and `extractLinks(html, baseUrl)`.
-- [ ] T031 [US3] Create `lib/knowledge/crawl.ts`: `crawlSite(url)`.
+- [x] T027 [US3] Write and apply migration `supabase/migrations/20260921110000_unanswered_answered_at.sql`, adding `answered_at timestamptz null`. Update `lib/unanswered/schema.ts` and `lib/unanswered/queries.ts` to read it, plus `getQuestion(id)` and `markAnswered(id)`.
+- [x] T028 [US3] Update `lib/content/schema.ts`: add `knowledgeDoc`, and `knowledge` in `contentDoc` (default `[]`), `emptyDoc`, `parseDoc`, `isEmptyDoc` and `forPublicApi` (active only).
+- [x] T029 [US3] `npm install unpdf`, then create `lib/knowledge/pdf.ts`: `pdfToText(buffer)`, which refuses more than 10 MB and returns the trimmed text or `null`.
+- [x] T030 [P] [US3] Create `lib/knowledge/html-text.ts`: `htmlToText(html)` drops script, style, nav, footer and header, strips tags, decodes common entities and collapses whitespace; and `extractLinks(html, baseUrl)`.
+- [x] T031 [US3] Create `lib/knowledge/crawl.ts`: `crawlSite(url)`.
   - http(s) only, and refuses localhost and private or link-local addresses;
   - breadth-first on the same host, at most 10 pages, each with an 8 s timeout, a 2 MB cap, and `text/html` only;
   - returns `[{ url, title, text }]`, and skips failing pages.
-- [ ] T032 [US3] Create `app/dashboard/knowledge/actions.ts` with `answerQuestion`, `importPdf`, `importWebsite`, `saveKnowledge` and `archiveKnowledge` (contracts/api.md §4). Each checks the staff session, writes the **draft** doc only, and revalidates `/dashboard/knowledge`. If needed, set `experimental.serverActions.bodySizeLimit` / `serverActions.bodySizeLimit` in `next.config.ts` to `11mb`, after checking the Next 16 docs in `node_modules/next/dist/docs`.
-- [ ] T033 [P] [US3] Create `lib/strings/knowledge.ts` with every Knowledge screen string in EN and UR: titles, tabs, import forms, errors, empty states.
-- [ ] T034 [US3] Create `app/dashboard/knowledge/page.tsx`:
+- [x] T032 [US3] Create `app/dashboard/knowledge/actions.ts` with `answerQuestion`, `importPdf`, `importWebsite`, `saveKnowledge` and `archiveKnowledge` (contracts/api.md §4). Each checks the staff session, writes the **draft** doc only, and revalidates `/dashboard/knowledge`. If needed, set `experimental.serverActions.bodySizeLimit` / `serverActions.bodySizeLimit` in `next.config.ts` to `11mb`, after checking the Next 16 docs in `node_modules/next/dist/docs`.
+- [x] T033 [P] [US3] Create `lib/strings/knowledge.ts` with every Knowledge screen string in EN and UR: titles, tabs, import forms, errors, empty states.
+- [x] T034 [US3] Create `app/dashboard/knowledge/page.tsx`:
   - two sections: "Asked by parents" (unanswered first, with an "Answered" filter) and "Documents";
   - "Add from PDF" and "Add from website" forms (`components/knowledge/import-forms.tsx`);
   - every row links to its own page;
   - empty and error states.
-- [ ] T035 [US3] Create `app/dashboard/knowledge/[id]/page.tsx`:
+- [x] T035 [US3] Create `app/dashboard/knowledge/[id]/page.tsx`:
   - a question id shows the question and times asked, plus `components/knowledge/answer-form.tsx` (EN and UR question and answer), which calls `answerQuestion`;
   - a knowledge id shows `components/knowledge/document-editor.tsx` (title EN and UR, text, source, Save, Remove, and a "draft — publish to use" note);
   - otherwise `notFound()`.
-- [ ] T036 [US3] Replace `app/dashboard/unanswered/page.tsx` with a `redirect("/dashboard/knowledge")`. Rename the nav item in `components/dashboard/sidebar.tsx` and the `navGaps` and `seeAllGaps` strings in `lib/strings/dashboard.ts` to Knowledge / معلومات. Update the Overview's gaps panel link.
-- [ ] T037 [US3] Update `lib/content/simulate-sources.ts` to add knowledge text as prose candidates, reusing `prose()` with the title as keywords.
+- [x] T036 [US3] Replace `app/dashboard/unanswered/page.tsx` with a `redirect("/dashboard/knowledge")`. Rename the nav item in `components/dashboard/sidebar.tsx` and the `navGaps` and `seeAllGaps` strings in `lib/strings/dashboard.ts` to Knowledge / معلومات. Update the Overview's gaps panel link.
+- [x] T037 [US3] Update `lib/content/simulate-sources.ts` to add knowledge text as prose candidates, reusing `prose()` with the title as keywords.
 
 **Checkpoint**: build passes; quickstart stage 3 click path; `/api/content` with the secret includes `knowledge` only after Publish.
 

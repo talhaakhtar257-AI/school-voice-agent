@@ -11,7 +11,7 @@ export function navItems(lang: Lang): NavItem[] {
   return [
     { href: "/dashboard", label: s.navOverview[lang], icon: "overview" },
     { href: "/dashboard/leads", label: s.navLeads[lang], icon: "leads" },
-    { href: "/dashboard/unanswered", label: s.navGaps[lang], icon: "gaps" },
+    { href: "/dashboard/knowledge", label: s.navGaps[lang], icon: "gaps" },
     { href: "/dashboard/content", label: s.navContent[lang], icon: "content" },
     { href: "/dashboard/health", label: s.navHealth[lang], icon: "health" },
     { href: "/dashboard/settings", label: s.navSettings[lang], icon: "settings" },
