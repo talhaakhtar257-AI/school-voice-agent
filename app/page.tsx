@@ -90,6 +90,7 @@ export default async function HomePage() {
             policies={content?.policies ?? null}
             admissionDates={facts?.admissionDates ?? []}
             schoolTimings={facts?.schoolTimings ?? []}
+            downloads={publicContent?.downloads ?? []}
             failed={contentFailed}
           />
           <FaqSection lang={lang} faqs={publicContent?.faqs ?? []} failed={contentFailed} />

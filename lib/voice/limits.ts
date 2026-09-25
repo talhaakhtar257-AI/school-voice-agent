@@ -52,3 +52,21 @@ export async function checkAndReserve(visitorId: string): Promise<boolean> {
   if (error) throw error;
   return data === true;
 }
+
+/**
+ * When a call ends, give back the part of its reservation it did not use
+ * (feature 011). The gate reserved the full maximum length; a 3-minute call
+ * returns the other 7. Safe to call twice: the database marks each call as
+ * settled the first time.
+ */
+export async function releaseUnusedMinutes(callRowId: string, durationSeconds: number | null): Promise<void> {
+  const maxCallSeconds = Number(process.env.VOICE_MAX_CALL_SECONDS);
+  if (!maxCallSeconds) return;
+  const usedMinutes = Math.ceil(Math.max(0, durationSeconds ?? 0) / 60);
+  const { error } = await createAdminClient().rpc("release_voice_minutes", {
+    p_call_id: callRowId,
+    p_reserved_minutes: maxCallSeconds / 60,
+    p_used_minutes: usedMinutes,
+  });
+  if (error) throw error;
+}

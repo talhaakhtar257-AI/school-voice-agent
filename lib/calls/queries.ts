@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { maskIdNumbers, maskTranscript } from "./mask";
 import type { RetellCall } from "./retell-api";
 
-type CallRow = {
+export type CallRow = {
   id: string;
   status: "ongoing" | "ended";
   started_at: string;

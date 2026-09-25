@@ -5,11 +5,32 @@ import type { Lang } from "@/lib/language";
 import { OFFICE_PHONE_DISPLAY, OFFICE_PHONE_E164 } from "@/lib/office";
 import { landingStrings as s } from "@/lib/strings/landing";
 import { callStrings as c } from "@/lib/strings/landing-call";
-import { MicExplainer } from "@/components/voice/mic-explainer";
+import { preCallStrings as p } from "@/lib/strings/pre-call";
 import { CloseIcon, MicIcon } from "../icons";
 import { useCall } from "./call-provider";
-import { EmailBox } from "./email-box";
+import { PreCallForm } from "./pre-call-form";
 import styles from "./call.module.css";
+
+/**
+ * A "message yourself" link: WhatsApp opens a chat with the parent's own
+ * number with the school's details typed in, ready to keep. No WhatsApp
+ * account for the school is needed — sending from the school's own number is
+ * a later phase.
+ */
+function whatsappLink(phone: string, lang: Lang): string {
+  const site = typeof window === "undefined" ? "" : window.location.origin;
+  const text =
+    lang === "ur"
+      ? `النور پبلک اسکول — داخلے کی معلومات
+فیس، دستاویزات اور داخلہ فارم: ${site}
+دفتر: ${OFFICE_PHONE_DISPLAY}
+مکمل تفصیل میری ای میل میں ہے۔`
+      : `Al-Noor Public School — admission enquiry
+Fees, documents and admission form: ${site}
+Office: ${OFFICE_PHONE_DISPLAY}
+Full details are in my email.`;
+  return `https://wa.me/92${phone.replace(/^0/, "")}?text=${encodeURIComponent(text)}`;
+}
 
 function clock(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -25,7 +46,7 @@ function clock(totalSeconds: number) {
  */
 export function CallOverlay({ lang }: { lang: Lang }) {
   const {
-    phase, muted, transcript, fallback, elapsedSeconds, maxSeconds, callId,
+    phase, muted, transcript, fallback, elapsedSeconds, maxSeconds, thinking, parentDetails,
     openCall, closeCall, startCall, endCall, toggleMute,
   } = useCall();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -105,7 +126,7 @@ export function CallOverlay({ lang }: { lang: Lang }) {
 
         {phase === "explaining" && (
           <div className={styles.body}>
-            <MicExplainer lang={lang} onContinue={() => void startCall()} />
+            <PreCallForm lang={lang} initial={parentDetails} onSubmit={(details) => void startCall(details)} />
             {officeLine}
           </div>
         )}
@@ -130,8 +151,13 @@ export function CallOverlay({ lang }: { lang: Lang }) {
                     </p>
                   ))
                 )}
+                {thinking && (
+                  <p className={styles.thinking} role="status">
+                    <span className={styles.dots} aria-hidden="true"><i /><i /><i /></span>
+                    {p.thinking[lang]}
+                  </p>
+                )}
               </div>
-              <EmailBox lang={lang} callId={callId} />
               <p className={styles.keepOpen}>{c.keepOpen[lang]}</p>
               {officeLine}
             </div>
@@ -156,7 +182,18 @@ export function CallOverlay({ lang }: { lang: Lang }) {
               ) : (
                 <p className={styles.endedText}>{c.endedBody[lang]}</p>
               )}
-              <EmailBox lang={lang} callId={callId} />
+              {parentDetails && !fallback && (
+                <>
+                  <p className={styles.keepOpen}>
+                    {p.emailedNote[lang].split("{email}")[0]}
+                    <bdi dir="ltr">{parentDetails.email}</bdi>
+                    {p.emailedNote[lang].split("{email}")[1]}
+                  </p>
+                  <a className={styles.whatsapp} href={whatsappLink(parentDetails.phone, lang)} target="_blank" rel="noopener">
+                    {p.whatsapp[lang]}
+                  </a>
+                </>
+              )}
               {officeLine}
             </div>
             <div className={styles.foot}>

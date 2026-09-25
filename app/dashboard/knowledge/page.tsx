@@ -8,6 +8,7 @@ import { knowledgeStrings as s } from "@/lib/strings/knowledge";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { LanguageTag } from "@/components/dashboard/status-tag";
 import { ImportForms } from "@/components/knowledge/import-forms";
+import { DownloadsPanel } from "@/components/knowledge/downloads-panel";
 import ui from "@/components/dashboard/ui.module.css";
 import styles from "@/components/knowledge/knowledge.module.css";
 import people from "@/components/leads/lead-details.module.css";
@@ -94,6 +95,8 @@ export default async function KnowledgePage({ searchParams }: { searchParams: Pr
           </div>
         )}
       </section>
+
+      {draft !== null && <DownloadsPanel lang={lang} downloads={draft.doc.downloads} />}
 
       <ImportForms lang={lang} />
 

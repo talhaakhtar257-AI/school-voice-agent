@@ -1,4 +1,5 @@
 import type { ContentDoc, Facts } from "@/lib/content/schema";
+import { downloadStrings as d } from "@/lib/strings/downloads";
 import type { Lang } from "@/lib/language";
 import { contentStrings as s } from "@/lib/strings/landing-content";
 import { AdmissionTimeline } from "./admission-timeline";
@@ -27,12 +28,15 @@ export function ProcessDocumentsSection({
   policies,
   admissionDates,
   schoolTimings,
+  downloads = [],
   failed,
 }: {
   lang: Lang;
   policies: ContentDoc["policies"] | null;
   admissionDates: Facts["admissionDates"];
   schoolTimings: Facts["schoolTimings"];
+  /** Published files such as the admission form (feature 011). */
+  downloads?: { title: { en: string; ur: string }; url: string }[];
   failed: boolean;
 }) {
   const steps = toLines(policies?.admissionProcess[lang] ?? "");
@@ -77,6 +81,20 @@ export function ProcessDocumentsSection({
                 </li>
               ))}
             </ul>
+          )}
+
+          {downloads.length > 0 && (
+            <div className={`${styles.card} ${styles.timingsCard}`}>
+              <h3>{d.landingTitle[lang]}</h3>
+              {downloads.map((file, i) => (
+                <div key={i} className={styles.timingRow}>
+                  <a href={file.url} target="_blank" rel="noopener" dir="auto" style={{ fontWeight: 700 }}>
+                    {file.title[lang] || file.title.en || file.title.ur}
+                  </a>
+                  <span>{d.pdf[lang]}</span>
+                </div>
+              ))}
+            </div>
           )}
 
           <div className={`${styles.card} ${styles.timingsCard}`}>

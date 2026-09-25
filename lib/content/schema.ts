@@ -112,6 +112,20 @@ export const knowledgeDoc = z.object({
 });
 export type KnowledgeDoc = z.infer<typeof knowledgeDoc>;
 
+/**
+ * A file parents can download, such as the admission form (feature 011).
+ * Staff upload it; `url` is its public address in the `downloads` store.
+ */
+export const downloadItem = z.object({
+  id: z.string(),
+  title: bilingual,
+  url: z.string().url(),
+  fileName: z.string(),
+  sizeBytes: z.number().int().min(0),
+  archivedAt: z.string().nullable(),
+});
+export type DownloadItem = z.infer<typeof downloadItem>;
+
 export const contentDoc = z.object({
   facts,
   policies: z.object({
@@ -123,6 +137,7 @@ export const contentDoc = z.object({
   profile: profile.default({ tagline: blankPair, about: blankPair, address: blankPair, showSampleBanner: false }),
   programs: z.array(programItem).default([]),
   knowledge: z.array(knowledgeDoc).default([]),
+  downloads: z.array(downloadItem).default([]),
 });
 export type ContentDoc = z.infer<typeof contentDoc>;
 
@@ -147,6 +162,7 @@ export const emptyDoc: ContentDoc = {
   profile: { tagline: blankPair, about: blankPair, address: blankPair, showSampleBanner: false },
   programs: [],
   knowledge: [],
+  downloads: [],
 };
 
 /** Parse a stored jsonb value into a full ContentDoc, filling any missing branch. */
@@ -175,6 +191,7 @@ export function parseDoc(raw: unknown): ContentDoc {
     profile: { ...emptyDoc.profile, ...((r.profile as object) ?? {}) },
     programs: Array.isArray(r.programs) ? r.programs : [],
     knowledge: Array.isArray(r.knowledge) ? r.knowledge : [],
+    downloads: Array.isArray(r.downloads) ? r.downloads : [],
   };
   return contentDoc.parse(merged);
 }
@@ -195,6 +212,7 @@ export function isEmptyDoc(doc: ContentDoc): boolean {
     doc.escalationTopics.length === 0 &&
     doc.programs.length === 0 &&
     doc.knowledge.length === 0 &&
+    doc.downloads.length === 0 &&
     blank(doc.profile.tagline) &&
     blank(doc.profile.about) &&
     blank(doc.profile.address)
@@ -212,6 +230,7 @@ export function forPublicApi(doc: ContentDoc) {
     faqs: active(doc.faqs),
     escalationTopics: active(doc.escalationTopics),
     programs: active(doc.programs),
+    downloads: active(doc.downloads).map(({ title, url }) => ({ title, url })),
     knowledge: active(doc.knowledge).map(({ title, source, text }) => ({ title, source: source.name, text })),
   };
 }
