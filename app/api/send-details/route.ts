@@ -26,6 +26,8 @@ export const dynamic = "force-dynamic";
 const args = z.object({
   topics: z.array(z.enum(INFO_TOPICS)).max(INFO_TOPICS.length).default([]),
   retellCallId: z.string().max(200).optional(),
+  // The answers the assistant gave on the call, written from the school content.
+  answers: z.string().max(2000).optional(),
 });
 const wrapped = z.object({ call: z.object({ call_id: z.string().max(200) }).passthrough(), args: z.unknown() });
 
@@ -47,7 +49,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.success || !callId) return NextResponse.json({ error: "invalid request" }, { status: 400 });
 
   try {
-    const result = await sendDetailsDuringCall(callId, parsed.data.topics);
+    const result = await sendDetailsDuringCall(callId, parsed.data.topics, parsed.data.answers ?? "");
     // What the assistant reads back decides what it says to the parent.
     return NextResponse.json(
       result === "sent"

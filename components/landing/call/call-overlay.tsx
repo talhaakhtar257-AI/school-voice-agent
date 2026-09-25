@@ -9,6 +9,7 @@ import { preCallStrings as p } from "@/lib/strings/pre-call";
 import { CloseIcon, MicIcon } from "../icons";
 import { useCall } from "./call-provider";
 import { PreCallForm } from "./pre-call-form";
+import { EmailBox } from "./email-box";
 import styles from "./call.module.css";
 
 /**
@@ -46,7 +47,7 @@ function clock(totalSeconds: number) {
  */
 export function CallOverlay({ lang }: { lang: Lang }) {
   const {
-    phase, muted, transcript, fallback, elapsedSeconds, maxSeconds, thinking, parentDetails,
+    phase, muted, transcript, fallback, elapsedSeconds, maxSeconds, thinking, parentDetails, callId,
     openCall, closeCall, startCall, endCall, toggleMute,
   } = useCall();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -158,6 +159,9 @@ export function CallOverlay({ lang }: { lang: Lang }) {
                   </p>
                 )}
               </div>
+              {/* Email is optional on the form; if it was skipped, the parent can
+                  still add it here when they ask for details. */}
+              {parentDetails && !parentDetails.email && <EmailBox lang={lang} callId={callId} />}
               <p className={styles.keepOpen}>{c.keepOpen[lang]}</p>
               {officeLine}
             </div>
@@ -184,11 +188,12 @@ export function CallOverlay({ lang }: { lang: Lang }) {
               )}
               {parentDetails && !fallback && (
                 <>
-                  <p className={styles.keepOpen}>
+                  {!parentDetails.email && <EmailBox lang={lang} callId={callId} />}
+                  {parentDetails.email && <p className={styles.keepOpen}>
                     {p.emailedNote[lang].split("{email}")[0]}
                     <bdi dir="ltr">{parentDetails.email}</bdi>
                     {p.emailedNote[lang].split("{email}")[1]}
-                  </p>
+                  </p>}
                   <a className={styles.whatsapp} href={whatsappLink(parentDetails.phone, lang)} target="_blank" rel="noopener">
                     {p.whatsapp[lang]}
                   </a>

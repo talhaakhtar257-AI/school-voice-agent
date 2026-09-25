@@ -33,7 +33,8 @@ const intakeBody = z.object({
   callId: z.string().min(1).max(200),
   name: z.string().trim().min(2).max(120),
   phone: z.string().max(30),
-  email: z.string().trim().toLowerCase().max(254).regex(EMAIL_PATTERN),
+  // Optional: the parent may skip it on the form.
+  email: z.union([z.literal(""), z.string().trim().toLowerCase().max(254).regex(EMAIL_PATTERN)]).default(""),
 });
 
 export async function POST(request: NextRequest) {
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     // Claims the call for this browser (403 if another browser owns it) and
     // stores the email on the call.
-    if ((await saveParentEmail(callId, visitorId, email)) === "forbidden") {
+    if ((await saveParentEmail(callId, visitorId, email || null)) === "forbidden") {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
 
