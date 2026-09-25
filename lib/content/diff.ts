@@ -84,6 +84,7 @@ export function summariseChanges(before: ContentDoc, after: ContentDoc): string[
   );
 
   diffList("Knowledge document", before.knowledge, after.knowledge, (k) => k.title.en || k.title.ur || k.source.name, lines);
+  diffList("Download", before.downloads, after.downloads, (x) => x.title.en || x.title.ur || x.fileName, lines);
 
   if (lines.length === 0) lines.push("No visible changes.");
   return lines;

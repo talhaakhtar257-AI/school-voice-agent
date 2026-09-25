@@ -1,7 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { readLiveForApi } from "@/lib/content/queries";
 import { emailConfigured, sendEmail } from "./send";
-import { parentSummaryEmail, schoolEnquiryEmail } from "./templates";
+import { parentDetailsEmail, schoolEnquiryEmail } from "./templates";
+import { INFO_TOPICS, renderInfoPack, type InfoTopic } from "./info-pack";
 
 type Which = "school" | "parent";
 const COLUMN: Record<Which, string> = { school: "school_email_sent_at", parent: "parent_email_sent_at" };
@@ -30,16 +31,33 @@ async function recordFailure(callId: string, which: Which, reason: string): Prom
     .eq("id", callId);
 }
 
-function officeHoursLine(hours: { days: string; opens: string; closes: string }[]): string | null {
-  return hours.length > 0 ? hours.map((h) => `${h.days} ${h.opens}–${h.closes}`).join(", ") : null;
-}
 
 /**
  * After Retell's summary arrives: email the school about the enquiry, and the
  * parent if they typed an email. Never throws — email trouble is recorded on
  * the call and the webhook still answers 200.
  */
-export async function sendCallSummaries(call: { id: string; lead_id: string | null; summary: string | null; parent_email: string | null }, siteOrigin: string): Promise<void> {
+type CallForEmail = { id: string; lead_id: string | null; summary: string | null; parent_email: string | null; transcript: unknown };
+type LeadForEmail = { parent_name: string | null; phone: string | null; student_name: string | null; class_wanted: string | null; student_age: number | null; email: string | null };
+
+async function readLead(leadId: string): Promise<LeadForEmail | null> {
+  const { data } = await createAdminClient()
+    .from("leads")
+    .select("parent_name, phone, student_name, class_wanted, student_age, email")
+    .eq("id", leadId)
+    .maybeSingle<LeadForEmail>();
+  return data ?? null;
+}
+
+/** The parent's info pack for these topics, from the published content. */
+async function parentMail(lead: LeadForEmail | null, topics: readonly InfoTopic[]) {
+  const live = await readLiveForApi();
+  if (!live) return null;
+  const pack = renderInfoPack({ doc: live.doc, classWanted: lead?.class_wanted ?? null, studentAge: lead?.student_age ?? null, topics });
+  return parentDetailsEmail(lead?.parent_name ?? null, pack);
+}
+
+export async function sendCallSummaries(call: CallForEmail, siteOrigin: string): Promise<void> {
   if (!call.summary || !call.lead_id) return;
   const schoolTo = process.env.SCHOOL_NOTIFY_EMAIL;
   if (!emailConfigured() || !schoolTo) {
@@ -48,11 +66,7 @@ export async function sendCallSummaries(call: { id: string; lead_id: string | nu
   }
 
   try {
-    const { data: lead } = await createAdminClient()
-      .from("leads")
-      .select("parent_name, phone, student_name, class_wanted, email")
-      .eq("id", call.lead_id)
-      .maybeSingle<{ parent_name: string | null; phone: string | null; student_name: string | null; class_wanted: string | null; email: string | null }>();
+    const lead = await readLead(call.lead_id);
 
     if (await claim(call.id, "school")) {
       const mail = schoolEnquiryEmail({
@@ -60,8 +74,10 @@ export async function sendCallSummaries(call: { id: string; lead_id: string | nu
         phone: lead?.phone ?? null,
         studentName: lead?.student_name ?? null,
         classWanted: lead?.class_wanted ?? null,
+        studentAge: lead?.student_age ?? null,
         email: lead?.email ?? call.parent_email,
         summary: call.summary,
+        transcript: Array.isArray(call.transcript) ? (call.transcript as { role: "agent" | "user"; content: string }[]) : [],
         leadUrl: `${siteOrigin}/dashboard/leads/${call.lead_id}`,
       });
       const sent = await sendEmail({ to: schoolTo, ...mail });
@@ -71,9 +87,8 @@ export async function sendCallSummaries(call: { id: string; lead_id: string | nu
 
     const parentTo = call.parent_email ?? lead?.email ?? null;
     if (parentTo && (await claim(call.id, "parent"))) {
-      const live = await readLiveForApi();
-      const mail = parentSummaryEmail(call.summary, officeHoursLine(live?.doc.facts.officeHours ?? []));
-      const sent = await sendEmail({ to: parentTo, ...mail });
+      const mail = await parentMail(lead, INFO_TOPICS);
+      const sent = mail ? await sendEmail({ to: parentTo, ...mail }) : { ok: false as const, error: "no published content" };
       if (!sent.ok) await recordFailure(call.id, "parent", sent.error);
       // The address itself is never logged.
       console.info(`[email] parent ${sent.ok ? "sent" : "failed"} for call ${call.id}`);
@@ -81,4 +96,24 @@ export async function sendCallSummaries(call: { id: string; lead_id: string | nu
   } catch (error) {
     console.error(`[email] ${error instanceof Error ? error.message : "unknown"} for call ${call.id}`);
   }
+}
+
+/**
+ * The send_details tool (feature 011): while the call is still going, email
+ * the parent the details they just asked for. Returns whether it went out.
+ */
+export async function sendDetailsDuringCall(retellCallId: string, topics: readonly InfoTopic[]): Promise<"sent" | "no-email" | "failed"> {
+  const { data: call } = await createAdminClient()
+    .from("calls")
+    .select("id, lead_id, parent_email")
+    .eq("retell_call_id", retellCallId)
+    .maybeSingle<{ id: string; lead_id: string | null; parent_email: string | null }>();
+  const lead = call?.lead_id ? await readLead(call.lead_id) : null;
+  const to = call?.parent_email ?? lead?.email ?? null;
+  if (!to) return "no-email";
+  const mail = await parentMail(lead, topics.length > 0 ? topics : INFO_TOPICS);
+  if (!mail) return "failed";
+  const sent = await sendEmail({ to, ...mail });
+  console.info(`[email] details ${sent.ok ? "sent" : "failed"} for call ${call?.id ?? retellCallId}`);
+  return sent.ok ? "sent" : "failed";
 }

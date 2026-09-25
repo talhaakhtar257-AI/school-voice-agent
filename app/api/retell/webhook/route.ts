@@ -22,6 +22,7 @@ import { isHandledEvent, webhookBody } from "@/lib/calls/schema";
 import { getRetellCall } from "@/lib/calls/retell-api";
 import { upsertCallFromRetell } from "@/lib/calls/queries";
 import { sendCallSummaries } from "@/lib/email/send-summaries";
+import { releaseUnusedMinutes } from "@/lib/voice/limits";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,13 @@ export async function POST(request: NextRequest) {
     // Stage 5: once the summary exists, email the school (and the parent if
     // they typed an email). Sent at most once per call; never throws.
     if (saved.summary) await sendCallSummaries(saved, new URL(request.url).origin);
+    // Give back the minutes the call did not use. A failure here must not
+    // make Retell retry the whole event, so it is logged and swallowed.
+    if (saved.status === "ended") {
+      await releaseUnusedMinutes(saved.id, saved.duration_seconds).catch((error: unknown) =>
+        console.error(`[api/retell/webhook] release minutes ${call.call_id}: ${error instanceof Error ? error.message : "unknown"}`),
+      );
+    }
     console.info(`[api/retell/webhook] ${event} ${call.call_id}: ${saved.status}, lead ${saved.lead_id ?? "none"}`);
     return NextResponse.json({ ok: true });
   } catch (error) {
