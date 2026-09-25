@@ -21,6 +21,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { readLiveForApi } from "@/lib/content/queries";
 import { forPublicApi, isEmptyDoc } from "@/lib/content/schema";
 import { hasValidAgentSecret } from "@/lib/api/secret";
+import { agentBrief } from "@/lib/content/agent-brief";
 
 // The agent must see a publish immediately — never serve a cached response.
 export const dynamic = "force-dynamic";
@@ -45,6 +46,11 @@ export async function GET(request: NextRequest) {
       // Unambiguous: nothing published yet (FR-004). Not an error, not an empty
       // object with keys.
       return NextResponse.json({ published: false });
+    }
+    // ?format=brief — the compact text version for the voice agent (cheaper
+    // per reply; see lib/content/agent-brief.ts). Default stays the full JSON.
+    if (request.nextUrl.searchParams.get("format") === "brief") {
+      return NextResponse.json({ published: true, publishedAt: live.updatedAt, brief: agentBrief(live.doc) });
     }
     return NextResponse.json({
       published: true,
