@@ -118,6 +118,8 @@ using `RETELL_API_KEY` in Vercel.
 | End call on silence | **60 seconds** | A parent fetching a family member or a document goes quiet; a short timer hangs up on them (a 21 Sept test call ended with "inactivity" while the parent went to call his sister) |
 | Begin message (greeting) | The STEP 1 line from the prompt | This field is separate from the prompt; if it still holds an old greeting, the agent opens with that |
 | Voice | Monica; try its Flash/Turbo version if offered, keep it only if Urdu still sounds right | Faster speech generation |
+| Speech recognition (`stt_mode`) | **fast** | Names are typed on the pre-call form now, so the slower "accurate" mode is no longer worth its delay (25 Sept 2026, after testers reported freezing on phones) |
+| Noise filter (`denoising_mode`) | **noise-cancellation** | The heavier "noise and background speech" filter added processing to every word |
 | Knowledge base | Off | Content comes from `get_school_content` |
 | Backchannel | Off | Saves words and time |
 
