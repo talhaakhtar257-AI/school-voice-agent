@@ -52,7 +52,7 @@ using `RETELL_API_KEY` in Vercel.
 
 ### `get_school_content`
 
-- Method `GET`, URL `https://alnoor-school-admissions.vercel.app/api/content`
+- Method `GET`, URL `https://alnoor-school-admissions.vercel.app/api/content?format=brief` (compact text brief since 26 Sept 2026 — cuts the per-reply token surcharge; the plain URL still returns the full JSON)
 - Parameters: none
 - **Description** (the agent decides from this, so it matters):
   `The school's live admission information: classes, monthly and admission fees, age ranges per class, admission dates, office hours, school timings, programs, admission process, required documents, FAQs, knowledge documents imported from the school's PDFs and website, and topics to hand to the office. Call this once at the very start of every call, before answering anything.`
