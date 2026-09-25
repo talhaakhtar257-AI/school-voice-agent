@@ -9,11 +9,20 @@ export const preCallStrings = {
   namePlaceholder: { en: "e.g. Ahmed Khan", ur: "مثلاً احمد خان" },
   phone: { en: "Mobile number", ur: "موبائل نمبر" },
   phonePlaceholder: { en: "03XX XXXXXXX", ur: "03XX XXXXXXX" },
-  email: { en: "Email", ur: "ای میل" },
+  email: { en: "Email (optional)", ur: "ای میل (اختیاری)" },
   emailPlaceholder: { en: "you@example.com", ur: "you@example.com" },
   emailHint: {
-    en: "We email you the fees, documents and admission form after the call.",
-    ur: "کال کے بعد ہم آپ کو فیس، دستاویزات اور داخلہ فارم ای میل کریں گے۔",
+    en: "Add your email to receive the full conversation, the documents list and the admission form after the call.",
+    ur: "کال کے بعد مکمل گفتگو، دستاویزات کی فہرست اور داخلہ فارم پانے کے لیے اپنی ای میل لکھیں۔",
+  },
+  consent: {
+    en: "I agree to start a recorded call with the school's AI admissions assistant.",
+    ur: "میں اسکول کے اے آئی داخلہ اسسٹنٹ کے ساتھ ریکارڈ شدہ کال شروع کرنے کی اجازت دیتا/دیتی ہوں۔",
+  },
+  consentError: { en: "Please tick the box to start the call.", ur: "کال شروع کرنے کے لیے براہ کرم خانے پر نشان لگائیں۔" },
+  emailBoxDuringCall: {
+    en: "To receive the details by email, type your email here:",
+    ur: "تفصیلات ای میل پر حاصل کرنے کے لیے یہاں اپنی ای میل لکھیں:",
   },
   nameError: { en: "Please enter your name.", ur: "براہ کرم اپنا نام لکھیں۔" },
   phoneError: {
@@ -32,8 +41,8 @@ export const preCallStrings = {
   // After the call
   whatsapp: { en: "Save these details on WhatsApp", ur: "یہ تفصیلات واٹس ایپ پر محفوظ کریں" },
   emailedNote: {
-    en: "We are emailing the details to {email}.",
-    ur: "ہم تفصیلات {email} پر ای میل کر رہے ہیں۔",
+    en: "The full conversation is on its way to {email}.",
+    ur: "مکمل گفتگو {email} پر بھیجی جا رہی ہے۔",
   },
 } as const;
 

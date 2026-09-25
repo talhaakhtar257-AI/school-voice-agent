@@ -49,12 +49,18 @@ async function readLead(leadId: string): Promise<LeadForEmail | null> {
   return data ?? null;
 }
 
-/** The parent's info pack for these topics, from the published content. */
-async function parentMail(lead: LeadForEmail | null, topics: readonly InfoTopic[]) {
+type Turn = { role: "agent" | "user"; content: string };
+const asTurns = (value: unknown): Turn[] => (Array.isArray(value) ? (value as Turn[]) : []);
+
+/**
+ * The parent's email: the conversation (after the call) plus the info pack
+ * for these topics, from the published content.
+ */
+async function parentMail(lead: LeadForEmail | null, topics: readonly InfoTopic[], transcript: Turn[] = [], answers = "") {
   const live = await readLiveForApi();
   if (!live) return null;
   const pack = renderInfoPack({ doc: live.doc, classWanted: lead?.class_wanted ?? null, studentAge: lead?.student_age ?? null, topics });
-  return parentDetailsEmail(lead?.parent_name ?? null, pack);
+  return parentDetailsEmail(lead?.parent_name ?? null, pack, transcript, answers);
 }
 
 export async function sendCallSummaries(call: CallForEmail, siteOrigin: string): Promise<void> {
@@ -77,7 +83,7 @@ export async function sendCallSummaries(call: CallForEmail, siteOrigin: string):
         studentAge: lead?.student_age ?? null,
         email: lead?.email ?? call.parent_email,
         summary: call.summary,
-        transcript: Array.isArray(call.transcript) ? (call.transcript as { role: "agent" | "user"; content: string }[]) : [],
+        transcript: asTurns(call.transcript),
         leadUrl: `${siteOrigin}/dashboard/leads/${call.lead_id}`,
       });
       const sent = await sendEmail({ to: schoolTo, ...mail });
@@ -87,7 +93,7 @@ export async function sendCallSummaries(call: CallForEmail, siteOrigin: string):
 
     const parentTo = call.parent_email ?? lead?.email ?? null;
     if (parentTo && (await claim(call.id, "parent"))) {
-      const mail = await parentMail(lead, INFO_TOPICS);
+      const mail = await parentMail(lead, INFO_TOPICS, asTurns(call.transcript));
       const sent = mail ? await sendEmail({ to: parentTo, ...mail }) : { ok: false as const, error: "no published content" };
       if (!sent.ok) await recordFailure(call.id, "parent", sent.error);
       // The address itself is never logged.
@@ -102,7 +108,11 @@ export async function sendCallSummaries(call: CallForEmail, siteOrigin: string):
  * The send_details tool (feature 011): while the call is still going, email
  * the parent the details they just asked for. Returns whether it went out.
  */
-export async function sendDetailsDuringCall(retellCallId: string, topics: readonly InfoTopic[]): Promise<"sent" | "no-email" | "failed"> {
+export async function sendDetailsDuringCall(
+  retellCallId: string,
+  topics: readonly InfoTopic[],
+  answers = "",
+): Promise<"sent" | "no-email" | "failed"> {
   const { data: call } = await createAdminClient()
     .from("calls")
     .select("id, lead_id, parent_email")
@@ -111,7 +121,7 @@ export async function sendDetailsDuringCall(retellCallId: string, topics: readon
   const lead = call?.lead_id ? await readLead(call.lead_id) : null;
   const to = call?.parent_email ?? lead?.email ?? null;
   if (!to) return "no-email";
-  const mail = await parentMail(lead, topics.length > 0 ? topics : INFO_TOPICS);
+  const mail = await parentMail(lead, topics.length > 0 ? topics : INFO_TOPICS, [], answers);
   if (!mail) return "failed";
   const sent = await sendEmail({ to, ...mail });
   console.info(`[email] details ${sent.ok ? "sent" : "failed"} for call ${call?.id ?? retellCallId}`);

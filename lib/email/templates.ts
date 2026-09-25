@@ -63,20 +63,53 @@ ${turns ? `<p style="margin:22px 0 8px;font-weight:bold">Full conversation</p><d
 }
 
 /**
- * To the parent: the details they asked for, built from the school's
- * published content — not a description of the call.
+ * To the parent. After the call: the whole conversation word for word, then
+ * the details they may need (fees, documents, process, dates, form links),
+ * built from the school's published content. During the call (send_details):
+ * the details only, since the conversation is not over. Never Retell's
+ * summary — that describes the call for staff, not for the family.
  */
-export function parentDetailsEmail(name: string | null, pack: { html: string; text: string }) {
+export function parentDetailsEmail(
+  name: string | null,
+  pack: { html: string; text: string },
+  transcript: { role: "agent" | "user"; content: string }[] = [],
+  answers = "",
+) {
   const greetEn = name ? `Dear ${esc(name)},` : "Dear parent,";
   const greetUr = name ? `محترم ${esc(name)}،` : "محترم والدین،";
+  const hasConversation = transcript.length > 0;
+  const conversation = hasConversation
+    ? `<p style="margin:18px 0 8px;font-weight:bold">Your conversation / آپ کی گفتگو</p>
+<div style="padding:12px 14px;background:#f4f7f5;border-radius:10px;font-size:14px">${transcript
+        .map(
+          (t) =>
+            `<p style="margin:0 0 8px" dir="auto"><b style="color:${t.role === "agent" ? "#0f5c4a" : "#a86e00"}">${
+              t.role === "agent" ? "Admissions assistant" : esc(name ?? "You")
+            }:</b> ${esc(t.content)}</p>`,
+        )
+        .join("")}</div>
+<p style="margin:18px 0 0;font-weight:bold">Details you may need / ضروری معلومات</p>`
+    : "";
   const html = shell(`<p style="margin:0 0 8px">${greetEn}</p>
-<p style="margin:0 0 4px">Thank you for your interest in Al-Noor Public School. Here are the admission details you asked about.</p>
-<p style="margin:0 0 4px" dir="rtl">${greetUr} النور پبلک اسکول میں دلچسپی کا شکریہ۔ آپ کی مطلوبہ داخلے کی معلومات یہ ہیں۔</p>
+<p style="margin:0 0 4px">Thank you for your interest in Al-Noor Public School. ${
+    hasConversation ? "Here is the full conversation from your call, followed by the admission details." : "Here are the admission details you asked about."
+  }</p>
+<p style="margin:0 0 4px" dir="rtl">${greetUr} النور پبلک اسکول میں دلچسپی کا شکریہ۔ ${
+    hasConversation ? "آپ کی کال کی مکمل گفتگو اور داخلے کی معلومات نیچے ہیں۔" : "آپ کی مطلوبہ داخلے کی معلومات یہ ہیں۔"
+  }</p>
+${conversation}
+${answers.trim() ? `<p style="margin:14px 0 6px;font-weight:bold">Answers to your questions / آپ کے سوالات کے جواب</p><p style="margin:0;white-space:pre-line" dir="auto">${esc(answers.trim())}</p>` : ""}
 ${pack.html}
 <p style="margin:20px 0 0"><b>Next step:</b> the admissions office will contact you soon.</p>
 <p style="margin:0" dir="rtl"><b>اگلا قدم:</b> داخلہ دفتر جلد آپ سے رابطہ کرے گا۔</p>
 <p style="margin:18px 0 0;color:#6e7f78;font-size:13px">This email is information only. It is not an admission confirmation — only the school office confirms admissions.</p>
 <p style="margin:0;color:#6e7f78;font-size:13px" dir="rtl">یہ ای میل صرف معلومات کے لیے ہے، داخلے کی تصدیق نہیں۔ داخلے کی تصدیق صرف اسکول کا دفتر کرتا ہے۔</p>`);
-  const text = `${name ? `Dear ${name},` : "Dear parent,"}\n\nThank you for your interest in Al-Noor Public School. Here are the admission details you asked about.\n\n${pack.text}\n\nNext step: the admissions office will contact you soon.\n\nThis email is information only. It is not an admission confirmation.`;
-  return { subject: "Al-Noor Public School — your admission details / داخلے کی معلومات", html, text };
+  const conversationText = hasConversation
+    ? `Your conversation:\n${transcript.map((t) => `${t.role === "agent" ? "Admissions assistant" : (name ?? "You")}: ${t.content}`).join("\n")}\n\nDetails you may need:\n\n`
+    : "";
+  const text = `${name ? `Dear ${name},` : "Dear parent,"}\n\nThank you for your interest in Al-Noor Public School.\n\n${conversationText}${answers.trim() ? `Answers to your questions:\n${answers.trim()}\n\n` : ""}${pack.text}\n\nNext step: the admissions office will contact you soon.\n\nThis email is information only. It is not an admission confirmation.`;
+  const subject = hasConversation
+    ? "Your call with Al-Noor Public School — full conversation / آپ کی گفتگو"
+    : "Al-Noor Public School — your admission details / داخلے کی معلومات";
+  return { subject, html, text };
 }

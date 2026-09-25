@@ -120,7 +120,7 @@ export async function linkLeadToCall(
 export async function saveParentEmail(
   retellCallId: string,
   visitorId: string,
-  email: string,
+  email: string | null,
 ): Promise<"ok" | "forbidden"> {
   const supabase = createAdminClient();
   const existing = await findCall(retellCallId);
@@ -130,7 +130,7 @@ export async function saveParentEmail(
   const { data, error } = existing
     ? await supabase
         .from("calls")
-        .update({ visitor_id: visitorId, parent_email: email })
+        .update(email ? { visitor_id: visitorId, parent_email: email } : { visitor_id: visitorId })
         .eq("id", existing.id)
         .select(CALL_COLUMNS)
         .single<CallRow>()
@@ -149,7 +149,7 @@ export async function saveParentEmail(
   if (error?.code === "23505" && !existing) return saveParentEmail(retellCallId, visitorId, email);
   if (error) throw error;
 
-  if (data.lead_id) {
+  if (data.lead_id && email) {
     // The parent just typed it, so it replaces an older one on the lead.
     const { error: leadError } = await supabase.from("leads").update({ email }).eq("id", data.lead_id);
     if (leadError) throw leadError;
