@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Turn } from "./mask";
+import { INFO_TOPICS, type InfoTopic } from "@/lib/email/info-pack";
 
 const RETELL_API = "https://api.retellai.com";
 
@@ -13,8 +14,42 @@ const retellCall = z.object({
   transcript_object: z
     .array(z.object({ role: z.string(), content: z.string().optional() }))
     .optional(),
+  transcript_with_tool_calls: z
+    .array(z.object({ role: z.string(), name: z.string().optional(), arguments: z.string().optional() }).passthrough())
+    .optional(),
   call_analysis: z.object({ call_summary: z.string().optional() }).nullish(),
 });
+
+/** What the parent asked to receive in writing during the call (send_details). */
+export type RequestedDetails = { topics: InfoTopic[]; classWanted: string | null };
+
+const sendDetailsArgs = z.object({
+  topics: z.array(z.string()).optional(),
+  class_wanted: z.string().max(40).optional(),
+});
+
+/**
+ * Collect every send_details call the assistant made, so the after-call email
+ * repeats only what the parent actually asked for (tester round 3).
+ */
+function requestedFrom(entries: z.infer<typeof retellCall>["transcript_with_tool_calls"]): RequestedDetails {
+  const topics = new Set<InfoTopic>();
+  let classWanted: string | null = null;
+  for (const entry of entries ?? []) {
+    if (entry.role !== "tool_call_invocation" || entry.name !== "send_details" || !entry.arguments) continue;
+    let raw: unknown;
+    try {
+      raw = JSON.parse(entry.arguments);
+    } catch {
+      continue; // a malformed tool call is skipped, not fatal
+    }
+    const parsed = sendDetailsArgs.safeParse(raw);
+    if (!parsed.success) continue;
+    for (const t of parsed.data.topics ?? []) if ((INFO_TOPICS as readonly string[]).includes(t)) topics.add(t as InfoTopic);
+    if (parsed.data.class_wanted?.trim()) classWanted = parsed.data.class_wanted.trim();
+  }
+  return { topics: [...topics], classWanted };
+}
 
 export type RetellCall = {
   callId: string;
@@ -25,6 +60,7 @@ export type RetellCall = {
   durationSeconds: number | null;
   transcript: Turn[] | null;
   summary: string | null;
+  requested: RequestedDetails;
 };
 
 /**
@@ -66,5 +102,6 @@ export async function getRetellCall(callId: string): Promise<RetellCall | null> 
     durationSeconds: call.duration_ms !== undefined ? Math.round(call.duration_ms / 1000) : null,
     transcript: transcript && transcript.length > 0 ? transcript : null,
     summary: call.call_analysis?.call_summary?.trim() || null,
+    requested: requestedFrom(call.transcript_with_tool_calls),
   };
 }

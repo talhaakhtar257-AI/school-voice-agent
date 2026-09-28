@@ -135,7 +135,7 @@ export default async function KnowledgePage({ searchParams }: { searchParams: Pr
                     </td>
                     <td>
                       <span className={`${ui.tag} ${k.source.kind === "pdf" ? ui.tagUr : ui.tagEn}`}>
-                        {k.source.kind === "pdf" ? s.pdf[lang] : s.website[lang]}
+                        {s[k.source.kind][lang]}
                       </span>{" "}
                       <bdi dir="ltr" className={ui.muted} style={{ fontSize: "0.8rem", overflowWrap: "anywhere" }}>{k.source.name}</bdi>
                     </td>

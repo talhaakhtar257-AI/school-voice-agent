@@ -34,6 +34,12 @@ export const leadDetailStrings = {
   emailParentSent: { en: "Summary emailed to the parent", ur: "خلاصہ والدین کو ای میل ہو گیا" },
   emailProblem: { en: "Email not sent", ur: "ای میل نہیں گئی" },
   conversationTitle: { en: "Full conversation", ur: "مکمل گفتگو" },
+  addToKnowledge: { en: "Add to Knowledge", ur: "معلومات میں شامل کریں" },
+  addingToKnowledge: { en: "Adding…", ur: "شامل ہو رہا ہے…" },
+  addToKnowledgeHint: {
+    en: "Copies this call's questions and answers into a draft Knowledge document, with names, phone numbers and emails removed. Check and edit it, then Publish on the Content screen.",
+    ur: "اس کال کے سوال و جواب نام، فون نمبر اور ای میل ہٹا کر معلومات کے مسودے میں آ جائیں گے۔ دیکھ کر درست کریں، پھر مواد والی اسکرین پر شائع کریں۔",
+  },
   parent: { en: "Parent", ur: "والدین" },
   assistant: { en: "Assistant", ur: "اسسٹنٹ" },
   conversationLive: {

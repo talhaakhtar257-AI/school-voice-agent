@@ -79,7 +79,7 @@ export default async function KnowledgeEntryPage({ params }: { params: Promise<{
             <div>
               <h2 className={ui.cardTitle}>{s.documentHeading[lang]}</h2>
               <div className={ui.sub}>
-                {doc.source.kind === "pdf" ? s.pdf[lang] : s.website[lang]} · <bdi dir="ltr">{doc.source.name}</bdi> ·{" "}
+                {s[doc.source.kind][lang]} ·<bdi dir="ltr">{doc.source.name}</bdi> ·{" "}
                 {s.imported[lang]} {formatDate(doc.importedAt, lang)}
               </div>
             </div>

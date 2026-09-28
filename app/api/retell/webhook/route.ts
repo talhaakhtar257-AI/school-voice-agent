@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     const saved = await upsertCallFromRetell(retellCall);
     // Stage 5: once the summary exists, email the school (and the parent if
     // they typed an email). Sent at most once per call; never throws.
-    if (saved.summary) await sendCallSummaries(saved, new URL(request.url).origin);
+    if (saved.summary) await sendCallSummaries(saved, new URL(request.url).origin, retellCall.requested);
     // Give back the minutes the call did not use. A failure here must not
     // make Retell retry the whole event, so it is logged and swallowed.
     if (saved.status === "ended") {

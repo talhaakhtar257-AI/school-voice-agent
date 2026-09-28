@@ -8,6 +8,8 @@ import { updateDraft } from "@/lib/knowledge/draft";
 import { KNOWLEDGE_MAX_CHARS, PDF_MAX_BYTES, pdfToText } from "@/lib/knowledge/pdf";
 import { CrawlRefused, crawlSite } from "@/lib/knowledge/crawl";
 import { getUnansweredQuestion, markQuestionAnswered } from "@/lib/unanswered/list";
+import { getLeadWithCall } from "@/lib/leads/queries";
+import { callToKnowledgeText } from "@/lib/knowledge/from-call";
 
 /**
  * Knowledge screen actions (contracts/api.md §4). Every one checks the staff
@@ -116,6 +118,30 @@ export async function importWebsiteAction(url: string): Promise<ActionResult<str
   } catch (error) {
     if (error instanceof CrawlRefused) return { ok: false, reason: error.message };
     logFailure("website", error);
+    return { ok: false, reason: "error" };
+  }
+}
+
+/**
+ * "Add to Knowledge" on a lead's page (tester round 3): the call's questions
+ * and answers become a draft Knowledge document, personal details removed.
+ * Staff edit it next; parents hear it only after Publish.
+ */
+export async function addCallToKnowledgeAction(leadId: string): Promise<ActionResult<string>> {
+  if (!(await signedIn())) return { ok: false, reason: "auth" };
+  if (!z.string().uuid().safeParse(leadId).success) return { ok: false, reason: "missing" };
+  try {
+    const lead = await getLeadWithCall(leadId);
+    if (!lead) return { ok: false, reason: "missing" };
+    const turns = lead.call?.transcript ?? [];
+    const text = callToKnowledgeText(turns, { parentName: lead.parent_name, studentName: lead.student_name });
+    if (!text) return { ok: false, reason: "no-conversation" };
+    const date = new Date(lead.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Karachi" });
+    const item = newKnowledge(`From call on ${date}`, { kind: "call", name: `Call on ${date}` }, text);
+    await addKnowledge(item);
+    return { ok: true, value: item.id };
+  } catch (error) {
+    logFailure("from-call", error);
     return { ok: false, reason: "error" };
   }
 }
