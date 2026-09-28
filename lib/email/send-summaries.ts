@@ -3,6 +3,7 @@ import { readLiveForApi } from "@/lib/content/queries";
 import { emailConfigured, sendEmail } from "./send";
 import { parentDetailsEmail, schoolEnquiryEmail } from "./templates";
 import { INFO_TOPICS, renderInfoPack, type InfoTopic } from "./info-pack";
+import type { RequestedDetails } from "@/lib/calls/retell-api";
 
 type Which = "school" | "parent";
 const COLUMN: Record<Which, string> = { school: "school_email_sent_at", parent: "parent_email_sent_at" };
@@ -56,14 +57,26 @@ const asTurns = (value: unknown): Turn[] => (Array.isArray(value) ? (value as Tu
  * The parent's email: the conversation (after the call) plus the info pack
  * for these topics, from the published content.
  */
-async function parentMail(lead: LeadForEmail | null, topics: readonly InfoTopic[], transcript: Turn[] = [], answers = "") {
+async function parentMail(
+  lead: LeadForEmail | null,
+  topics: readonly InfoTopic[],
+  transcript: Turn[] = [],
+  answers = "",
+  classWanted: string | null = null,
+) {
   const live = await readLiveForApi();
   if (!live) return null;
-  const pack = renderInfoPack({ doc: live.doc, classWanted: lead?.class_wanted ?? null, studentAge: lead?.student_age ?? null, topics });
+  // The class the assistant named in send_details wins: save_lead may not
+  // have stored it yet (tester round 3).
+  const pack = renderInfoPack({ doc: live.doc, classWanted: classWanted ?? lead?.class_wanted ?? null, studentAge: lead?.student_age ?? null, topics });
   return parentDetailsEmail(lead?.parent_name ?? null, pack, transcript, answers);
 }
 
-export async function sendCallSummaries(call: CallForEmail, siteOrigin: string): Promise<void> {
+/**
+ * After the call the parent gets the whole conversation plus only the details
+ * they asked for on it — never every class's fee and every document.
+ */
+export async function sendCallSummaries(call: CallForEmail, siteOrigin: string, requested: RequestedDetails = { topics: [], classWanted: null }): Promise<void> {
   if (!call.summary || !call.lead_id) return;
   const schoolTo = process.env.SCHOOL_NOTIFY_EMAIL;
   if (!emailConfigured() || !schoolTo) {
@@ -93,7 +106,7 @@ export async function sendCallSummaries(call: CallForEmail, siteOrigin: string):
 
     const parentTo = call.parent_email ?? lead?.email ?? null;
     if (parentTo && (await claim(call.id, "parent"))) {
-      const mail = await parentMail(lead, INFO_TOPICS, asTurns(call.transcript));
+      const mail = await parentMail(lead, requested.topics, asTurns(call.transcript), "", requested.classWanted);
       const sent = mail ? await sendEmail({ to: parentTo, ...mail }) : { ok: false as const, error: "no published content" };
       if (!sent.ok) await recordFailure(call.id, "parent", sent.error);
       // The address itself is never logged.
@@ -112,6 +125,7 @@ export async function sendDetailsDuringCall(
   retellCallId: string,
   topics: readonly InfoTopic[],
   answers = "",
+  classWanted: string | null = null,
 ): Promise<"sent" | "no-email" | "failed"> {
   const { data: call } = await createAdminClient()
     .from("calls")
@@ -121,7 +135,7 @@ export async function sendDetailsDuringCall(
   const lead = call?.lead_id ? await readLead(call.lead_id) : null;
   const to = call?.parent_email ?? lead?.email ?? null;
   if (!to) return "no-email";
-  const mail = await parentMail(lead, topics.length > 0 ? topics : INFO_TOPICS, [], answers);
+  const mail = await parentMail(lead, topics.length > 0 ? topics : INFO_TOPICS, [], answers, classWanted);
   if (!mail) return "failed";
   const sent = await sendEmail({ to, ...mail });
   console.info(`[email] details ${sent.ok ? "sent" : "failed"} for call ${call?.id ?? retellCallId}`);

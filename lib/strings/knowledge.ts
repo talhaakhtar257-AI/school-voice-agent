@@ -45,6 +45,7 @@ export const knowledgeStrings = {
   characters: { en: "characters", ur: "حروف" },
   pdf: { en: "PDF", ur: "پی ڈی ایف" },
   website: { en: "Website", ur: "ویب سائٹ" },
+  call: { en: "From a call", ur: "کال سے" },
 
   // Import
   addPdf: { en: "Add from PDF", ur: "پی ڈی ایف سے شامل کریں" },
@@ -76,6 +77,10 @@ export const knowledgeStrings = {
     private: { en: "That address cannot be read from here.", ur: "یہ پتا یہاں سے نہیں پڑھا جا سکتا۔" },
     unreachable: { en: "That website could not be reached.", ur: "اس ویب سائٹ تک رسائی نہیں ہو سکی۔" },
     invalid: { en: "Please fill in the required fields.", ur: "براہ کرم ضروری خانے پُر کریں۔" },
+    "no-conversation": {
+      en: "This call has no conversation to add.",
+      ur: "اس کال میں شامل کرنے کے لیے کوئی گفتگو نہیں۔",
+    },
     missing: { en: "This item no longer exists.", ur: "یہ چیز اب موجود نہیں۔" },
     auth: { en: "Please sign in again.", ur: "براہ کرم دوبارہ سائن ان کریں۔" },
     error: { en: "Something went wrong. Please try again.", ur: "کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔" },

@@ -11,6 +11,7 @@ import { LeadSummary } from "@/components/leads/lead-summary";
 import { Conversation } from "@/components/leads/conversation";
 import { LeadStatusControl } from "@/components/leads/lead-status-control";
 import { LeadAvatar } from "@/components/leads/lead-avatar";
+import { AddToKnowledge } from "@/components/leads/add-to-knowledge";
 import ui from "@/components/dashboard/ui.module.css";
 import styles from "@/components/leads/lead-details.module.css";
 
@@ -126,6 +127,7 @@ export default async function LeadDetailsPage({ params }: { params: Promise<{ id
         <div className={ui.cardHead}>
           <h2 className={ui.cardTitle}>{s.conversationTitle[lang]}</h2>
         </div>
+        {lead.call?.transcript && lead.call.transcript.length > 0 && <AddToKnowledge leadId={lead.id} lang={lang} />}
         <Conversation call={lead.call} lang={lang} />
       </section>
     </div>

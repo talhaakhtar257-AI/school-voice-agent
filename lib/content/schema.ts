@@ -105,7 +105,8 @@ export type Profile = z.infer<typeof profile>;
 export const knowledgeDoc = z.object({
   id: z.string(),
   title: bilingual,
-  source: z.object({ kind: z.enum(["pdf", "website"]), name: z.string() }),
+  // "call": staff turned a parent's call into knowledge from the lead page.
+  source: z.object({ kind: z.enum(["pdf", "website", "call"]), name: z.string() }),
   text: z.string().max(60_000),
   importedAt: z.string(),
   archivedAt: z.string().nullable(),

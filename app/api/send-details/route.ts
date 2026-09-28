@@ -13,7 +13,7 @@
  *   # a call with no email on record -> 200 {"ok":true,"sent":false,"reason":"no-email"}
  *   curl -s -X POST http://localhost:3000/api/send-details \
  *     -H "X-Agent-Secret: $RETELL_WEBHOOK_SECRET" -H "Content-Type: application/json" \
- *     -d '{"name":"send_details","call":{"call_id":"call_x"},"args":{"topics":["fees","documents"]}}'
+ *     -d '{"name":"send_details","call":{"call_id":"call_x"},"args":{"topics":["fees","documents"],"class_wanted":"Playgroup"}}'
  */
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
@@ -28,6 +28,9 @@ const args = z.object({
   retellCallId: z.string().max(200).optional(),
   // The answers the assistant gave on the call, written from the school content.
   answers: z.string().max(2000).optional(),
+  // The class the parent is asking about, so the email carries that class's
+  // fee and documents even if save_lead has not stored it yet.
+  class_wanted: z.string().max(40).optional(),
 });
 const wrapped = z.object({ call: z.object({ call_id: z.string().max(200) }).passthrough(), args: z.unknown() });
 
@@ -49,7 +52,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.success || !callId) return NextResponse.json({ error: "invalid request" }, { status: 400 });
 
   try {
-    const result = await sendDetailsDuringCall(callId, parsed.data.topics, parsed.data.answers ?? "");
+    const result = await sendDetailsDuringCall(callId, parsed.data.topics, parsed.data.answers ?? "", parsed.data.class_wanted?.trim() || null);
     // What the assistant reads back decides what it says to the parent.
     return NextResponse.json(
       result === "sent"
