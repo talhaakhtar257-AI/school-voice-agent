@@ -65,7 +65,7 @@ Each statement in the policy maps to where the system does it:
 | 3 | Lead fields: parent name, child's name, class wanted, age, phone, current class, previous school, fresh/transfer, language | `leads` table: `parent_name, student_name, class_wanted, student_age, phone, current_class, previous_school, admission_type, language, consent` (initial migration) |
 | 4 | A name the parent did not confirm is left empty | Constitution V; `save_lead` rules in `docs/retell-agent-prompt.md` |
 | 5 | Transcript and summary are stored; the audio is not stored in the school's database | `calls.transcript`, `calls.summary`; no recording column in any migration |
-| 6 | The voice-call service keeps the recording | Retell stores call recordings by default. **To verify in the Retell dashboard** (agent → "Opt out of data storage" must be off for this to be true); listed in quickstart |
+| 6 | The voice-call service keeps the recording | Retell stores call recordings when the agent's **Data Storage Settings** level is **Everything** (Security & Fallback Settings). **Owner check in quickstart.** "Basic Attributes Only" would also stop the webhook's call read-back. |
 | 7 | Unanswered questions kept as question text and language only | `unanswered_questions (question_text, language, times_asked)`; `app/api/unanswered/route.ts` |
 | 8 | CNIC/B-Form never asked for; hidden if spoken | `docs/retell-agent-prompt.md` (never collects); `lib/calls/mask.ts` after D-7 |
 | 9 | AI, information only, never confirms admission or offers discounts | Constitution II/III; prompt v9 rules; `landingStrings.aiDisclosure`, `decisionNotice` |

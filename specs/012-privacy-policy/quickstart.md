@@ -24,7 +24,10 @@ Run `npm run dev` and open http://localhost:3000. On Vercel, use the preview lin
 To see that the policy still loads when the school content can't, stop the internet connection to the database. This is a developer step that can be skipped. The policy text and phone still show, and the footer shows "not available" for hours.
 
 ## 4. Owner checks outside the code
-- **Retell dashboard**: on the agent, confirm that **"Opt out of data storage"** is **off**. The policy says Retell keeps the recording; if it is on, tell Claude and the sentence will be changed.
+- **Retell dashboard**: on the agent, under **Security & Fallback Settings → Data Storage Settings**, confirm the level is **Everything**.
+  - The policy says Retell keeps the recording.
+  - The webhook also reads each call back from Retell, so "Basic Attributes Only" would stop transcripts reaching the dashboard.
+  - If it is set to anything else, tell Claude before changing it.
 - **The school**: reads the English and Urdu text and confirms the retention sentence ("kept for the current admission session"). When it is approved, set `PRIVACY_POLICY_APPROVED` to `true` in `lib/strings/privacy.ts` to remove the draft notice.
 
 ## 5. ID-number hiding (Urdu digits)
