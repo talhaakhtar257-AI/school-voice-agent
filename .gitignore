@@ -8,3 +8,6 @@ node_modules
 # typescript build artifacts
 *.tsbuildinfo
 next-env.d.ts
+
+# logs (e.g. a stray Chrome debug.log)
+*.log

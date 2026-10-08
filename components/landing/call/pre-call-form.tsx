@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Lang } from "@/lib/language";
 import { EMAIL_PATTERN, normalisePkMobile, preCallStrings as p } from "@/lib/strings/pre-call";
+import { privacyStrings } from "@/lib/strings/privacy";
 import { MicExplainer } from "@/components/voice/mic-explainer";
 import styles from "./call.module.css";
 
@@ -96,6 +97,12 @@ export function PreCallForm({
         />
         <span>{p.consent[lang]}</span>
       </label>
+      {/* Outside the label so tapping it never ticks the box. A new tab keeps
+          the typed details here, since this form is not saved anywhere (FR-009). */}
+      <a href="/privacy" target="_blank" rel="noopener" className={styles.privacyLink}>
+        {privacyStrings.linkLabel[lang]}
+        <span className={styles.srOnly}>{privacyStrings.opensNewTab[lang]}</span>
+      </a>
       {errors.consent && (
         <span className={styles.fieldError} role="alert">
           {p.consentError[lang]}

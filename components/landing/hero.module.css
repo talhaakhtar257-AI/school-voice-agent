@@ -315,6 +315,18 @@
   font-size: 13.5px;
 }
 
+/* White and underlined: readable on the green card, and clearly a link. */
+.acPrivacy {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* ---------- Figures strip ---------- */
 .stats {
   padding-block: 36px;

@@ -1,0 +1,102 @@
+/*
+ * The privacy policy reads like a document: one narrow column and generous
+ * spacing. Colours come from the landing page tokens (landing.module.css .page).
+ * Body text uses --ink-2, not --ink-3: the QA review measured --ink-3 on the
+ * paper background at 4.19:1, below the 4.5:1 that small text needs.
+ */
+.article {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 28px 16px 56px;
+  /* Long Urdu words and the phone number wrap instead of scrolling sideways at 360px. */
+  overflow-wrap: anywhere;
+}
+
+.article h1 {
+  font-size: clamp(28px, 7vw, 40px);
+  color: var(--brand-900);
+}
+
+/* Dark text on the gold tint: gold text on it fails contrast (QA review, check 13). */
+.draft {
+  margin: 16px 0 0;
+  padding: 12px 16px;
+  border: 1px solid #f0ddb4;
+  border-inline-start: 5px solid var(--gold-600);
+  border-radius: 12px;
+  background: var(--gold-50);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.meta {
+  margin: 14px 0 0;
+  color: var(--ink-2);
+  font-size: 14.5px;
+}
+
+.contact {
+  margin: 8px 0 0;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.phone {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 800;
+  color: var(--brand-700);
+}
+
+.section {
+  margin-top: 30px;
+  /* Room for the sticky header when a section is opened from a link. */
+  scroll-margin-top: 90px;
+}
+
+.section h2 {
+  margin-bottom: 6px;
+  font-size: 21px;
+  color: var(--brand-900);
+}
+
+.section p,
+.section ul {
+  margin: 10px 0 0;
+  color: var(--ink-2);
+}
+
+.section ul {
+  padding-inline-start: 22px;
+}
+
+.section li {
+  margin-top: 6px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 12px;
+  border-radius: 10px;
+  color: var(--brand-700);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  background: var(--brand-50);
+}
+
+/* A parent who prints or saves the policy gets the document, not the site controls. */
+@media print {
+  .noPrint {
+    display: none !important;
+  }
+
+  .article {
+    padding-top: 0;
+  }
+}
