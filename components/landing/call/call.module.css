@@ -513,6 +513,32 @@
   cursor: pointer;
 }
 
+/* "Privacy policy" in the call window: white and underlined on the dark green. */
+.privacyLink {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Read by screen readers, invisible on screen (e.g. "opens in a new tab"). */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .consent input {
   flex: none;
   width: 22px;

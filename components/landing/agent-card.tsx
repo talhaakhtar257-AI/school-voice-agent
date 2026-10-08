@@ -1,5 +1,7 @@
+import Link from "next/link";
 import type { Lang } from "@/lib/language";
 import { landingStrings } from "@/lib/strings/landing";
+import { privacyStrings } from "@/lib/strings/privacy";
 import { agentQuote, heroStrings as h } from "@/lib/strings/landing-hero";
 import { CallButton } from "./call/call-button";
 import { MicIcon } from "./icons";
@@ -46,6 +48,9 @@ export function AgentCard({ lang, schoolName }: { lang: Lang; schoolName: string
         <li>{landingStrings.recordingNotice[lang]}</li>
         <li>{landingStrings.privacyLine[lang]}</li>
       </ul>
+      <Link href="/privacy" className={styles.acPrivacy}>
+        {privacyStrings.linkLabel[lang]}
+      </Link>
     </div>
   );
 }

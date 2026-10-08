@@ -38,18 +38,21 @@ export const landingStrings = {
     en: "Why we ask for your microphone",
     ur: "ہم مائیکروفون کیوں مانگتے ہیں",
   },
+  // These three sentences must agree with each other and with the privacy policy
+  // (feature 012). An earlier "nothing is used for anything else" contradicted
+  // the recording notice, on the very screen where the parent gives consent.
   micExplainerBody: {
-    en: "Talking is how this assistant hears your question and answers out loud, like a phone call. Nothing is used for anything else.",
-    ur: "بات کرنا ہی وہ طریقہ ہے جس سے یہ اسسٹنٹ آپ کا سوال سنتا ہے اور زبانی جواب دیتا ہے، فون کال کی طرح۔ کچھ بھی کسی اور مقصد کے لیے استعمال نہیں ہوتا۔",
+    en: "The assistant hears your question through your microphone and answers out loud, like a phone call. The microphone is used only during the call.",
+    ur: "اسسٹنٹ آپ کے مائیکروفون کے ذریعے آپ کا سوال سنتا ہے اور فون کال کی طرح زبانی جواب دیتا ہے۔ مائیکروفون صرف کال کے دوران استعمال ہوتا ہے۔",
   },
   micExplainerContinue: { en: "Continue", ur: "جاری رکھیں" },
   recordingNotice: {
-    en: "This conversation is recorded so our team can review it and improve the assistant.",
-    ur: "یہ گفتگو ریکارڈ کی جاتی ہے تاکہ ہماری ٹیم اسے دیکھ کر اسسٹنٹ کو بہتر بنا سکے۔",
+    en: "This call is recorded and written down so the school can follow up your enquiry and improve the assistant's answers.",
+    ur: "یہ کال ریکارڈ اور تحریر کی جاتی ہے تاکہ اسکول آپ کی درخواست پر رابطہ کر سکے اور اسسٹنٹ کے جوابات بہتر بنا سکے۔",
   },
   privacyLine: {
-    en: "Your answers are used only to help with your admission enquiry.",
-    ur: "آپ کے جوابات صرف آپ کی داخلہ درخواست میں مدد کے لیے استعمال ہوتے ہیں۔",
+    en: "Your details are used only for your admission enquiry and to improve this assistant. They are never sold or used for advertising.",
+    ur: "آپ کی تفصیلات صرف آپ کی داخلہ درخواست اور اس اسسٹنٹ کو بہتر بنانے کے لیے استعمال ہوتی ہیں۔ انہیں کبھی فروخت یا اشتہارات کے لیے استعمال نہیں کیا جاتا۔",
   },
   aiDisclosure: {
     en: "You are talking to an AI assistant, not a person.",

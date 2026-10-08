@@ -379,6 +379,13 @@
   color: #fff;
 }
 
+/* Privacy policy and staff sign-in sit together, opposite the copyright line. */
+.footLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 18px;
+}
+
 /* ---------- Floating talk card (wide screens) + phone Talk button ---------- */
 .floating {
   display: none;

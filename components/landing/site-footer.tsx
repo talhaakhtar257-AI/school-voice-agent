@@ -5,6 +5,7 @@ import { OFFICE_PHONE_DISPLAY, OFFICE_PHONE_E164 } from "@/lib/office";
 import { landingStrings } from "@/lib/strings/landing";
 import { heroStrings } from "@/lib/strings/landing-hero";
 import { contentStrings as s } from "@/lib/strings/landing-content";
+import { privacyStrings } from "@/lib/strings/privacy";
 import styles from "./landing.module.css";
 
 /**
@@ -83,7 +84,10 @@ export function SiteFooter({
           <span>
             © <span className={styles.latin}>{new Date().getFullYear()}</span> {schoolName}
           </span>
-          <Link href="/login">{s.footerStaff[lang]}</Link>
+          <span className={styles.footLinks}>
+            <Link href="/privacy">{privacyStrings.linkLabel[lang]}</Link>
+            <Link href="/login">{s.footerStaff[lang]}</Link>
+          </span>
         </div>
       </div>
     </footer>
