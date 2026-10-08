@@ -34,7 +34,7 @@ Series of prompts:
 - we need to create another account tell me what i have to give you that you create again perfectly account of retell and do all setting
 - check and create perfectly acccount
 - which url give in pblic key for staff
-- public_key_365e7f03b754414972ac2   this is staff key  check i add some in local and one is here check them and i didn't change them in vercel
+- public_key_…[redacted]   this is staff key  check i add some in local and one is here check them and i didn't change them in vercel
 - i test it works
 
 ## Response snapshot
