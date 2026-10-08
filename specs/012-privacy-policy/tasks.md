@@ -160,7 +160,7 @@ description: "Task list for 012-privacy-policy"
   - the Retell "opt out of data storage" setting
   - the retention sentence
   - the approval flag
-- [ ] T022 Commit on branch `012-privacy-policy`, only after T020 passes, with a message in the project's style (e.g. `feat: bilingual privacy policy page, consistent call-flow privacy wording, Urdu-digit ID masking`). Merge to `main` locally and push only when the owner says so (no pull request).
+- [X] T022 Commit on branch `012-privacy-policy`, only after T020 passes, with a message in the project's style (e.g. `feat: bilingual privacy policy page, consistent call-flow privacy wording, Urdu-digit ID masking`). Merge to `main` locally and push only when the owner says so (no pull request).
 
 ---
 
