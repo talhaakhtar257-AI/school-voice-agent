@@ -61,6 +61,8 @@ export const landingStrings = {
 
   // Call states
   stateConnecting: { en: "Connecting…", ur: "رابطہ ہو رہا ہے…" },
+  // Shown while a failed first connection is retried, so the parent waits instead of tapping again.
+  stateStillConnecting: { en: "Still connecting, please wait…", ur: "رابطہ جاری ہے، براہ کرم انتظار کریں…" },
   stateListening: { en: "Listening…", ur: "سن رہا ہے…" },
   stateSpeaking: { en: "Speaking…", ur: "بول رہا ہے…" },
   endCall: { en: "End Call", ur: "کال ختم کریں" },

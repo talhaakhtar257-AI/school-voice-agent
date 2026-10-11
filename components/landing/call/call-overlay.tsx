@@ -47,7 +47,7 @@ function clock(totalSeconds: number) {
  */
 export function CallOverlay({ lang }: { lang: Lang }) {
   const {
-    phase, muted, transcript, fallback, elapsedSeconds, maxSeconds, thinking, parentDetails, callId,
+    phase, muted, transcript, fallback, elapsedSeconds, maxSeconds, thinking, reconnecting, parentDetails, callId,
     openCall, closeCall, startCall, endCall, toggleMute,
   } = useCall();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -77,7 +77,7 @@ export function CallOverlay({ lang }: { lang: Lang }) {
 
   const title =
     phase === "explaining" ? c.ready[lang]
-    : phase === "connecting" ? s.stateConnecting[lang]
+    : phase === "connecting" ? (reconnecting ? s.stateStillConnecting[lang] : s.stateConnecting[lang])
     : phase === "listening" ? s.stateListening[lang]
     : phase === "speaking" ? s.stateSpeaking[lang]
     : c.ended[lang];

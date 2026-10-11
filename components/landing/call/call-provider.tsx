@@ -36,6 +36,14 @@ const FALLBACK_MESSAGES: Record<string, Bilingual> = {
   "retell-error": s.assistantUnavailable,
 };
 
+// Pauses before the 2nd and 3rd attempt to reach Retell. A phone on mobile data
+// can fail to reach Retell for a few seconds: the owner's Android test on
+// 2026-10-11 failed four times in a row and then worked, while the same site
+// connected first time from a desktop. Patient retries ride out that blip on
+// the same reservation, instead of the parent tapping again and reserving
+// another full call's minutes each time.
+const CONNECT_RETRY_DELAYS_MS = [1000, 2500];
+
 type CallContextValue = {
   phase: CallPhase;
   muted: boolean;
@@ -47,6 +55,8 @@ type CallContextValue = {
   maxSeconds: number | null;
   /** True while the parent has finished speaking and the assistant has not started replying. */
   thinking: boolean;
+  /** True while a failed first connection is being retried, so the window can say "Still connecting…". */
+  reconnecting: boolean;
   /** What the parent typed before the call, kept for "Talk again" and the WhatsApp button. */
   parentDetails: ParentDetails | null;
   openCall: () => void;
@@ -83,6 +93,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const [maxSeconds, setMaxSeconds] = useState<number | null>(null);
   const [callId, setCallId] = useState<string | null>(null);
   const [thinking, setThinking] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
   const [parentDetails, setParentDetails] = useState<ParentDetails | null>(null);
 
   const sessionRef = useRef<WebCallSession | null>(null);
@@ -112,6 +123,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       clearThinking();
       sessionRef.current = null;
       setMuted(false);
+      setReconnecting(false);
       setFallback(message);
       setPhase("ended");
     },
@@ -127,6 +139,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     setElapsedSeconds(0);
     setMaxSeconds(null);
     setCallId(null);
+    setReconnecting(false);
     setPhase("connecting");
 
     let gate: { ok: true; maxCallSeconds: number } | { reason: string };
@@ -152,17 +165,25 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Connects to Retell. A connection that fails before the call goes live
-    // is retried once, on the same reservation (testers saw a first attempt
-    // fail with a Retell error and could not call again).
-    const connect = (isRetry: boolean) => {
+    // is tried up to three times in all, with short pauses, on the same
+    // reservation (see CONNECT_RETRY_DELAYS_MS).
+    const connect = (tryNumber: number) => {
       let wentLive = false;
       let active = true; // false once this session has been replaced by a retry
       const current = () => active && isCurrent();
-      const failedBeforeLive = () => {
+      // `giveUp` skips the retries when Retell has refused outright (401/403,
+      // e.g. "Public key is not allowed for this domain"): that answer will not
+      // change in two seconds, so retrying only keeps the parent waiting.
+      const failedBeforeLive = (giveUp = false) => {
         if (wentLive) return false;
         active = false;
-        if (!isRetry) {
-          connect(true);
+        const pause = giveUp ? undefined : CONNECT_RETRY_DELAYS_MS[tryNumber];
+        if (pause !== undefined) {
+          setReconnecting(true);
+          // An End Call during the pause bumps attemptRef, so no retry follows it.
+          setTimeout(() => {
+            if (isCurrent()) connect(tryNumber + 1);
+          }, pause);
         } else {
           attemptRef.current += 1;
           finish(p.couldNotConnect);
@@ -185,6 +206,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
             if (!current()) return;
             if (status === "live") {
               wentLive = true;
+              setReconnecting(false);
               setPhase("listening");
               const liveCallId = session.callId ?? null;
               setCallId(liveCallId);
@@ -234,8 +256,11 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
           },
           onError: (error) => {
             if (!current()) return;
-            console.error(`[call/error] ${error.message}`);
-            if (failedBeforeLive()) return;
+            // Which try failed and Retell's HTTP status, if it answered at all:
+            // "no status" means the request never reached Retell (network).
+            const httpStatus = "status" in error ? Number(error.status) : null;
+            console.error(`[call/error] try ${tryNumber + 1}/3, ${httpStatus ? `HTTP ${httpStatus}` : "no status"}: ${error.message}`);
+            if (failedBeforeLive(httpStatus === 401 || httpStatus === 403)) return;
             attemptRef.current += 1;
             finish(s.assistantUnavailable);
           },
@@ -244,7 +269,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       sessionRef.current = session;
     };
 
-    connect(false);
+    connect(0);
     setMaxSeconds(gate.maxCallSeconds);
 
     // Per-call length: a UX pacing timer, not the security boundary (that is
@@ -312,10 +337,10 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<CallContextValue>(
     () => ({
-      phase, muted, transcript, fallback, elapsedSeconds, maxSeconds, callId, thinking, parentDetails,
+      phase, muted, transcript, fallback, elapsedSeconds, maxSeconds, callId, thinking, reconnecting, parentDetails,
       openCall, closeCall, startCall, endCall, toggleMute,
     }),
-    [phase, muted, transcript, fallback, elapsedSeconds, maxSeconds, callId, thinking, parentDetails, openCall, closeCall, startCall, endCall, toggleMute],
+    [phase, muted, transcript, fallback, elapsedSeconds, maxSeconds, callId, thinking, reconnecting, parentDetails, openCall, closeCall, startCall, endCall, toggleMute],
   );
 
   return <CallContext.Provider value={value}>{children}</CallContext.Provider>;
