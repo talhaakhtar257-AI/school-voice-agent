@@ -466,6 +466,31 @@
   pointer-events: none;
 }
 
+/*
+ * Narrow phones (360px is the common Android width here). The call pill is
+ * fixed, so at full size it sat on top of the office-call link in the band
+ * behind it — worst in Urdu, where the label is longer. Shrink it and cap its
+ * width so the content underneath stays tappable, while keeping the 44px
+ * minimum touch target.
+ */
+@media (max-width: 420px) {
+  .fab {
+    gap: 7px;
+    min-height: 48px;
+    max-width: 58vw;
+    padding: 0 15px;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* A phone number that wraps mid-digits reads as two broken numbers. */
+.latin {
+  white-space: nowrap;
+}
+
 @media (min-width: 700px) {
   .footGrid {
     grid-template-columns: 1.5fr 1fr 1fr;
