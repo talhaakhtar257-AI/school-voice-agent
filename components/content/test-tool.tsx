@@ -49,7 +49,7 @@ export function TestTool({ draft, lang }: { draft: ContentDoc; lang: Lang }) {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          setResult(simulate(question, draft));
+          setResult(simulate(question, draft, lang));
         }}
         style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
       >

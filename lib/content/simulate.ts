@@ -1,5 +1,6 @@
 import type { ContentDoc } from "./schema";
-import { factCandidates, type Candidate } from "./simulate-sources";
+import { factCandidates, pick, type Candidate } from "./simulate-sources";
+import type { Lang } from "@/lib/language";
 
 export type SimulationResult =
   | { kind: "answer"; text: string }
@@ -74,7 +75,7 @@ function distinctive(text: string): string {
  * (FR-005, FR-019). Pure function — no I/O, so running it changes nothing
  * (FR-020).
  */
-export function simulate(question: string, doc: ContentDoc): SimulationResult {
+export function simulate(question: string, doc: ContentDoc, lang: Lang = "en"): SimulationResult {
   const q = tokenise(question);
   if (q.length === 0) return { kind: "none" };
 
@@ -82,19 +83,20 @@ export function simulate(question: string, doc: ContentDoc): SimulationResult {
     .filter((x) => x.archivedAt === null)
     .map<Candidate>((t) => ({
       kind: "handoff",
-      text: t.handoffWording.en || t.handoffWording.ur,
+      text: pick(t.handoffWording, lang),
       score: score(q, distinctive(`${t.topic.en} ${t.topic.ur}`)),
     }));
 
-  const candidates: Candidate[] = [...factCandidates(q, doc, score)];
+  const candidates: Candidate[] = [...factCandidates(q, doc, score, lang)];
 
   for (const f of doc.faqs.filter((x) => x.archivedAt === null)) {
     candidates.push({
       kind: "answer",
-      text: f.answer.en || f.answer.ur,
+      text: pick(f.answer, lang),
       score: Math.max(
         score(q, `${f.question.en} ${f.question.ur}`),
-        score(q, f.answer.en),
+        // Score against BOTH sides: an Urdu question only matches the Urdu answer.
+        score(q, `${f.answer.en} ${f.answer.ur}`),
       ),
     });
   }
@@ -102,12 +104,12 @@ export function simulate(question: string, doc: ContentDoc): SimulationResult {
   for (const p of doc.programs.filter((x) => x.archivedAt === null)) {
     candidates.push({
       kind: "answer",
-      text: [p.title.en || p.title.ur, p.description.en || p.description.ur]
+      text: [pick(p.title, lang), pick(p.description, lang)]
         .filter(Boolean)
         .join(": "),
       score: Math.max(
         score(q, `${p.title.en} ${p.title.ur} ${p.classes.join(" ")}`),
-        score(q, p.description.en),
+        score(q, `${p.description.en} ${p.description.ur}`),
       ),
     });
   }

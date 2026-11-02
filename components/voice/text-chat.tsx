@@ -31,7 +31,7 @@ export function TextChat({ content, lang }: { content: ContentDoc; lang: Lang })
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          setResult(simulate(question, content));
+          setResult(simulate(question, content, lang));
         }}
         className={styles.chatForm}
       >

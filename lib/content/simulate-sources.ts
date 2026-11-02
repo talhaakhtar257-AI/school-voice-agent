@@ -1,4 +1,16 @@
 import type { ContentDoc } from "./schema";
+import type { Lang } from "@/lib/language";
+
+/**
+ * Pick the side of a bilingual pair that matches the page the parent is reading,
+ * falling back to the other language when that side is empty. Answering an Urdu
+ * page in English is the single most noticeable fault in a demo (known issue,
+ * README 2026-10-08).
+ */
+export function pick(pair: { en: string; ur: string } | undefined, lang: Lang): string {
+  if (!pair) return "";
+  return lang === "ur" ? pair.ur || pair.en : pair.en || pair.ur;
+}
 
 export type Candidate = { kind: "answer" | "handoff"; text: string; score: number };
 
@@ -10,7 +22,7 @@ type Score = (queryTokens: string[], text: string) => number;
  * lookup searched only FAQs, programs and timings, so "which documents do I
  * need?" came back empty while the answer sat in Policies.
  */
-export function factCandidates(q: string[], doc: ContentDoc, score: Score): Candidate[] {
+export function factCandidates(q: string[], doc: ContentDoc, score: Score, lang: Lang = "en"): Candidate[] {
   const out: Candidate[] = [];
   const add = (text: string, value: number) => {
     if (text.trim() !== "") out.push({ kind: "answer", text, score: value });
@@ -75,7 +87,7 @@ export function factCandidates(q: string[], doc: ContentDoc, score: Score): Cand
   if (facts.schoolTimings.length > 0) {
     add(
       facts.schoolTimings
-        .map((t) => `${t.label.en || t.label.ur}: ${t.days} ${t.starts}-${t.ends}`)
+        .map((t) => `${pick(t.label, lang)}: ${t.days} ${t.starts}-${t.ends}`)
         .join("\n"),
       score(q, "school timing timings time times start starts end ends finish day days shift"),
     );
@@ -88,7 +100,7 @@ export function factCandidates(q: string[], doc: ContentDoc, score: Score): Cand
     Math.max(score(q, keywords), Math.min(score(q, text), PROSE_CAP));
 
   // --- Admission process ---
-  const process = policies.admissionProcess.en || policies.admissionProcess.ur;
+  const process = pick(policies.admissionProcess, lang);
   if (process.trim() !== "") {
     add(
       process,
@@ -97,7 +109,7 @@ export function factCandidates(q: string[], doc: ContentDoc, score: Score): Cand
   }
 
   // --- Required documents ---
-  const documents = policies.documentRequirements.en || policies.documentRequirements.ur;
+  const documents = pick(policies.documentRequirements, lang);
   if (documents.trim() !== "") {
     add(
       documents,
@@ -106,11 +118,11 @@ export function factCandidates(q: string[], doc: ContentDoc, score: Score): Cand
   }
 
   // --- About the school, address and figures ---
-  const about = profile.about.en || profile.about.ur;
+  const about = pick(profile.about, lang);
   if (about.trim() !== "") {
     add(about, prose(about, "school about history founded started since story information"));
   }
-  const address = profile.address.en || profile.address.ur;
+  const address = pick(profile.address, lang);
   if (address.trim() !== "") {
     add(address, score(q, "address location located where area campus branch map direction"));
   }
