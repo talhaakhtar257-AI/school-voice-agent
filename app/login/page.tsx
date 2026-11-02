@@ -14,7 +14,12 @@ import { staffLoginStrings as s } from "@/lib/strings/staff-login";
 import landing from "@/components/landing/landing.module.css";
 import styles from "@/components/login/login.module.css";
 
-export const metadata: Metadata = { title: "Staff sign in" };
+export const metadata: Metadata = {
+  title: "Staff sign in",
+  // A staff sign-in screen indexed under the school's name looks careless to
+  // a parent searching for the school, and invites credential stuffing.
+  robots: { index: false, follow: false },
+};
 
 /**
  * The staff sign-in screen at /login, in the landing design's style.

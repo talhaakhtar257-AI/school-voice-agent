@@ -12,6 +12,9 @@ import { isDatabaseReachable } from "@/lib/supabase/health";
  * A stranger who guesses this address learns only whether the system is healthy.
  */
 
+// Not for search engines: this address exists for the maintainer, not for parents.
+export const metadata = { robots: { index: false, follow: false } };
+
 // Never cached: a stale "reachable" would be worse than no answer at all.
 export const dynamic = "force-dynamic";
 
