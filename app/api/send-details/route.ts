@@ -95,10 +95,15 @@ export async function POST(request: NextRequest) {
     // "sending", never "sent": the agent speaks this, and the email has not
     // left yet. Promising delivery here would make the assistant say something
     // untrue if the provider then failed (Constitution I).
+    //
+    // Worded as an instruction because prompt v9 hardcodes the past tense —
+    // 'I have sent these details to your email' / 'بھیج دی ہیں' — which is no
+    // longer true at the moment it is spoken. Until that line is corrected in
+    // Retell, this is what steers the agent away from claiming delivery.
     return NextResponse.json({
       ok: true,
       sending: true,
-      say: "The details are being emailed to the parent now. Tell them it is on its way and carry on.",
+      say: "The email is on its way but has NOT arrived yet. Say it is being sent right now — do NOT say you have already sent it. English: \"I'm sending these details to your email now.\" Urdu: \"میں یہ تفصیلات ابھی آپ کی ای میل پر بھیج رہی ہوں۔\"",
     });
   } catch (error) {
     console.error(`[api/send-details] ${error instanceof Error ? error.message : "unknown"} @ ${new Date().toISOString()}`);
