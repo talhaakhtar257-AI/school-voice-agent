@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/dashboard/empty-state";
 import { LeadsChart } from "@/components/dashboard/leads-chart";
 import { StatusTag } from "@/components/dashboard/status-tag";
 import { LeadAvatar } from "@/components/leads/lead-avatar";
+import { AutoRefresh } from "@/components/live/auto-refresh";
 import ui from "@/components/dashboard/ui.module.css";
 import people from "@/components/leads/lead-details.module.css";
 
@@ -38,6 +39,15 @@ export default async function DashboardOverviewPage() {
 
   return (
     <div className={ui.stack}>
+      {/*
+       * The leads table and the live screen have always polled; this screen was
+       * missed, so a call that had just finished only appeared after staff
+       * reloaded the page by hand (reported 3 Nov 2026). Slower than the other
+       * two screens on purpose: this page runs four aggregate queries including
+       * the seven-day chart, and its figures are counts for today and this week,
+       * not a call in progress.
+       */}
+      <AutoRefresh seconds={30} />
       <StatsStrip stats={stats} lang={lang} />
 
       <section className={ui.card}>
