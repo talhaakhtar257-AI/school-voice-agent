@@ -115,7 +115,7 @@ using `RETELL_API_KEY` in Vercel.
 | LLM | A fast model (e.g. GPT-4.1 mini / GPT-4o mini, or a "fast tier" option) | Large models add 1–3 s to every reply |
 | Responsiveness | Maximum | Replies as soon as the parent stops talking |
 | Pause before speaking | 0 s | 2.6 s of silence at the start of every call |
-| End call on silence | **60 seconds** | A parent fetching a family member or a document goes quiet; a short timer hangs up on them (a 21 Sept test call ended with "inactivity" while the parent went to call his sister) |
+| End call on silence | live value is **30 seconds** (`end_call_after_silence_ms: 30000`) — **should be 60** | A parent fetching a family member or a document goes quiet; a short timer hangs up on them (a 21 Sept test call ended with "inactivity" while the parent went to call his sister). The 60 s decision was written here but never applied to the agent, and §3 below still records 30 s. Confirmed still 30 s on the new account, 2 Nov 2026 |
 | Begin message (greeting) | The STEP 1 line from the prompt | This field is separate from the prompt; if it still holds an old greeting, the agent opens with that |
 | Voice | Monica; try its Flash/Turbo version if offered, keep it only if Urdu still sounds right | Faster speech generation |
 | Speech recognition (`stt_mode`) | **fast** | Names are typed on the pre-call form now, so the slower "accurate" mode is no longer worth its delay (25 Sept 2026, after testers reported freezing on phones) |
@@ -125,6 +125,32 @@ using `RETELL_API_KEY` in Vercel.
 
 **After any change in Retell, press Publish.** Web calls always use the published
 version; the Test button uses the draft.
+
+### Changing a published agent through the API
+
+A published agent and its LLM are frozen. `PATCH /update-agent/{id}` answers
+`422 Cannot update published agent other than version title`, and
+`PATCH /update-retell-llm/{id}` answers `400 Cannot update published LLM`. The
+dashboard hides this by making a new version for you; a script has to ask:
+
+1. `POST /create-agent-version/{agent_id}` with `{"base_version": <current>}`
+2. `PATCH /update-agent/{agent_id}?version=<new>` with the changes
+3. `POST /publish-agent-version/{agent_id}` with `{"version": <new>}`
+
+`GET /list-agent-versions/{agent_id}` lists versions, each with `version`,
+`base_version`, `is_published` and `version_title`.
+
+**Model settings go in `model_config` only.** `model`, `model_temperature`,
+`model_high_priority`, `model_ultrafast`, `s2s_model`, `model_choice` and
+`backup_model` are deprecated as *request* fields (Retell ends support
+2027-01-31) and sending them earns a deprecation notice even when the values are
+correct. Retell still returns them on a read as a mirror of `model_config`, so
+never treat a read of `model` as proof of what was written. The speed tier lives
+at `model_config.primary.tier` — `"standard"` is what `model_high_priority:
+false` used to mean, and `"fast"` costs 50% more per minute.
+
+Endpoints also move: agent and call list endpoints are now
+`POST /v2/list-agents` and `POST /v3/list-calls`, both returning `items`.
 
 ---
 
