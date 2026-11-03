@@ -59,10 +59,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, id, updated: false });
     }
 
-    const { id, updated } = await upsertLeadForCall(parsed.enquiry, parsed.callId);
+    const { id, outcome } = await upsertLeadForCall(parsed.enquiry, parsed.callId);
+    // Linking still runs on an unchanged save. The first save can land before
+    // Retell has reported the call, in which case there was no call row to link
+    // to; skipping it here would leave that lead unlinked for good.
     await linkLeadToCall(parsed.callId, id, parsed.enquiry.language);
-    console.info(`[api/leads] ${updated ? "updated" : "inserted"} ${id} for ${parsed.callId}`);
-    return NextResponse.json({ ok: true, id, updated });
+    console.info(`[api/leads] ${outcome} ${id} for ${parsed.callId}`);
+    return NextResponse.json({
+      ok: true,
+      id,
+      updated: outcome === "updated",
+      ...(outcome === "unchanged" ? { unchanged: true } : {}),
+    });
   } catch (error) {
     // Log the route and message only — never a name, a phone, or the DB error
     // text itself (`.claude/rules/api.md`, FR-029).
