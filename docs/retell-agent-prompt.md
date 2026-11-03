@@ -122,6 +122,7 @@ using `RETELL_API_KEY` in Vercel.
 | Noise filter (`denoising_mode`) | **noise-cancellation** | The heavier "noise and background speech" filter added processing to every word |
 | Knowledge base | Off | Content comes from `get_school_content` |
 | Backchannel | Off | Saves words and time |
+| Nudge after silence (`reminder_trigger_ms`) | **15 s**, up to **2 times** | Was 25 s once, which left a parent in 28 seconds of dead air on 3 Nov when the agent did not answer a short turn. Not the 10 s first proposed: the prompt tells the agent to stay silent when a parent asks it to wait, and a 10 s nudge would talk over exactly that |
 | Boosted keywords | **On, 11 words** — candidate for removal | Retell's own latency guide says boosted keywords add transcription delay. The 11 are Al-Noor, admission, Playgroup, Nursery, KG, Class, fees, transfer, daakhla, beta, beti. Needs one A/B call before removing: they are what makes the Urdu words recognisable, so this is an ears decision, not a code one |
 
 **After any change in Retell, press Publish.** Web calls always use the published
@@ -155,11 +156,16 @@ Endpoints also move: agent and call list endpoints are now
 
 ---
 
-## 3. Prompt, version 10 (in Retell since 3 Nov 2026)
+## 3. Prompt, version 11 (in Retell since 3 Nov 2026)
 
 v10 changed three lines in SENDING DETAILS and the silence timer, because feature
-013 made `send_details` answer before the email leaves. See the end of this
-section for what changed from v9 and why.
+013 made `send_details` answer before the email leaves.
+
+v11 added the "NEVER leave the parent in silence" rule under How to talk, and
+dropped the nudge timer. On the 3 Nov v10 call the parent said "جی جی" (0.1s of
+audio), the agent answered nothing, and the nudge fired 28.4 seconds later with
+a line that did not address it. Per-turn speed was fine either side — a 2.3s
+median on both calls — so that single gap was the whole bad experience.
 
 Set Retell → agent → **Language: Multilingual**.
 

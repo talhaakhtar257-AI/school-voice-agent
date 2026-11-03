@@ -16,8 +16,7 @@
  *   # otherwise -> { "ok": true }
  */
 import { NextResponse, type NextRequest } from "next/server";
-import { readLiveForApi } from "@/lib/content/queries";
-import { isEmptyDoc } from "@/lib/content/schema";
+import { readCachedBrief } from "@/lib/content/brief-cache";
 import { checkAndReserve, getVisitorId, setVisitorCookie } from "@/lib/voice/limits";
 
 export const dynamic = "force-dynamic";
@@ -55,8 +54,14 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const live = await readLiveForApi();
-    if (!live || isEmptyDoc(live.doc)) {
+    // The parent is waiting on this before the call can even connect, and it
+    // only needs to know whether anything is published. It used to read the
+    // whole content document and re-validate it from scratch to answer that —
+    // about a second, in front of every call, which the owner reported on
+    // 3 Nov as a pause after entering their name. The agent's brief is already
+    // cached for exactly this data, so reuse it (feature 013, D-002).
+    const brief = await readCachedBrief();
+    if (brief.state === "empty") {
       return respond({ reason: "no-content" });
     }
 
