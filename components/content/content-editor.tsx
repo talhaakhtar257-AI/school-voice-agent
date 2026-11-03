@@ -20,6 +20,8 @@ import { PoliciesEditor } from "./policies-editor";
 import { FaqEditor } from "./faq-editor";
 import { EscalationEditor } from "./escalation-editor";
 import { PublishDialog } from "./publish-dialog";
+import { measureBrief } from "@/lib/content/brief-budget";
+import { StatTile } from "@/components/dashboard/stat-tile";
 
 /**
  * The content editor. Holds the working document; Save writes it to the draft
@@ -133,8 +135,28 @@ export function ContentEditor({
     },
   ];
 
+  // Recomputed as the document is edited, so the cost of adding content is
+  // visible while it is being added rather than only at publish (FR-017). A
+  // pure string measurement over a document a school can hold in its head.
+  const budget = measureBrief(doc);
+
   return (
     <div className={ui.stack}>
+      <div className={ui.tiles}>
+        <StatTile
+          label={s.budgetLabel[lang]}
+          value={`${budget.percent}%`}
+          percent={budget.percent}
+          hint={
+            budget.overBudget
+              ? s.budgetOver[lang]
+              : budget.nearLimit
+                ? s.budgetNear[lang]
+                : s.budgetHint[lang]
+          }
+        />
+      </div>
+
       {sections.map((section) => (
         <section key={section.id} id={section.id} className={`${ui.card} ${panels.editorSection}`}>
           <div className={ui.cardHead}>
