@@ -29,6 +29,35 @@ export const readDraft = () => readChannel("draft");
 export const readLive = () => readChannel("live");
 
 /**
+ * The live document for the voice agent, telling a failure apart from "nothing
+ * is published".
+ *
+ * `readLiveForApi` below returns null for both, which the agent cannot act on:
+ * if the database is merely unreachable and the agent is told there is no
+ * content, it answers as though the school has no fees and no classes. That
+ * breaks Constitution I. This throws instead, so the caller can route the
+ * parent to the office (feature 013, D-007).
+ *
+ * Returns null only when the live row genuinely does not exist.
+ */
+export async function readLiveStrict(): Promise<LoadedDoc | null> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("content")
+    .select("doc, updated_at")
+    .eq("channel", "live")
+    .single<ContentRow>();
+  // PGRST116 is "no rows", which is an answer, not a fault.
+  if (error) {
+    if (error.code === "PGRST116") return null;
+    throw new Error(`live content unreadable: ${error.message}`);
+  }
+  if (!data) return null;
+  // A parse failure is a fault, not emptiness, so let it throw.
+  return { doc: parseDoc(data.doc), updatedAt: data.updated_at };
+}
+
+/**
  * Read the live document with the service-role client, for the API route, which
  * has no staff session. Returns null on any error rather than throwing, so the
  * route can answer cleanly.

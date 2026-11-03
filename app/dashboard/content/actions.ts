@@ -1,6 +1,8 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { AGENT_BRIEF_TAG } from "@/lib/content/brief-cache";
 import { contentDoc, parseDoc } from "@/lib/content/schema";
 import {
   DraftConflict,
@@ -93,6 +95,17 @@ export async function confirmPublishAction(): Promise<ConfirmPublishResult> {
 
     const summary = summariseChanges(live, draft);
     const outcome = await publish(user.id, user.email, summary);
+    // Only after the publish succeeded: clear the agent's cached brief so the
+    // next call hears the new content instead of waiting out its 60-second
+    // window (feature 013, D-002). A failed publish must not clear it.
+    //
+    // updateTag, not revalidateTag: it expires the entry outright, so the next
+    // call blocks for fresh content rather than being served the old fee once
+    // while a refresh runs behind it. Staff publishing and immediately test
+    // calling is the case this exists for. If the tag ever fails to match, the
+    // 60-second window in brief-cache.ts is the backstop, so the worst outcome
+    // is a one-minute delay rather than a wrong answer forever.
+    updateTag(AGENT_BRIEF_TAG);
     return { ok: true, outcome };
   } catch (e) {
     console.error(
