@@ -1,4 +1,5 @@
 import type { ContentDoc } from "./schema";
+import { measureBrief } from "./brief-budget";
 
 export type Problem = {
   path: string;
@@ -127,6 +128,31 @@ export function checkPublishReadiness(doc: ContentDoc): Problem[] {
   }
   if (!escText.includes("special case")) {
     warn("Escalation topics", "No topic mentions special cases.");
+  }
+
+  // --- The agent's per-reply budget (feature 013, FR-018, FR-019) ---
+  //
+  // The whole brief rides every turn of every call, so its size is money and
+  // delay, not housekeeping. A warning, never a block: refusing to publish
+  // would stop the school recording true facts about itself, which is worse
+  // than a slower call. Staff are told, and nothing is dropped unnamed.
+  const budget = measureBrief(doc);
+  if (budget.overBudget) {
+    warn(
+      "Agent content size",
+      `The agent's brief is ${budget.used.toLocaleString()} characters, over the ${budget.budget.toLocaleString()} it should fit. Every reply in every call now costs more and takes longer. Consider shortening FAQs or archiving old ones.`,
+    );
+  } else if (budget.nearLimit) {
+    warn(
+      "Agent content size",
+      `The agent's brief is at ${budget.percent}% of its budget. Past 100% every reply in every call gets slower and more expensive.`,
+    );
+  }
+  for (const title of budget.truncatedDocuments) {
+    warn(
+      "Agent content size",
+      `The imported document "${title}" is too long to fit and the agent will only see the start of it. Shorten it, or move the important parts into an FAQ.`,
+    );
   }
 
   return out;

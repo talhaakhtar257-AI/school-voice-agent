@@ -29,6 +29,36 @@ export const screenStrings = {
     ur: "ہر کال حد میں سے اپنی پوری زیادہ سے زیادہ مدت محفوظ کرتی ہے۔",
   },
   healthGaps: { en: "Open gaps", ur: "کھلی کمیاں" },
+
+  // Reply delay and cost (feature 013). Retell's own per-call figures, not ours.
+  healthReplyDelay: { en: "Average reply delay", ur: "جواب میں اوسط تاخیر" },
+  healthReplyDelayHint: {
+    en: "How long a parent waits after they stop speaking. Target: under 1.5s.",
+    ur: "والدین بات مکمل کرنے کے بعد کتنا انتظار کرتے ہیں۔ ہدف: 1.5 سیکنڈ سے کم۔",
+  },
+  healthReplyDelayOver: {
+    en: "Above the 1.5s target",
+    ur: "1.5 سیکنڈ کے ہدف سے زیادہ",
+  },
+  healthReplyDelayWorst: {
+    en: "Slowest in this period",
+    ur: "اس مدت میں سب سے سست",
+  },
+  healthCost: { en: "Cost of calls", ur: "کالز کی لاگت" },
+  healthCostHint: {
+    en: "What the voice provider charged, in US dollars.",
+    ur: "وائس سروس نے جو رقم لی، امریکی ڈالر میں۔",
+  },
+  healthPerCall: { en: "per call", ur: "فی کال" },
+  // The figures must never be read as a trend when they rest on one call.
+  healthBasedOn: {
+    en: "Based on {n} measured call(s)",
+    ur: "{n} ناپی گئی کال(وں) پر مبنی",
+  },
+  healthNotMeasuredYet: {
+    en: "Figures appear here once calls have been answered. Very short calls are not measured.",
+    ur: "کالز کے جواب دیے جانے کے بعد اعداد و شمار یہاں آ جائیں گے۔ بہت مختصر کالز نہیں ناپی جاتیں۔",
+  },
   checksTitle: { en: "System checks", ur: "سسٹم کی جانچ" },
   ok: { en: "OK", ur: "ٹھیک" },
   attention: { en: "Needs attention", ur: "توجہ درکار" },

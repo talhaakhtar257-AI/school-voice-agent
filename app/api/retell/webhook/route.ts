@@ -16,7 +16,7 @@
  *   curl -s -X POST "http://localhost:3000/api/retell/webhook?secret=$RETELL_WEBHOOK_SECRET" \
  *     -H "Content-Type: application/json" -d '{"event":"call_ended","call":{"call_id":"call_fake"}}'
  */
-import { NextResponse, type NextRequest } from "next/server";
+import { after, NextResponse, type NextRequest } from "next/server";
 import { hasValidQuerySecret } from "@/lib/api/secret";
 import { isHandledEvent, webhookBody } from "@/lib/calls/schema";
 import { getRetellCall } from "@/lib/calls/retell-api";
@@ -63,16 +63,33 @@ export async function POST(request: NextRequest) {
 
   try {
     const saved = await upsertCallFromRetell(retellCall);
-    // Stage 5: once the summary exists, email the school (and the parent if
-    // they typed an email). Sent at most once per call; never throws.
-    if (saved.summary) await sendCallSummaries(saved, new URL(request.url).origin, retellCall.requested);
-    // Give back the minutes the call did not use. A failure here must not
-    // make Retell retry the whole event, so it is logged and swallowed.
-    if (saved.status === "ended") {
-      await releaseUnusedMinutes(saved.id, saved.duration_seconds).catch((error: unknown) =>
-        console.error(`[api/retell/webhook] release minutes ${call.call_id}: ${error instanceof Error ? error.message : "unknown"}`),
-      );
-    }
+    const origin = new URL(request.url).origin;
+
+    // Everything below the record itself happens after the response, inside
+    // Retell's 10-second budget rather than against it (feature 013, D-003).
+    //
+    // It used to be awaited: up to 8s reading the call back, 4-6 database round
+    // trips, then TWO email sends with 8-second timeouts each. Past 10 seconds
+    // Retell gives up and retries, and the whole path runs again. The sends are
+    // already latched once per call and the minute release is guarded by
+    // usage_released_at, so a retry was safe — just wasteful. Answering first
+    // stops the retry happening at all.
+    after(async () => {
+      try {
+        // Once the summary exists, email the school (and the parent if they
+        // typed an address). Sent at most once per call; never throws.
+        if (saved.summary) await sendCallSummaries(saved, origin, retellCall.requested);
+        // Give back the minutes the call did not use.
+        if (saved.status === "ended") {
+          await releaseUnusedMinutes(saved.id, saved.duration_seconds);
+        }
+      } catch (error) {
+        // Nothing is waiting on this now, so it has to be logged or it is lost.
+        const message = error instanceof Error ? error.message : "unknown";
+        console.error(`[api/retell/webhook] after ${event} ${call.call_id}: ${message} @ ${new Date().toISOString()}`);
+      }
+    });
+
     console.info(`[api/retell/webhook] ${event} ${call.call_id}: ${saved.status}, lead ${saved.lead_id ?? "none"}`);
     return NextResponse.json({ ok: true });
   } catch (error) {

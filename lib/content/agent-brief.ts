@@ -11,7 +11,8 @@ import type { ContentDoc } from "./schema";
  *
  * Constitution I still holds — every line comes from the live content.
  */
-const KNOWLEDGE_BUDGET = 6000; // characters of imported documents, in total
+/** Characters of imported documents, in total. Read by lib/content/brief-budget.ts. */
+export const KNOWLEDGE_BUDGET = 6000;
 
 export function agentBrief(doc: ContentDoc): string {
   const out: string[] = [];

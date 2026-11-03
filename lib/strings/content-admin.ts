@@ -5,6 +5,18 @@
  * around it.
  */
 export const contentAdminStrings = {
+  // The agent's per-reply budget (feature 013). Shown while editing, so staff
+  // see the cost of adding content before they publish it, not after.
+  budgetLabel: { en: "Agent content size", ur: "ایجنٹ کے مواد کا حجم" },
+  budgetHint: {
+    en: "The assistant carries all of this on every reply. Past 100% every call gets slower and costs more.",
+    ur: "اسسٹنٹ ہر جواب کے ساتھ یہ سب لے کر چلتا ہے۔ 100% کے بعد ہر کال سست اور مہنگی ہو جاتی ہے۔",
+  },
+  budgetOver: {
+    en: "Over budget — calls are now slower and more expensive",
+    ur: "حد سے زیادہ — کالیں اب سست اور مہنگی ہیں",
+  },
+  budgetNear: { en: "Approaching the limit", ur: "حد کے قریب" },
   // Sections
   factsTitle: { en: "Facts", ur: "حقائق" },
   policiesTitle: { en: "Policies", ur: "پالیسیاں" },

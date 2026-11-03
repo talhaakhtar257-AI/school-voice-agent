@@ -21,9 +21,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { readLiveForApi } from "@/lib/content/queries";
 import { forPublicApi, isEmptyDoc } from "@/lib/content/schema";
 import { hasValidAgentSecret } from "@/lib/api/secret";
-import { agentBrief } from "@/lib/content/agent-brief";
+import { readCachedBrief } from "@/lib/content/brief-cache";
 
-// The agent must see a publish immediately — never serve a cached response.
+// The route itself always runs, so the shared secret is always checked. What is
+// cached is the brief the route serves, inside lib/content/brief-cache.ts, and
+// that cache does not vary by caller (feature 013, D-002).
 export const dynamic = "force-dynamic";
 
 function unauthorized() {
@@ -41,16 +43,27 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // ?format=brief — the compact text version for the voice agent (cheaper
+    // per reply; see lib/content/agent-brief.ts). This is the path the agent
+    // actually calls, before the first answer of every call, so it is the one
+    // that is cached. Default stays the full JSON, read fresh.
+    if (request.nextUrl.searchParams.get("format") === "brief") {
+      const cached = await readCachedBrief();
+      if (cached.state === "empty") {
+        return NextResponse.json({ published: false });
+      }
+      return NextResponse.json({
+        published: true,
+        publishedAt: cached.publishedAt,
+        brief: cached.brief,
+      });
+    }
+
     const live = await readLiveForApi();
     if (!live || isEmptyDoc(live.doc)) {
       // Unambiguous: nothing published yet (FR-004). Not an error, not an empty
       // object with keys.
       return NextResponse.json({ published: false });
-    }
-    // ?format=brief — the compact text version for the voice agent (cheaper
-    // per reply; see lib/content/agent-brief.ts). Default stays the full JSON.
-    if (request.nextUrl.searchParams.get("format") === "brief") {
-      return NextResponse.json({ published: true, publishedAt: live.updatedAt, brief: agentBrief(live.doc) });
     }
     return NextResponse.json({
       published: true,

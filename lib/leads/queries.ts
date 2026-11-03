@@ -51,39 +51,79 @@ function leadValues(enquiry: IncomingEnquiry): Record<string, string | number | 
   >;
 }
 
+/** Every column `leadValues` can write, so a repeat save can be compared. */
+const WRITABLE = [
+  "parent_name",
+  "student_name",
+  "class_wanted",
+  "student_age",
+  "phone",
+  "current_class",
+  "previous_school",
+  "admission_type",
+  "language",
+  "consent",
+] as const;
+
+type StoredLead = { id: string } & Record<string, string | number | boolean | null>;
+
 /**
  * One lead per call (FR-003). The agent saves once the phone is confirmed and
  * again at the end; the second save fills in the same row. Another call's lead
  * is never touched, and status is never set here.
+ *
+ * Repeat-safe since feature 013 (slice C). The 3 November test call shows the
+ * model firing save_lead four times in two identical pairs on the same row,
+ * each returning the same id — so the prompt cannot be relied on to stop it and
+ * the endpoint has to make it harmless. Fields are now compared against what is
+ * stored and only the differences are written; an identical repeat does no
+ * write at all and reports `outcome: "unchanged"`.
+ *
+ * This also settles the race where the parent's typed form and the agent's
+ * first save reach the same row at once: whichever arrives second writes only
+ * what the first did not already store.
+ *
+ * Merge, never replace. `leadValues` omits anything absent, so a later save
+ * carrying only the child's age cannot blank a class recorded earlier
+ * (`.claude/rules/api.md`). The one deliberate blanking — consent withdrawn
+ * clearing the phone — stays, because the rules require it.
  */
 export async function upsertLeadForCall(
   enquiry: IncomingEnquiry,
   callId: string,
-): Promise<{ id: string; updated: boolean }> {
+): Promise<{ id: string; outcome: "inserted" | "updated" | "unchanged" }> {
   const supabase = createAdminClient();
   const { data: existing, error: findError } = await supabase
     .from("leads")
-    .select("id")
+    .select(["id", ...WRITABLE].join(", "))
     .eq("retell_call_id", callId)
-    .maybeSingle<{ id: string }>();
+    .maybeSingle<StoredLead>();
   if (findError) throw findError;
 
   if (!existing) {
     try {
-      return { id: await insertLead(enquiry, callId), updated: false };
+      return { id: await insertLead(enquiry, callId), outcome: "inserted" };
     } catch (error) {
       // 23505: two saves in the same call raced; the other one inserted first.
+      // Still the backstop — comparing above cannot prevent a true collision.
       if ((error as { code?: string }).code !== "23505") throw error;
       return upsertLeadForCall(enquiry, callId);
     }
   }
 
+  // Only what actually differs. An empty object means the agent told us
+  // nothing new, so the row is left alone.
   const values = leadValues(enquiry);
-  if (Object.keys(values).length > 0) {
-    const { error } = await supabase.from("leads").update(values).eq("id", existing.id);
-    if (error) throw error;
+  const changed = Object.fromEntries(
+    Object.entries(values).filter(([column, value]) => existing[column] !== value),
+  );
+  if (Object.keys(changed).length === 0) {
+    return { id: existing.id, outcome: "unchanged" };
   }
-  return { id: existing.id, updated: true };
+
+  const { error } = await supabase.from("leads").update(changed).eq("id", existing.id);
+  if (error) throw error;
+  return { id: existing.id, outcome: "updated" };
 }
 
 /**
