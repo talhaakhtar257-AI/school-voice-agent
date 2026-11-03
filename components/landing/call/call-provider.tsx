@@ -97,6 +97,21 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const [parentDetails, setParentDetails] = useState<ParentDetails | null>(null);
 
   const sessionRef = useRef<WebCallSession | null>(null);
+  /**
+   * Retell streams the assistant's words from the model, which finishes well
+   * before her voice starts — measured at about 600ms on a 3 Nov 2026 test
+   * call. Showing them straight away put the whole sentence on screen while she
+   * was still halfway through saying it, so she read as slow and broken even
+   * when she was not. These three hold an assistant turn back until her audio
+   * has actually begun:
+   *   allTurnsRef            every turn Retell has sent us
+   *   agentAudibleRef        is her voice playing right now
+   *   releasedAgentTurnsRef  how many of her turns the parent may read
+   * A turn, once released, stays visible — the transcript never loses a line.
+   */
+  const allTurnsRef = useRef<Turn[]>([]);
+  const agentAudibleRef = useRef(false);
+  const releasedAgentTurnsRef = useRef(0);
   const thinkingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const limitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -115,6 +130,25 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     if (thinkingTimerRef.current) clearTimeout(thinkingTimerRef.current);
     thinkingTimerRef.current = null;
     setThinking(false);
+  }, []);
+
+  const countAgentTurns = (turns: Turn[]) =>
+    turns.reduce((n, turn) => (turn.role === "agent" ? n + 1 : n), 0);
+
+  /**
+   * Put on screen every turn the parent is allowed to read: all of their own,
+   * and only the assistant turns whose audio has started. Returns the visible
+   * list so the caller can decide about the thinking indicator.
+   */
+  const publishTranscript = useCallback(() => {
+    let agentTurnsSeen = 0;
+    const visible = allTurnsRef.current.filter((turn) => {
+      if (turn.role !== "agent") return true;
+      agentTurnsSeen += 1;
+      return agentTurnsSeen <= releasedAgentTurnsRef.current;
+    });
+    setTranscript(visible);
+    return visible;
   }, []);
 
   const finish = useCallback(
@@ -136,6 +170,9 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     setParentDetails(details);
     setFallback(null);
     setTranscript([]);
+    allTurnsRef.current = [];
+    agentAudibleRef.current = false;
+    releasedAgentTurnsRef.current = 0;
     setElapsedSeconds(0);
     setMaxSeconds(null);
     setCallId(null);
@@ -224,11 +261,21 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
           },
           onAgentStartTalking: () => {
             if (!current()) return;
+            // Her voice is playing, so whatever she has said so far may be read.
+            agentAudibleRef.current = true;
+            releasedAgentTurnsRef.current = countAgentTurns(allTurnsRef.current);
+            publishTranscript();
             clearThinking();
             setPhase("speaking");
           },
           onAgentStopTalking: () => {
-            if (current()) setPhase("listening");
+            if (!current()) return;
+            agentAudibleRef.current = false;
+            // A last chunk of text can land after the audio ends; she has
+            // certainly said it by now, so release everything we hold.
+            releasedAgentTurnsRef.current = countAgentTurns(allTurnsRef.current);
+            publishTranscript();
+            setPhase("listening");
           },
           onTranscript: (full) => {
             if (!current()) return;
@@ -240,11 +287,19 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
                   "content" in u,
               )
               .map((u) => ({ role: u.role, content: u.content }));
-            setTranscript(turns);
+            allTurnsRef.current = turns;
+            // Text arriving while she is already speaking is hers to show now;
+            // text arriving ahead of her voice waits for onAgentStartTalking.
+            if (agentAudibleRef.current) {
+              releasedAgentTurnsRef.current = countAgentTurns(turns);
+            }
+            const visible = publishTranscript();
             // The parent has spoken and nothing has come back yet: after a
             // short quiet moment, show that the assistant is working on it.
+            // Judged on what the parent can see, so the indicator stays up
+            // while her words are still held back.
             clearThinking();
-            if (turns.at(-1)?.role === "user") {
+            if (visible.at(-1)?.role === "user") {
               thinkingTimerRef.current = setTimeout(() => setThinking(true), 900);
             }
           },
@@ -280,7 +335,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       void sessionRef.current?.end();
       finish(s.callTimeUp);
     }, gate.maxCallSeconds * 1000);
-  }, [finish, clearThinking]);
+  }, [finish, clearThinking, publishTranscript]);
 
   const endCall = useCallback(async () => {
     attemptRef.current += 1;
