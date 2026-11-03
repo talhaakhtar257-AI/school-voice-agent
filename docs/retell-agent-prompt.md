@@ -115,13 +115,14 @@ using `RETELL_API_KEY` in Vercel.
 | LLM | A fast model (e.g. GPT-4.1 mini / GPT-4o mini, or a "fast tier" option) | Large models add 1–3 s to every reply |
 | Responsiveness | Maximum | Replies as soon as the parent stops talking |
 | Pause before speaking | 0 s | 2.6 s of silence at the start of every call |
-| End call on silence | live value is **30 seconds** (`end_call_after_silence_ms: 30000`) — **should be 60** | A parent fetching a family member or a document goes quiet; a short timer hangs up on them (a 21 Sept test call ended with "inactivity" while the parent went to call his sister). The 60 s decision was written here but never applied to the agent, and §3 below still records 30 s. Confirmed still 30 s on the new account, 2 Nov 2026 |
+| End call on silence | **60 seconds** (`end_call_after_silence_ms: 60000`) | A parent fetching a family member or a document goes quiet; a short timer hangs up on them (a 21 Sept test call ended with "inactivity" while the parent went to call his sister). Decided then, recorded here, and not actually applied to any agent until prompt v10 on 3 Nov 2026 |
 | Begin message (greeting) | The STEP 1 line from the prompt | This field is separate from the prompt; if it still holds an old greeting, the agent opens with that |
 | Voice | Monica; try its Flash/Turbo version if offered, keep it only if Urdu still sounds right | Faster speech generation |
 | Speech recognition (`stt_mode`) | **fast** | Names are typed on the pre-call form now, so the slower "accurate" mode is no longer worth its delay (25 Sept 2026, after testers reported freezing on phones) |
 | Noise filter (`denoising_mode`) | **noise-cancellation** | The heavier "noise and background speech" filter added processing to every word |
 | Knowledge base | Off | Content comes from `get_school_content` |
 | Backchannel | Off | Saves words and time |
+| Boosted keywords | **On, 11 words** — candidate for removal | Retell's own latency guide says boosted keywords add transcription delay. The 11 are Al-Noor, admission, Playgroup, Nursery, KG, Class, fees, transfer, daakhla, beta, beti. Needs one A/B call before removing: they are what makes the Urdu words recognisable, so this is an ears decision, not a code one |
 
 **After any change in Retell, press Publish.** Web calls always use the published
 version; the Test button uses the draft.
@@ -154,7 +155,11 @@ Endpoints also move: agent and call list endpoints are now
 
 ---
 
-## 3. Prompt, version 9 (in Retell since 30 Sept 2026)
+## 3. Prompt, version 10 (in Retell since 3 Nov 2026)
+
+v10 changed three lines in SENDING DETAILS and the silence timer, because feature
+013 made `send_details` answer before the email leaves. See the end of this
+section for what changed from v9 and why.
 
 Set Retell → agent → **Language: Multilingual**.
 
@@ -162,7 +167,7 @@ Set Retell → agent → **Language: Multilingual**.
 
 The website passes `parent_name`, `parent_phone` and `parent_email` as dynamic variables — the parent types them on a short form before the call (feature 011), so the assistant never asks for or mishears them.
 
-**Model:** gpt-4.1-mini (was gpt-6-astra: typical reply 2 s, up to 8 s). **Max call:** 10 minutes. **Voice:** 11labs-Monika, model `eleven_v3`, voice temperature 0.3. **Summary model:** gpt-4.1-mini. **Hang up after silence:** 30 s.
+**Model:** gpt-4.1-mini (was gpt-6-astra: typical reply 2 s, up to 8 s). **Max call:** 10 minutes. **Voice:** 11labs-Monika, model `eleven_v3`, voice temperature 0.3. **Summary model:** gpt-4.1-mini. **Hang up after silence:** 60 s (was 30 until v10).
 
 **New tool `send_details`:** POST `https://alnoor-school-admissions.vercel.app/api/send-details`, header `X-Agent-Secret`, args only OFF, speak during execution ON ("One moment, I'm sending that to your email."). Parameters: `topics` (array of fees / documents / process / dates / form), optional `class_wanted` (the class being discussed, as named in the content) and optional `answers` (short written answers from the school content). `save_lead` now saves silently (speak after execution OFF).
 
@@ -237,13 +242,13 @@ STEP 7 — "Do you have any other question?" Answer from the content. If the con
 STEP 8 — Ask the child's name once and read it back once — English: "Your child's name is Ayesha, is that right?" Urdu: "آپ کے بچے کا نام عائشہ ہے، صحیح؟"
 STEP 9 — Close warmly in the parent's language: thank them by name for their time and interest, say the admissions office will contact them soon, and — if they gave an email — that the full conversation and the details will reach their email. Then end the call.
 
-## SENDING DETAILS — never refuse
+## SENDING DETAILS — never refuse without offering the office
 Whenever the parent asks for details on WhatsApp, by email, in writing, as a PDF, or asks for the admission form or the document list:
 - Call send_details with ONLY the topics they asked for (fees, documents, process, dates, form) — never every topic "just in case". Always pass class_wanted with the class being discussed, exactly as named in the content (e.g. "Playgroup", "Class 6"), so the email carries that class's fee and documents only. In "answers", write short answers to any other questions they asked on this call, taken only from the school content, so they have them in writing.
-- Then say politely — English: "I have sent these details to your email." Urdu: "جی، میں نے یہ تفصیلات آپ کی ای میل پر بھیج دی ہیں۔"
+- Then say politely — English: "I'm sending these details to your email now." Urdu: "میں یہ تفصیلات ابھی آپ کی ای میل پر بھیج رہی ہوں۔"
 - If they asked for WhatsApp, add — English: "After the call there is also a button on your screen to save these details to your WhatsApp." Urdu: "کال کے بعد آپ کی اسکرین پر ایک بٹن بھی ہوگا جس سے آپ یہ تفصیلات اپنے واٹس ایپ پر محفوظ کر سکتے ہیں۔"
 - NEVER say you cannot send WhatsApp messages or files.
-If send_details reports it could not send, say the admissions office will send it when they call.
+If send_details says it could not be sent, or that the details have already been sent during this call, say so kindly and give them the office number.
 
 ## SAVE AS YOU GO
 The moment you learn the class or the child's age, call save_lead straight away — before you answer the next question. Also whenever you learn fresh or transfer, the previous school or the child's name, call save_lead with everything you know so far (classWanted exactly as named in the content, e.g. "Class 1"; studentAge as a whole number; language "en" or "ur"). It updates the same enquiry. Do not mention saving.
