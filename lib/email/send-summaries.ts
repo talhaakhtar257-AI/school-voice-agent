@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { readLiveForApi } from "@/lib/content/queries";
 import { emailConfigured, sendEmail } from "./send";
 import { parentDetailsEmail, schoolEnquiryEmail } from "./templates";
-import { INFO_TOPICS, renderInfoPack, type InfoTopic } from "./info-pack";
+import { renderInfoPack, type InfoTopic } from "./info-pack";
 import type { RequestedDetails } from "@/lib/calls/retell-api";
 
 type Which = "school" | "parent";
@@ -25,7 +25,7 @@ async function claim(callId: string, which: Which): Promise<boolean> {
 }
 
 /** Undo a claim after a failed send and keep the reason for staff (FR-024). */
-async function recordFailure(callId: string, which: Which, reason: string): Promise<void> {
+export async function recordFailure(callId: string, which: Which, reason: string): Promise<void> {
   await createAdminClient()
     .from("calls")
     .update({ [COLUMN[which]]: null, email_error: `${which}: ${reason}`.slice(0, 400) })
@@ -41,7 +41,7 @@ async function recordFailure(callId: string, which: Which, reason: string): Prom
 type CallForEmail = { id: string; lead_id: string | null; summary: string | null; parent_email: string | null; transcript: unknown };
 type LeadForEmail = { parent_name: string | null; phone: string | null; student_name: string | null; class_wanted: string | null; student_age: number | null; email: string | null };
 
-async function readLead(leadId: string): Promise<LeadForEmail | null> {
+export async function readLead(leadId: string): Promise<LeadForEmail | null> {
   const { data } = await createAdminClient()
     .from("leads")
     .select("parent_name, phone, student_name, class_wanted, student_age, email")
@@ -57,7 +57,7 @@ const asTurns = (value: unknown): Turn[] => (Array.isArray(value) ? (value as Tu
  * The parent's email: the conversation (after the call) plus the info pack
  * for these topics, from the published content.
  */
-async function parentMail(
+export async function parentMail(
   lead: LeadForEmail | null,
   topics: readonly InfoTopic[],
   transcript: Turn[] = [],
@@ -115,29 +115,4 @@ export async function sendCallSummaries(call: CallForEmail, siteOrigin: string, 
   } catch (error) {
     console.error(`[email] ${error instanceof Error ? error.message : "unknown"} for call ${call.id}`);
   }
-}
-
-/**
- * The send_details tool (feature 011): while the call is still going, email
- * the parent the details they just asked for. Returns whether it went out.
- */
-export async function sendDetailsDuringCall(
-  retellCallId: string,
-  topics: readonly InfoTopic[],
-  answers = "",
-  classWanted: string | null = null,
-): Promise<"sent" | "no-email" | "failed"> {
-  const { data: call } = await createAdminClient()
-    .from("calls")
-    .select("id, lead_id, parent_email")
-    .eq("retell_call_id", retellCallId)
-    .maybeSingle<{ id: string; lead_id: string | null; parent_email: string | null }>();
-  const lead = call?.lead_id ? await readLead(call.lead_id) : null;
-  const to = call?.parent_email ?? lead?.email ?? null;
-  if (!to) return "no-email";
-  const mail = await parentMail(lead, topics.length > 0 ? topics : INFO_TOPICS, [], answers, classWanted);
-  if (!mail) return "failed";
-  const sent = await sendEmail({ to, ...mail });
-  console.info(`[email] details ${sent.ok ? "sent" : "failed"} for call ${call?.id ?? retellCallId}`);
-  return sent.ok ? "sent" : "failed";
 }
