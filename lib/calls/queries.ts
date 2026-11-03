@@ -13,10 +13,14 @@ export type CallRow = {
   visitor_id: string | null;
   parent_email: string | null;
   lead_id: string | null;
+  /** Null means Retell measured nothing, never that the call was instant. */
+  reply_delay_ms: number | null;
+  reply_delay_p90_ms: number | null;
+  cost_cents: number | null;
 };
 
 const CALL_COLUMNS =
-  "id, status, started_at, ended_at, duration_seconds, transcript, summary, visitor_id, parent_email, lead_id";
+  "id, status, started_at, ended_at, duration_seconds, transcript, summary, visitor_id, parent_email, lead_id, reply_delay_ms, reply_delay_p90_ms, cost_cents";
 
 async function findCall(retellCallId: string): Promise<CallRow | null> {
   const { data, error } = await createAdminClient()
@@ -59,6 +63,14 @@ export async function upsertCallFromRetell(call: RetellCall): Promise<CallRow> {
     summary: call.summary ? maskIdNumbers(call.summary) : (existing?.summary ?? null),
     lead_id: leadId,
     outcome: ended ? (leadId ? "lead_captured" : "answered") : null,
+    // Retell's own measurements, kept so the Health screen can report them
+    // (feature 013, D-005). Merged like everything else here: a figure already
+    // stored is never replaced by nothing, because the call_started event
+    // carries no latency and would otherwise wipe what call_ended recorded.
+    // Writing the same values again on a repeated delivery is harmless (FR-009).
+    reply_delay_ms: call.replyDelayMs ?? existing?.reply_delay_ms ?? null,
+    reply_delay_p90_ms: call.replyDelayP90Ms ?? existing?.reply_delay_p90_ms ?? null,
+    cost_cents: call.costCents ?? existing?.cost_cents ?? null,
   };
 
   const { data, error } = await createAdminClient()

@@ -18,7 +18,24 @@ const retellCall = z.object({
     .array(z.object({ role: z.string(), name: z.string().optional(), arguments: z.string().optional() }).passthrough())
     .optional(),
   call_analysis: z.object({ call_summary: z.string().optional() }).nullish(),
+  // How long the parent waited, as Retell measured it, and what the call cost.
+  // Both were already in this response and thrown away; the Health screen has
+  // asked for the first since feature 004 (feature 013, D-005).
+  //
+  // `e2e` is the wait from the parent finishing speaking to the agent starting
+  // to speak. Absent on a call with no measured turns — four of the old
+  // account's eight were too short — so every field here is optional, and
+  // absent means "not measured", never zero.
+  latency: z
+    .object({ e2e: z.object({ p50: z.number().optional(), p90: z.number().optional() }).nullish() })
+    .nullish(),
+  // In cents, as Retell bills.
+  call_cost: z.object({ combined_cost: z.number().optional() }).nullish(),
 });
+
+/** A non-negative whole number, or null when Retell reported nothing. */
+const wholeNumber = (value: number | undefined): number | null =>
+  typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.round(value) : null;
 
 /** What the parent asked to receive in writing during the call (send_details). */
 export type RequestedDetails = { topics: InfoTopic[]; classWanted: string | null };
@@ -61,6 +78,11 @@ export type RetellCall = {
   transcript: Turn[] | null;
   summary: string | null;
   requested: RequestedDetails;
+  /** Retell's own end-to-end wait for this call. Null when not measured. */
+  replyDelayMs: number | null;
+  replyDelayP90Ms: number | null;
+  /** Retell's own cost for this call, in cents. Null when not reported. */
+  costCents: number | null;
 };
 
 /**
@@ -103,5 +125,8 @@ export async function getRetellCall(callId: string): Promise<RetellCall | null> 
     transcript: transcript && transcript.length > 0 ? transcript : null,
     summary: call.call_analysis?.call_summary?.trim() || null,
     requested: requestedFrom(call.transcript_with_tool_calls),
+    replyDelayMs: wholeNumber(call.latency?.e2e?.p50),
+    replyDelayP90Ms: wholeNumber(call.latency?.e2e?.p90),
+    costCents: wholeNumber(call.call_cost?.combined_cost),
   };
 }
