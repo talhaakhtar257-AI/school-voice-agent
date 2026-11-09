@@ -216,9 +216,9 @@ Endpoints also move: agent and call list endpoints are now
 
 | Version | State | What it is |
 |---|---|---|
-| 8 | draft | **v15** — the school brief preloaded as `{{school_brief}}`, no mid-call `get_school_content`. Publish ONLY after the website change that sends that variable is deployed, or she will have no school information |
+| 8 | **published** | **v15** — the school brief preloaded as `{{school_brief}}`, no mid-call `get_school_content`. Published 9 Nov 2026 once commit 28aafd1 was live on Vercel and the gate route was confirmed returning 5,487 characters of brief. The prompt still falls back to `get_school_content` if the section arrives empty or unrendered |
 | 7 | draft | Cheap-voice comparison: OpenAI Coral, about $0.146/min against $0.254. Publish to listen, republish 6 to undo |
-| 6 | **published** | v14 — one-sentence greeting, on top of 5 |
+| 6 | superseded | v14 — one-sentence greeting, on top of 5. **Roll back here** if preloading the brief misbehaves |
 | 5 | superseded | v13 — `eleven_v4_turbo`, interruption 0.15, background-speech filter on, PII removal off |
 | 4 | superseded | v12 prompt + `eleven_v3_conversational` — the setup that failed on 9 Nov |
 | 3 | superseded | v12 on `eleven_v3` |
