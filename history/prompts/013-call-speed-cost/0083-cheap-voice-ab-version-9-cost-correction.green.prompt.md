@@ -1,6 +1,6 @@
 ---
 id: 0083
-title: Cheap-voice A/B version 9 and the cost correction
+title: Drafts go live by themselves, plus the cost correction
 stage: green
 date: 2026-11-09
 surface: agent
@@ -9,7 +9,7 @@ feature: 013-call-speed-cost
 branch: main
 user: talhawork257
 command: /sp.phr
-labels: ["retell", "voice-agent", "cost", "unit-price", "agent-versions", "openai-coral", "ab-test"]
+labels: ["retell", "voice-agent", "cost", "unit-price", "agent-versions", "openai-coral", "ab-test", "version-binding"]
 links:
   spec: specs/013-call-speed-cost/spec.md
   ticket: null
@@ -21,6 +21,7 @@ files:
  - history/prompts/013-call-speed-cost/0082-agent-silent-noise-sentence-gaps-preloaded-brief.red.prompt.md
  - history/prompts/013-call-speed-cost/0083-cheap-voice-ab-version-9-cost-correction.green.prompt.md
 tests:
+ - POST /v3/create-web-call + GET /v2/get-call — which version a real call binds to
  - npm run build
  - npx tsc --noEmit
  - npm run lint
@@ -77,6 +78,15 @@ which means the "1.667× markup" reported in PHR 0082 does not exist.
   noise filter, PII, greeting rule and billing all brought up to date, with the
   reversed noise-filter advice explained rather than silently replaced. PHR 0082
   annotated at the wrong claim instead of being rewritten.
+  **Then the serious find.** With 8 published and draft 9 above it,
+  `POST /v3/create-web-call` bound the call to `agent_version: 9` — a web call
+  takes the **highest** version, not the published one, and republishing 8 did
+  not reclaim it. The draft had put an untested voice on air by itself, which
+  would have reached the client demo. Fixed by cloning 8 up to version 10 and
+  publishing that, confirmed by reading `agent_version: 10` back off a fresh
+  web call. This reverses the standing note "web calls always use the published
+  version" and makes rollback a clone-upward operation, never a publish of a
+  lower number.
 - 🔁 Next prompts: the owner makes one call on version 8 and judges the Urdu;
   then publish 9 and call again to judge the cheap voice; publish the winner.
   Boosted keywords remain an untested latency candidate.
@@ -99,6 +109,10 @@ which means the "1.667× markup" reported in PHR 0082 does not exist.
   status code shown** when `base_version` is missing; only re-running with
   `-w '%{http_code}'` revealed `400 request/body must have required property
   'base_version'`. An empty response was twice read as "transient, retry".
+  Worst of all, the draft created earlier in this same turn went live on its own
+  and was found only because a last "confirm nothing moved" read showed
+  `get-agent` returning version 9. Creating a draft on this account is a
+  **publishing act** unless something higher is already published.
 - Graders run and results (PASS/FAIL): PASS — `npm run build`, `npx tsc
   --noEmit`, `npm run lint`; Retell read-back confirms version 9 differs from
   version 8 in exactly two fields.

@@ -126,8 +126,36 @@ using `RETELL_API_KEY` in Vercel.
 | Nudge after silence (`reminder_trigger_ms`) | **15 s**, up to **2 times** | Was 25 s once, which left a parent in 28 seconds of dead air on 3 Nov when the agent did not answer a short turn. Not the 10 s first proposed: the prompt tells the agent to stay silent when a parent asks it to wait, and a 10 s nudge would talk over exactly that |
 | Boosted keywords | **On, 11 words** — candidate for removal | Retell's own latency guide says boosted keywords add transcription delay. The 11 are Al-Noor, admission, Playgroup, Nursery, KG, Class, fees, transfer, daakhla, beta, beti. Needs one A/B call before removing: they are what makes the Urdu words recognisable, so this is an ears decision, not a code one |
 
-**After any change in Retell, press Publish.** Web calls always use the published
-version; the Test button uses the draft.
+**A web call uses the HIGHEST-numbered agent version, not the published one.**
+This is the opposite of what this file said until 9 Nov 2026, and it is the most
+dangerous thing on this page, so it is stated before anything else.
+
+Proved, not assumed: with version 8 published and draft 9 sitting above it,
+`POST /v3/create-web-call` returned a call bound to `agent_version: 9`.
+Republishing 8 did not change that — the next call still bound to 9. A draft
+left above the live version therefore goes on air by itself, which would have
+put an untested voice into the client demo with nobody choosing it.
+
+Two rules follow, and they are not optional:
+
+1. **The config you want on air must be the highest-numbered version, and
+   published.** After creating any draft above it, either publish that draft or
+   clone the good version upward and publish the clone.
+2. **A lower-numbered version cannot be made live by publishing it.** Rolling
+   back means cloning the old version to a *new* highest version and publishing
+   that: `POST /create-agent-version` with `{"base_version": <old>}`, then
+   `POST /publish-agent-version` with the new number. The rollback numbers in
+   the table below are recipes to clone, not versions to publish.
+
+Verify after any change, which costs nothing because an unanswered web call has
+no duration to bill: create a web call with `POST /v3/create-web-call`, then read
+`agent_version` back from `GET /v2/get-call/{call_id}`. That number is what a
+parent will actually get.
+
+`GET /get-agent/{id}` with no version returns the **latest** version, not the
+live one and not the published one — it reported version 9 while 8 was the
+published version. There is no field anywhere that names the published version;
+`is_published` is sticky and reads `true` on every version ever published.
 
 ### What a call actually costs, and why the voice is half of it (9 Nov 2026)
 
@@ -226,11 +254,11 @@ longer supported`. The listing is a summary: `version`, `base_version`,
 noise settings — read those per version with `GET /get-agent/{id}?version=N`.
 
 Two traps in that listing. `is_published` is sticky: it stays `true` on every
-version that was ever published, so six rows read `true` at once and only
-`GET /get-agent/{id}` without a version says which one is actually live. And
-`version_title` is the one field a published version will still accept from
-`PATCH /update-agent`, which is the only way to correct a title that says DRAFT
-after the version went live.
+version that was ever published, so eight rows read `true` at once and none of
+them means "live" — see the rule at the top of §2, and read the live version off
+a real web call rather than from any agent field. And `version_title` is the one
+field a published version will still accept from `PATCH /update-agent`, which is
+the only way to correct a title that says DRAFT after the version went live.
 
 **Model settings go in `model_config` only.** `model`, `model_temperature`,
 `model_high_priority`, `model_ultrafast`, `s2s_model`, `model_choice` and
@@ -250,8 +278,9 @@ Endpoints also move: agent and call list endpoints are now
 
 | Version | State | What it is |
 |---|---|---|
-| 9 | draft | The cheap-voice A/B. An exact clone of the live 8 — same prompt, same LLM version, same noise and interruption settings — with only the voice changed to `openai-Coral` / `gpt-4o-mini-tts`: about $0.092/min against $0.157. Publish it to hear the cheap voice, republish 8 to undo. This is the fair comparison; 7 was not |
-| 8 | **published** | **v15** — the school brief preloaded as `{{school_brief}}`, no mid-call `get_school_content`. Published 9 Nov 2026 once commit 28aafd1 was live on Vercel and the gate route was confirmed returning 5,487 characters of brief. The prompt still falls back to `get_school_content` if the section arrives empty or unrendered |
+| 10 | **live** | What a call actually uses. An exact clone of 8 — `eleven_v4_turbo`, interruption 0.15, background-speech filter on, PII off, one-sentence greeting, `{{school_brief}}` preloaded — created and published only because draft 9 sat above 8 and was therefore silently on air. Confirmed live by reading `agent_version` back off a real web call. **Keep this the highest version** |
+| 9 | recipe only | The cheap-voice A/B: identical to 10 except `openai-Coral` / `gpt-4o-mini-tts`, about $0.092/min against $0.157. It is *below* 10, so publishing it does nothing. To hear it, clone 10, patch the two voice fields, publish the clone |
+| 8 | superseded |  **v15** — the school brief preloaded as `{{school_brief}}`, no mid-call `get_school_content`. Published 9 Nov 2026 once commit 28aafd1 was live on Vercel and the gate route was confirmed returning 5,487 characters of brief. The prompt still falls back to `get_school_content` if the section arrives empty or unrendered |
 | 7 | obsolete | The first attempt at the cheap-voice comparison. Branched from 6, so it carries the old prompt that fetches the brief mid-call — publishing it would have changed the voice *and* undone the speed fix at the same time. Replaced by 9 |
 | 6 | superseded | v14 — one-sentence greeting, on top of 5. **Roll back here** if preloading the brief misbehaves |
 | 5 | superseded | v13 — `eleven_v4_turbo`, interruption 0.15, background-speech filter on, PII removal off |
@@ -259,7 +288,11 @@ Endpoints also move: agent and call list endpoints are now
 | 3 | superseded | v12 on `eleven_v3` |
 | 2 / 1 / 0 | superseded | v11 / v10 / v9 |
 
-Roll back with `POST /publish-agent-version/{agent_id}` and `{"version": N}`.
+**Rolling back is not a publish.** A lower version cannot be made live. Clone it
+to a new highest version and publish that:
+`POST /create-agent-version/{agent_id}` with `{"base_version": N}`, then
+`POST /publish-agent-version/{agent_id}` with the new number — then confirm with
+a throwaway web call as described in §2.
 
 ## 3. Prompt, version 12 (in Retell since 9 Nov 2026)
 
