@@ -56,7 +56,7 @@ using `RETELL_API_KEY` in Vercel.
 - Parameters: none
 - **Description** (the agent decides from this, so it matters):
   `The school's live admission information: classes, monthly and admission fees, age ranges per class, admission dates, office hours, school timings, programs, admission process, required documents, FAQs, knowledge documents imported from the school's PDFs and website, and topics to hand to the office. Call this once at the very start of every call, before answering anything.`
-- Speak during execution: **on** — "One moment please / ایک لمحہ"
+- Speak during execution: **off** since prompt v12 (3 Nov 2026). It said a static English "One moment please." at the start of every call, Urdu callers included, to cover a fetch that took up to 1.5s. Feature 013 cached the fetch to about 0.5s, so the filler became pure audible hesitation. Speak after execution stays on.
 - Timeout: 5 seconds
 
 ### `save_lead`
@@ -119,7 +119,8 @@ using `RETELL_API_KEY` in Vercel.
 | Begin message (greeting) | The STEP 1 line from the prompt | This field is separate from the prompt; if it still holds an old greeting, the agent opens with that |
 | Voice | Monica; try its Flash/Turbo version if offered, keep it only if Urdu still sounds right | Faster speech generation |
 | Speech recognition (`stt_mode`) | **fast** | Names are typed on the pre-call form now, so the slower "accurate" mode is no longer worth its delay (25 Sept 2026, after testers reported freezing on phones) |
-| Noise filter (`denoising_mode`) | **noise-cancellation** | The heavier "noise and background speech" filter added processing to every word |
+| Noise filter (`denoising_mode`) | **noise-cancellation** | The heavier "noise and background speech" filter added processing to every word. Reconsidered and deliberately kept off in v12: it would remove other voices in the room, but Retell's background-noise guide warns it can clip quiet or short replies and reduce non-English accuracy, costs +$0.005/min, and a short Urdu "جی جی" going unanswered is what caused the 28-second silence on 3 Nov. Test it on its own before switching |
+| Interruption sensitivity | **0.4** (was 0.6 until v12) | On the 8 Nov call background sound cut her off after one word, twice, and her greeting never registered. Retell's guide: lower it when background sound causes interruptions. Her replies are one or two short sentences, so being harder to interrupt costs a parent little |
 | Knowledge base | Off | Content comes from `get_school_content` |
 | Backchannel | Off | Saves words and time |
 | Nudge after silence (`reminder_trigger_ms`) | **15 s**, up to **2 times** | Was 25 s once, which left a parent in 28 seconds of dead air on 3 Nov when the agent did not answer a short turn. Not the 10 s first proposed: the prompt tells the agent to stay silent when a parent asks it to wait, and a 10 s nudge would talk over exactly that |
@@ -156,7 +157,7 @@ Endpoints also move: agent and call list endpoints are now
 
 ---
 
-## 3. Prompt, version 11 (in Retell since 3 Nov 2026)
+## 3. Prompt, version 12 (in Retell since 9 Nov 2026)
 
 v10 changed three lines in SENDING DETAILS and the silence timer, because feature
 013 made `send_details` answer before the email leaves.
@@ -167,6 +168,13 @@ audio), the agent answered nothing, and the nudge fired 28.4 seconds later with
 a line that did not address it. Per-turn speed was fine either side — a 2.3s
 median on both calls — so that single gap was the whole bad experience.
 
+v12 narrowed that rule and added one to ignore background sound. On the 8 Nov
+v11 call a background voice and two "(unintelligible audio)" turns reached her
+as the parent; she started speaking twice and was cut off after one word each
+time. The v11 wording told her to answer "something you did not catch", which
+in a noisy room means answering the room. v12 also turned off the tool fillers
+and lowered interruption sensitivity to 0.4 (see §1 and §2).
+
 Set Retell → agent → **Language: Multilingual**.
 
 **Begin message:** `Assalam-o-Alaikum {{parent_name}}! Welcome to Al-Noor Public School admissions. You can speak in English or Urdu. How can I help you today?`
@@ -175,7 +183,7 @@ The website passes `parent_name`, `parent_phone` and `parent_email` as dynamic v
 
 **Model:** gpt-4.1-mini (was gpt-6-astra: typical reply 2 s, up to 8 s). **Max call:** 10 minutes. **Voice:** 11labs-Monika, model `eleven_v3`, voice temperature 0.3. **Summary model:** gpt-4.1-mini. **Hang up after silence:** 60 s (was 30 until v10).
 
-**New tool `send_details`:** POST `https://alnoor-school-admissions.vercel.app/api/send-details`, header `X-Agent-Secret`, args only OFF, speak during execution ON ("One moment, I'm sending that to your email."). Parameters: `topics` (array of fees / documents / process / dates / form), optional `class_wanted` (the class being discussed, as named in the content) and optional `answers` (short written answers from the school content). `save_lead` now saves silently (speak after execution OFF).
+**New tool `send_details`:** POST `https://alnoor-school-admissions.vercel.app/api/send-details`, header `X-Agent-Secret`, args only OFF, speak during execution OFF since v12 (it said "One moment, I'm sending that to your email." and then the prompt's own sending line, so she said it twice once the route began answering instantly). Parameters: `topics` (array of fees / documents / process / dates / form), optional `class_wanted` (the class being discussed, as named in the content) and optional `answers` (short written answers from the school content). `save_lead` now saves silently (speak after execution OFF).
 
 > Office phone below is a **PLACEHOLDER** — replace `021-000-000-000` with the school's real number before launch (same value as `lib/office.ts`).
 
@@ -235,6 +243,8 @@ Call it once per call and keep the result in mind.
 - Never repeat the parent's question back. Never ask "is that correct?" after normal answers.
 - LISTS — documents, admission steps, dates: say them POINT BY POINT, one item per sentence, numbered — English: "First, … Second, … Third, …" Urdu: "پہلا، … دوسرا، … تیسرا، …". Never run the items together in one long sentence. Say only the items that apply to the child's class (an item marked "Class 1 and above" does not apply to Playgroup, Nursery or KG). After the last item, ask whether they would like it by email.
 - Say numbers naturally — English: "eight thousand five hundred rupees". Urdu: "آٹھ ہزار پانچ سو روپے".
+- NEVER leave the parent in silence after they speak to you. If what they said was short or not an answer to your question — "جی", "جی جی", "okay", "hmm", a half sentence — do NOT wait for them to say more. Answer within a moment: acknowledge it in one short line, then either ask your question again in simpler words or move to the next step. The one exception is when they have asked you to wait or handed the phone to someone else, which is covered below.
+- IGNORE sound that is not the parent speaking to you: "(unintelligible audio)", background noise, a TV, or other people talking nearby. Do not reply to it and do not start a new sentence because of it — finish what you were saying, or keep waiting for the parent. Only if the parent clearly said something you could not make out, ask once, briefly — English: "Sorry, I didn't catch that." Urdu: "معاف کیجیے، میں سمجھ نہیں پائی۔"
 
 ## THE CALL, STEP BY STEP
 The greeting has already welcomed the parent by name and asked how you can help. Then:
