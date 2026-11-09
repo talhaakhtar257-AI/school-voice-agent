@@ -117,10 +117,10 @@ using `RETELL_API_KEY` in Vercel.
 | Pause before speaking | 0 s | 2.6 s of silence at the start of every call |
 | End call on silence | **60 seconds** (`end_call_after_silence_ms: 60000`) | A parent fetching a family member or a document goes quiet; a short timer hangs up on them (a 21 Sept test call ended with "inactivity" while the parent went to call his sister). Decided then, recorded here, and not actually applied to any agent until prompt v10 on 3 Nov 2026 |
 | Begin message (greeting) | The STEP 1 line from the prompt | This field is separate from the prompt; if it still holds an old greeting, the agent opens with that |
-| Voice | Monika on **`eleven_v3_conversational`** since agent version 4 (9 Nov 2026); was `eleven_v3` | On the 3 Nov call 14 of 16 pauses had no tool call and sat at 2.3s, and the voice starting (~600ms) was the largest piece. v3 Conversational is the same v3 family judged right for Urdu, built for real-time talk, and $0.080/min against $0.100. Flash v2.5 and Multilingual v2 are ruled out: neither supports Urdu. Roll back to agent version 3 if the Urdu sounds wrong |
+| Voice | Monika on **`eleven_v4_turbo`** since agent version 5 (9 Nov 2026); was `eleven_v3_conversational` (v4), `eleven_v3` (v0-v3) | On the 3 Nov call 14 of 16 pauses had no tool call and sat at 2.3s, and the voice starting (~600ms) was the largest piece. v3 Conversational is the same v3 family judged right for Urdu, built for real-time talk, and $0.080/min against $0.100. Flash v2.5 and Multilingual v2 are ruled out: neither supports Urdu. Roll back to agent version 3 if the Urdu sounds wrong |
 | Speech recognition (`stt_mode`) | **fast** | Names are typed on the pre-call form now, so the slower "accurate" mode is no longer worth its delay (25 Sept 2026, after testers reported freezing on phones) |
-| Noise filter (`denoising_mode`) | **noise-cancellation** | The heavier "noise and background speech" filter added processing to every word. Reconsidered and deliberately kept off in v12: it would remove other voices in the room, but Retell's background-noise guide warns it can clip quiet or short replies and reduce non-English accuracy, costs +$0.005/min, and a short Urdu "جی جی" going unanswered is what caused the 28-second silence on 3 Nov. Test it on its own before switching |
-| Interruption sensitivity | **0.4** (was 0.6 until v12) | On the 8 Nov call background sound cut her off after one word, twice, and her greeting never registered. Retell's guide: lower it when background sound causes interruptions. Her replies are one or two short sentences, so being harder to interrupt costs a parent little |
+| Noise filter (`denoising_mode`) | **noise-and-background-speech-cancellation** since agent version 5; was `noise-cancellation` | The heavier "noise and background speech" filter added processing to every word. Reconsidered and deliberately kept off in v12: it would remove other voices in the room, but Retell's background-noise guide warns it can clip quiet or short replies and reduce non-English accuracy, costs +$0.005/min, and a short Urdu "جی جی" going unanswered is what caused the 28-second silence on 3 Nov. Test it on its own before switching |
+| Interruption sensitivity | **0.15** since agent version 5 (was 0.4 in v12, 0.6 before) | On the 8 Nov call background sound cut her off after one word, twice, and her greeting never registered. Retell's guide: lower it when background sound causes interruptions. Her replies are one or two short sentences, so being harder to interrupt costs a parent little |
 | Knowledge base | Off | Content comes from `get_school_content` |
 | Backchannel | Off | Saves words and time |
 | Nudge after silence (`reminder_trigger_ms`) | **15 s**, up to **2 times** | Was 25 s once, which left a parent in 28 seconds of dead air on 3 Nov when the agent did not answer a short turn. Not the 10 s first proposed: the prompt tells the agent to stay silent when a parent asks it to wait, and a 10 s nudge would talk over exactly that |
@@ -128,6 +128,61 @@ using `RETELL_API_KEY` in Vercel.
 
 **After any change in Retell, press Publish.** Web calls always use the published
 version; the Test button uses the draft.
+
+### What a call actually costs, and why the voice is half of it (9 Nov 2026)
+
+Every line on this account is billed at **1.667x Retell’s published list price**.
+Read the list price, multiply by 1.667, and that is the bill. Measured from
+`call_cost.product_costs` on real calls, not from the pricing page:
+
+| Line | List | Billed here |
+|---|---|---|
+| Retell voice engine | $0.055 | $0.0917 |
+| ElevenLabs v3 | $0.100 | $0.1667 |
+| ElevenLabs v3 Conversational | $0.080 | $0.1333 |
+| ElevenLabs v4 Turbo | $0.080 | $0.1333 |
+| OpenAI / Fish / MiniMax / Cartesia / Inworld voices | $0.015 | $0.025 |
+| gpt-4.1-mini | $0.0128 | $0.0213 |
+| PII removal | $0.010 | $0.0167 |
+| Background voice cancellation | $0.005 | $0.0083 |
+
+So the 9 Nov move to v3 Conversational did **not** save money: $0.1333/min
+against v3’s $0.1667 is a real saving, but the note claiming $0.080 was the
+list price, not the bill. Total per minute on agent version 4 was **$0.263**,
+not the $0.18 in CLAUDE.local.md.
+
+The voice is **half the bill**. Only three providers on Retell support Urdu:
+ElevenLabs, OpenAI and Fish Audio. MiniMax, Cartesia and Inworld do not, so the
+cheap tier that can speak Urdu is OpenAI or Fish at $0.025/min billed — which
+would take a call from $0.254 to about $0.146/min. Agent version 7 is a
+standing draft with OpenAI Coral for exactly that comparison; it is an ears
+decision, never a spreadsheet one.
+
+### Retell speaks one sentence at a time, with ~1s of silence between each
+
+The single biggest cause of the "she never said hello" reports. Measured
+word-by-word from `transcript_object` on three calls: TTS first-byte latency is
+only ~240ms, but Retell generates each **sentence** separately and leaves
+0.88-1.2s of dead air at every sentence boundary.
+
+A four-sentence begin message therefore took **7.5 seconds** with three holes
+in it, and parents heard the holes, not the greeting. The fix is free: write
+the begin message as **one sentence**, using commas instead of full stops.
+The same applies to her replies — two short sentences cost a second of silence
+that one sentence of the same length does not.
+
+### The microphone hears the room, and the room gets answered
+
+On a 9 Nov test call with nobody speaking to the microphone, Retell transcribed
+real background conversation as the parent — "کیک یا بسکٹ?",
+"دو دو نہیں ہیں، چکن", "بارش بھی ہو رہی ہے" — and the assistant politely
+answered it. The 8 Nov log says it outright: `Recovering from false VAD interruption (no ASR words)`.
+Each phantom turn starts a new turn, which is what leaves "Assistant is
+thinking…" stuck on the parent’s screen.
+
+Agent version 5 turned the background-speech filter on and dropped interruption
+sensitivity to 0.15. Both help; neither is a cure. **For a demo, use a headset
+or a quiet room** — that does more than any setting in this file.
 
 ### Changing a published agent through the API
 
@@ -157,6 +212,20 @@ Endpoints also move: agent and call list endpoints are now
 
 ---
 
+## Agent versions on this account
+
+| Version | State | What it is |
+|---|---|---|
+| 8 | draft | **v15** — the school brief preloaded as `{{school_brief}}`, no mid-call `get_school_content`. Publish ONLY after the website change that sends that variable is deployed, or she will have no school information |
+| 7 | draft | Cheap-voice comparison: OpenAI Coral, about $0.146/min against $0.254. Publish to listen, republish 6 to undo |
+| 6 | **published** | v14 — one-sentence greeting, on top of 5 |
+| 5 | superseded | v13 — `eleven_v4_turbo`, interruption 0.15, background-speech filter on, PII removal off |
+| 4 | superseded | v12 prompt + `eleven_v3_conversational` — the setup that failed on 9 Nov |
+| 3 | superseded | v12 on `eleven_v3` |
+| 2 / 1 / 0 | superseded | v11 / v10 / v9 |
+
+Roll back with `POST /publish-agent-version/{agent_id}` and `{"version": N}`.
+
 ## 3. Prompt, version 12 (in Retell since 9 Nov 2026)
 
 v10 changed three lines in SENDING DETAILS and the silence timer, because feature
@@ -177,11 +246,13 @@ and lowered interruption sensitivity to 0.4 (see §1 and §2).
 
 Set Retell → agent → **Language: Multilingual**.
 
-**Begin message:** `Assalam-o-Alaikum {{parent_name}}! Welcome to Al-Noor Public School admissions. You can speak in English or Urdu. How can I help you today?`
+**Begin message (agent version 6):** `Assalam-o-Alaikum {{parent_name}}, welcome to Al-Noor Public School admissions, and you can speak in English or Urdu, so how may I help you today?`
+
+One sentence on purpose. The four-sentence version it replaced took 7.5 seconds to say, because Retell leaves about a second of silence at every sentence boundary (see §2).
 
 The website passes `parent_name`, `parent_phone` and `parent_email` as dynamic variables — the parent types them on a short form before the call (feature 011), so the assistant never asks for or mishears them.
 
-**Model:** gpt-4.1-mini (was gpt-6-astra: typical reply 2 s, up to 8 s). **Max call:** 10 minutes. **Voice:** 11labs-Monika, model `eleven_v3_conversational` (was `eleven_v3` until agent version 4), voice temperature 0.3. **Summary model:** gpt-4.1-mini. **Hang up after silence:** 60 s (was 30 until v10).
+**Model:** gpt-4.1-mini (was gpt-6-astra: typical reply 2 s, up to 8 s). **Max call:** 10 minutes. **Voice:** 11labs-Monika, model `eleven_v4_turbo` since agent version 5 (was `eleven_v3_conversational` in v4, `eleven_v3` before), voice temperature 0.3. **Summary model:** gpt-4.1-mini. **Hang up after silence:** 60 s (was 30 until v10).
 
 **New tool `send_details`:** POST `https://alnoor-school-admissions.vercel.app/api/send-details`, header `X-Agent-Secret`, args only OFF, speak during execution OFF since v12 (it said "One moment, I'm sending that to your email." and then the prompt's own sending line, so she said it twice once the route began answering instantly). Parameters: `topics` (array of fees / documents / process / dates / form), optional `class_wanted` (the class being discussed, as named in the content) and optional `answers` (short written answers from the school content). `save_lead` now saves silently (speak after execution OFF).
 

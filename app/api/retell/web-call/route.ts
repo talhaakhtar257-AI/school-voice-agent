@@ -6,20 +6,33 @@
  * specs/005-voice-landing-page/research.md D-001. This route only checks
  * whether a call should be allowed to start: published content exists, the
  * public key and agent id are configured, and the visitor is within the two
- * hard usage limits. It never talks to Retell itself.
+ * hard usage limits. It never talks to Retell itself. It also hands the
+ * browser the school brief to pass to the assistant (see GateAnswer below).
  *
  * Test with curl:
  *
  *   # nothing published, or not configured, or capped -> a { "reason": ... }
  *   curl -s -X POST http://localhost:3000/api/retell/web-call | jq
  *
- *   # otherwise -> { "ok": true }
+ *   # otherwise -> { "ok": true, "maxCallSeconds": 600, "schoolBrief": "## School…" }
+ *   curl -s -X POST http://localhost:3000/api/retell/web-call | jq '{ok, maxCallSeconds, briefChars: (.schoolBrief|length)}'
  */
 import { NextResponse, type NextRequest } from "next/server";
 import { readCachedBrief } from "@/lib/content/brief-cache";
 import { checkAndReserve, getVisitorId, setVisitorCookie } from "@/lib/voice/limits";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * What the browser gets back. `schoolBrief` is the agent's whole school brief,
+ * handed over before the call so the assistant already knows the school when
+ * she greets the parent. She used to fetch it mid-call with
+ * `get_school_content`, which put two model round-trips and a tool call in
+ * front of her very first answer — measured at over 5 seconds on the 9 Nov
+ * call, by which point the parent had hung up. The brief is already cached for
+ * the emptiness check below, so sending it costs nothing extra.
+ */
+type GateAnswer = { ok: true; maxCallSeconds: number; schoolBrief: string } | { reason: string };
 
 function methodNotAllowed() {
   return NextResponse.json({ error: "method not allowed" }, { status: 405 });
@@ -47,7 +60,7 @@ export async function POST(request: NextRequest) {
 
   const visitorId = getVisitorId(request);
 
-  function respond(body: { ok: true; maxCallSeconds: number } | { reason: string }) {
+  function respond(body: GateAnswer) {
     const response = NextResponse.json(body);
     setVisitorCookie(response, visitorId);
     return response;
@@ -81,6 +94,7 @@ export async function POST(request: NextRequest) {
     return respond({
       ok: true,
       maxCallSeconds: Number(process.env.VOICE_MAX_CALL_SECONDS),
+      schoolBrief: brief.brief,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown";

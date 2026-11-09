@@ -190,7 +190,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     setReconnecting(false);
     setPhase("connecting");
 
-    let gate: { ok: true; maxCallSeconds: number } | { reason: string };
+    let gate: { ok: true; maxCallSeconds: number; schoolBrief: string } | { reason: string };
     try {
       const res = await fetch("/api/retell/web-call", { method: "POST" });
       gate = await res.json();
@@ -204,6 +204,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       finish(FALLBACK_MESSAGES[gate.reason] ?? s.assistantUnavailable);
       return;
     }
+    // Pulled out of `gate` before the closure below, so the narrowing survives.
+    const { maxCallSeconds: grantedSeconds, schoolBrief } = gate;
 
     const publicKey = process.env.NEXT_PUBLIC_RETELL_PUBLIC_KEY;
     const agentId = process.env.NEXT_PUBLIC_RETELL_AGENT_ID;
@@ -243,11 +245,18 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         agent_id: agentId,
         transcript: true,
         // The typed details, so the assistant greets the parent by name and
-        // never asks for (or mishears) the name, phone or email.
+        // never asks for (or mishears) the name, phone or email — plus the
+        // school's whole brief, so she already knows the fees, classes and
+        // dates when she says hello. Before this she fetched the brief with
+        // `get_school_content` during the call, which put two model
+        // round-trips and a tool call in front of her first answer: on the
+        // 9 Nov call the parent spoke at 7.8s and her reply had still not
+        // begun at 10.6s, when the call ended.
         retell_llm_dynamic_variables: {
           parent_name: details.name,
           parent_phone: details.phone,
           parent_email: details.email,
+          school_brief: schoolBrief,
         },
         hooks: {
           onStatus: (status) => {
@@ -347,7 +356,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     };
 
     connect(0);
-    setMaxSeconds(gate.maxCallSeconds);
+    setMaxSeconds(grantedSeconds);
 
     // Per-call length: a UX pacing timer, not the security boundary (that is
     // the server-side monthly reservation the gate route already applied).
@@ -356,7 +365,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       attemptRef.current += 1;
       void sessionRef.current?.end();
       finish(s.callTimeUp);
-    }, gate.maxCallSeconds * 1000);
+    }, grantedSeconds * 1000);
   }, [finish, clearThinking, publishTranscript]);
 
   const endCall = useCallback(async () => {
