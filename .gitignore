@@ -11,3 +11,6 @@ next-env.d.ts
 
 # logs (e.g. a stray Chrome debug.log)
 *.log
+
+# Obsidian vault settings — personal, and its workspace file changes on every open
+.obsidian/
