@@ -118,7 +118,7 @@ using `RETELL_API_KEY` in Vercel.
 | End call on silence | **60 seconds** (`end_call_after_silence_ms: 60000`) | A parent fetching a family member or a document goes quiet; a short timer hangs up on them (a 21 Sept test call ended with "inactivity" while the parent went to call his sister). Decided then, recorded here, and not actually applied to any agent until prompt v10 on 3 Nov 2026 |
 | Begin message (greeting) | The STEP 1 line from the prompt | This field is separate from the prompt; if it still holds an old greeting, the agent opens with that |
 | Voice | Monika on **`eleven_v4_turbo`** since agent version 5 (9 Nov 2026); was `eleven_v3_conversational` (v4), `eleven_v3` (v0-v3) | On the 3 Nov call 14 of 16 pauses had no tool call and sat at 2.3s, and the voice starting (~600ms) was the largest piece. v3 Conversational is the same v3 family judged right for Urdu, built for real-time talk, and $0.080/min against $0.100. Flash v2.5 and Multilingual v2 are ruled out: neither supports Urdu. Roll back to agent version 3 if the Urdu sounds wrong |
-| Speech recognition (`stt_mode`) | **fast** | Names are typed on the pre-call form now, so the slower "accurate" mode is no longer worth its delay (25 Sept 2026, after testers reported freezing on phones) |
+| Speech recognition (`stt_mode`) | **accurate** since agent version 11 | **This reverses the 25 Sept 2026 decision, so read the old reasoning before changing it back.** It was set to `fast` then because names are typed on the pre-call form and testers had reported freezing on phones with `accurate`. On the 9 Nov 22:00 call `fast` mangled mixed Urdu and English badly enough to break the conversation: the owner's speech came back as the fragments "School?" and "ہاں۔ One more thing, the admission—", the assistant answered the mangled text, and the owner read that as hallucination. A wrong answer is worse than a slow one. The phone freezing it was blamed for in September is now believed to have been the transcript re-rendering many times a second in `call-provider.tsx`, fixed separately on 9 Nov — but that is a belief, not a measurement, so **if a phone hangs again, put this back to `fast` first** and say so here |
 | Noise filter (`denoising_mode`) | **noise-and-background-speech-cancellation** since agent version 5; was `noise-cancellation` | The heavier "noise and background speech" filter added processing to every word. Reconsidered and deliberately kept off in v12: it would remove other voices in the room, but Retell's background-noise guide warns it can clip quiet or short replies and reduce non-English accuracy, costs +$0.005/min, and a short Urdu "جی جی" going unanswered is what caused the 28-second silence on 3 Nov. Test it on its own before switching |
 | Interruption sensitivity | **0.15** since agent version 5 (was 0.4 in v12, 0.6 before) | On the 8 Nov call background sound cut her off after one word, twice, and her greeting never registered. Retell's guide: lower it when background sound causes interruptions. Her replies are one or two short sentences, so being harder to interrupt costs a parent little |
 | Knowledge base | Off | Content comes from `get_school_content` |
@@ -278,7 +278,8 @@ Endpoints also move: agent and call list endpoints are now
 
 | Version | State | What it is |
 |---|---|---|
-| 10 | **live** | What a call actually uses. An exact clone of 8 — `eleven_v4_turbo`, interruption 0.15, background-speech filter on, PII off, one-sentence greeting, `{{school_brief}}` preloaded — created and published only because draft 9 sat above 8 and was therefore silently on air. Confirmed live by reading `agent_version` back off a real web call. **Keep this the highest version** |
+| 11 | **live** | v16 — `stt_mode: accurate` and the 16-word greeting. Published 9 Nov 2026 after the owner's first real mobile call: `fast` speech recognition had mangled mixed Urdu and English into fragments she then answered, and the 23-word greeting took 7.68s to say. Everything else is version 10 unchanged |
+| 10 | superseded | What a call actually uses. An exact clone of 8 — `eleven_v4_turbo`, interruption 0.15, background-speech filter on, PII off, one-sentence greeting, `{{school_brief}}` preloaded — created and published only because draft 9 sat above 8 and was therefore silently on air. Confirmed live by reading `agent_version` back off a real web call. Superseded by 11 |
 | 9 | recipe only | The cheap-voice A/B: identical to 10 except `openai-Coral` / `gpt-4o-mini-tts`, about $0.092/min against $0.157. It is *below* 10, so publishing it does nothing. To hear it, clone 10, patch the two voice fields, publish the clone |
 | 8 | superseded |  **v15** — the school brief preloaded as `{{school_brief}}`, no mid-call `get_school_content`. Published 9 Nov 2026 once commit 28aafd1 was live on Vercel and the gate route was confirmed returning 5,487 characters of brief. The prompt still falls back to `get_school_content` if the section arrives empty or unrendered |
 | 7 | obsolete | The first attempt at the cheap-voice comparison. Branched from 6, so it carries the old prompt that fetches the brief mid-call — publishing it would have changed the voice *and* undone the speed fix at the same time. Replaced by 9 |
@@ -328,7 +329,16 @@ the old behaviour instead of to a confident wrong answer.
 
 Set Retell → agent → **Language: Multilingual**.
 
-**Begin message (unchanged since agent version 6):** `Assalam-o-Alaikum {{parent_name}}, welcome to Al-Noor Public School admissions, and you can speak in English or Urdu, so how may I help you today?`
+**Begin message (agent version 11):** `Assalam-o-Alaikum {{parent_name}}, welcome to Al-Noor Public School admissions, English or Urdu, how can I help you?`
+
+Still one sentence, and now 16 words instead of 23. The version-6 wording —
+`...admissions, and you can speak in English or Urdu, so how may I help you
+today?` — measured **7.68 seconds of speech** on the 9 Nov 22:00 call (word
+timings 0.25s to 7.93s). That is not a gap or a fault: it is simply how long 23
+words take to say. But a parent who does not know they may interrupt waits for
+all of it before speaking, which is why the call felt slow to start even after
+the sentence-gap fix. The school's full name is kept on purpose; the words cut
+are the ones carrying no information.
 
 One sentence on purpose. The four-sentence version it replaced took 7.5 seconds to say, because Retell leaves about a second of silence at every sentence boundary (see §2).
 
