@@ -58,9 +58,11 @@ Diagnosed three independent faults from the Retell API plus a live Chrome test c
   the parent spoke at 7.8s and the reply had still not begun at 10.6s when the
   call ended: two model round-trips plus `get_school_content` in front of the
   first word.
-  Also corrected the cost record: the real price is **$0.263/min, not $0.18**,
-  because every line bills at **1.667× Retell's list price**. The 9 Nov switch
-  to v3 Conversational was recorded as $0.080/min but bills at $0.1333/min.
+  Also revisited the cost record. **⚠️ The cost claim in this PHR is wrong and
+  is corrected in PHR 0083:** `unit_price` in `call_cost.product_costs` is cents
+  per *second*, not dollars per minute, so there is no 1.667× markup — every
+  line bills at Retell's list price and the live rate is **$0.157/min**. The
+  9 Nov switch to v3 Conversational did save money after all.
   Audio delivery and the microphone were ruled out by measuring WebRTC
   inbound-rtp levels in the browser: her voice arrives at full level.
 - 🧪 Tests: build, type check and lint all pass; two live production calls

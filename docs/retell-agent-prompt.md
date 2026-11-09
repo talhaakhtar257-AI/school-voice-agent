@@ -131,32 +131,56 @@ version; the Test button uses the draft.
 
 ### What a call actually costs, and why the voice is half of it (9 Nov 2026)
 
-Every line on this account is billed at **1.667x Retell’s published list price**.
-Read the list price, multiply by 1.667, and that is the bill. Measured from
-`call_cost.product_costs` on real calls, not from the pricing page:
+Every line bills at **Retell's published list price**. There is no markup on this
+account. An earlier version of this section claimed a 1.667x multiplier — that
+was a unit mistake, corrected here, and the method matters more than the number:
 
-| Line | List | Billed here |
+**`unit_price` in `call_cost.product_costs` is cents per *second*, not dollars
+per minute.** A line's cost is `unit_price x billed_seconds`, in cents. To read a
+rate per minute, multiply `unit_price` by 0.6. ElevenLabs v4 Turbo reports
+`unit_price: 0.1333333`, which is $0.08/min — exactly list — not $0.1333/min.
+The same call's `total_duration_unit_price: 0.2619393` is the blended all-in
+rate: **$0.157/min**.
+
+| Line | $/min | On the live version 8? |
 |---|---|---|
-| Retell voice engine | $0.055 | $0.0917 |
-| ElevenLabs v3 | $0.100 | $0.1667 |
-| ElevenLabs v3 Conversational | $0.080 | $0.1333 |
-| ElevenLabs v4 Turbo | $0.080 | $0.1333 |
-| OpenAI / Fish / MiniMax / Cartesia / Inworld voices | $0.015 | $0.025 |
-| gpt-4.1-mini | $0.0128 | $0.0213 |
-| PII removal | $0.010 | $0.0167 |
-| Background voice cancellation | $0.005 | $0.0083 |
+| Retell voice engine | $0.055 | yes, unavoidable |
+| ElevenLabs v4 Turbo | $0.080 | **yes — 51% of the bill** |
+| ElevenLabs v3 Conversational | $0.080 | no (was version 4) |
+| ElevenLabs v3 | $0.100 | no (was versions 0–3) |
+| OpenAI / Fish Audio voices | $0.015 | no — the cheap Urdu tier, version 9 |
+| MiniMax / Cartesia / Inworld voices | $0.015 | no, and they cannot speak Urdu |
+| gpt-4.1-mini | $0.0128 | yes — only 8% of the bill |
+| LLM token surcharge | ~$0.004, varies | yes |
+| Background voice cancellation | $0.005 | yes, since version 5 |
+| PII removal | $0.010 | no, off since version 5 |
 
-So the 9 Nov move to v3 Conversational did **not** save money: $0.1333/min
-against v3’s $0.1667 is a real saving, but the note claiming $0.080 was the
-list price, not the bill. Total per minute on agent version 4 was **$0.263**,
-not the $0.18 in CLAUDE.local.md.
+Measured from `call_cost` on real calls, which is the only trustworthy source —
+never the pricing page, and never a remembered figure:
 
-The voice is **half the bill**. Only three providers on Retell support Urdu:
-ElevenLabs, OpenAI and Fish Audio. MiniMax, Cartesia and Inworld do not, so the
-cheap tier that can speak Urdu is OpenAI or Fish at $0.025/min billed — which
-would take a call from $0.254 to about $0.146/min. Agent version 7 is a
-standing draft with OpenAI Coral for exactly that comparison; it is an ears
-decision, never a spreadsheet one.
+| Config | Measured |
+|---|---|
+| versions 0–1, ElevenLabs v3 + PII on | $0.184 and $0.180/min |
+| version 4, v3 Conversational + PII on | $0.158 and $0.157/min |
+| versions 5–8, v4 Turbo, PII off, noise filter on | **$0.157/min** |
+| version 9, OpenAI Coral, same everything else | **~$0.092/min**, not yet called |
+
+Two corrections follow from this. The 9 Nov move to v3 Conversational **did**
+save money, $0.080 against v3's $0.100 — it was never a regression. And the
+$0.18/min in CLAUDE.local.md was right for the ElevenLabs v3 setup it was
+written against; the live setup is $0.157/min.
+
+The voice is still **half the bill**, so it is the only line worth arguing about.
+Only three providers on Retell speak Urdu — ElevenLabs, OpenAI and Fish Audio —
+so the cheap tier that can speak Urdu is OpenAI or Fish at $0.015/min, which
+takes a call from $0.157 to about **$0.092/min, a 41% cut**. Agent version 9 is a
+standing draft with OpenAI Coral for exactly that comparison, identical to the
+live version in every other respect. It is an ears decision, never a
+spreadsheet one.
+
+On the $10 trial credit: $1.74 spent over 9.9 minutes across 6 billed calls,
+leaving about **$8.26 — roughly 52 minutes** on the live voice, or 89 minutes on
+the cheap one.
 
 ### Retell speaks one sentence at a time, with ~1s of silence between each
 
@@ -195,8 +219,18 @@ dashboard hides this by making a new version for you; a script has to ask:
 2. `PATCH /update-agent/{agent_id}?version=<new>` with the changes
 3. `POST /publish-agent-version/{agent_id}` with `{"version": <new>}`
 
-`GET /list-agent-versions/{agent_id}` lists versions, each with `version`,
-`base_version`, `is_published` and `version_title`.
+`GET /list-agent-versions/{agent_id}` lists versions. The older
+`GET /get-agent-versions/{agent_id}` now answers `400 Deprecated API usage is no
+longer supported`. The listing is a summary: `version`, `base_version`,
+`is_published` and `version_title`, but **not** the voice, the LLM version or the
+noise settings — read those per version with `GET /get-agent/{id}?version=N`.
+
+Two traps in that listing. `is_published` is sticky: it stays `true` on every
+version that was ever published, so six rows read `true` at once and only
+`GET /get-agent/{id}` without a version says which one is actually live. And
+`version_title` is the one field a published version will still accept from
+`PATCH /update-agent`, which is the only way to correct a title that says DRAFT
+after the version went live.
 
 **Model settings go in `model_config` only.** `model`, `model_temperature`,
 `model_high_priority`, `model_ultrafast`, `s2s_model`, `model_choice` and
@@ -216,8 +250,9 @@ Endpoints also move: agent and call list endpoints are now
 
 | Version | State | What it is |
 |---|---|---|
+| 9 | draft | The cheap-voice A/B. An exact clone of the live 8 — same prompt, same LLM version, same noise and interruption settings — with only the voice changed to `openai-Coral` / `gpt-4o-mini-tts`: about $0.092/min against $0.157. Publish it to hear the cheap voice, republish 8 to undo. This is the fair comparison; 7 was not |
 | 8 | **published** | **v15** — the school brief preloaded as `{{school_brief}}`, no mid-call `get_school_content`. Published 9 Nov 2026 once commit 28aafd1 was live on Vercel and the gate route was confirmed returning 5,487 characters of brief. The prompt still falls back to `get_school_content` if the section arrives empty or unrendered |
-| 7 | draft | Cheap-voice comparison: OpenAI Coral, about $0.146/min against $0.254. Publish to listen, republish 6 to undo |
+| 7 | obsolete | The first attempt at the cheap-voice comparison. Branched from 6, so it carries the old prompt that fetches the brief mid-call — publishing it would have changed the voice *and* undone the speed fix at the same time. Replaced by 9 |
 | 6 | superseded | v14 — one-sentence greeting, on top of 5. **Roll back here** if preloading the brief misbehaves |
 | 5 | superseded | v13 — `eleven_v4_turbo`, interruption 0.15, background-speech filter on, PII removal off |
 | 4 | superseded | v12 prompt + `eleven_v3_conversational` — the setup that failed on 9 Nov |
