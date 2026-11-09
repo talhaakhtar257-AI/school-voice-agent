@@ -51,12 +51,6 @@ const CONNECT_RETRY_DELAYS_MS = [1000, 2500];
 // reported the assistant "thinking more". 1500ms restores the old on-screen
 // timing; a reply slower than normal still shows it.
 const THINKING_AFTER_MS = 1500;
-/**
- * How long her words may wait for her voice before going on screen anyway.
- * Short enough that a parent never waits for text she has clearly said, long
- * enough to cover the ~600ms head start the model's stream has on the audio.
- */
-const HOLD_UNSPOKEN_MS = 400;
 
 type CallContextValue = {
   phase: CallPhase;
@@ -112,35 +106,36 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
   const sessionRef = useRef<WebCallSession | null>(null);
   /**
-   * Retell streams the assistant's words from the model, which finishes well
-   * before her voice starts — measured at about 600ms on a 3 Nov 2026 test
-   * call. Showing them straight away put the whole sentence on screen while she
-   * was still halfway through saying it, so she read as slow and broken even
-   * when she was not. So her newest words wait briefly for her voice:
-   *   allTurnsRef     every turn Retell has sent us
-   *   agentAudibleRef is her voice playing right now
-   *   holdUntilRef    the moment her unspoken words go on screen regardless
+   * Every turn Retell has sent us, and whether her voice is playing right now.
    *
-   * This used to hold turns back by *counting* them: remember how many of her
-   * turns had been spoken, and show only that many. Two things in the 9 Nov
-   * 22:00 call broke that. Retell split one of her sentences into two turns
-   * either side of the parent's interruption, and it sent them out of order —
-   * turn 4 began at 19.71s, before turn 3 at 19.82s. A count means "the first
-   * N of her turns", so on a reordered list it points at the wrong ones. Worse,
-   * if `agent_start_talking` never arrived for an utterance the count never
-   * rose and her words stayed hidden *for the rest of the call*, which is what
-   * the owner reported as her questions never reaching the conversation box.
+   * There used to be a third thing here: her newest words were held back until
+   * her audio began, so the parent never read a sentence she had not started
+   * saying. It cost two user-visible bugs in two days and is now gone.
    *
-   * The rule is now a deadline, and it fails open: her unspoken words appear
-   * when her voice starts **or** when HOLD_UNSPOKEN_MS elapses, whichever
-   * comes first. A missing event can therefore cost 400ms of early text, never
-   * a lost line.
+   * First it held turns back by *counting* them, which the 9 Nov 22:00 call
+   * broke by splitting one of her sentences either side of an interruption and
+   * sending the halves out of order; a count means "the first N turns", so on a
+   * reordered list it selects the wrong ones, and a missing
+   * `agent_start_talking` hid her words for the rest of the call. Replacing the
+   * count with a deadline fixed that and introduced the next one: Retell grows
+   * her reply by extending the *same* turn, so a last chunk lands just after
+   * `agent_stop_talking` and the hold re-applied to the turn she had just
+   * finished saying. Her words appeared, vanished and came back, and with the
+   * parent's line now last, "thinking…" armed over her own voice.
+   *
+   * Any such scheme has to name the turns it is withholding, and position is
+   * the only name Retell gives us — while it inserts turns in the middle
+   * (call_6f3cf8f5cd5d3b89b2f8050b41b: a parent turn timed at 67.48s sits
+   * between her turns at 67.54s and 71.30s), which shifts every position after
+   * it. So the transcript now shows every turn it is given, always. The cost is
+   * that her words can lead her voice by the ~600ms the model's stream runs
+   * ahead; the benefit is that a line on screen can never move or vanish,
+   * which is what the parent actually needs. Interruptions had been reported
+   * twice; the early text had been reported never.
    */
   const allTurnsRef = useRef<Turn[]>([]);
   const agentAudibleRef = useRef(false);
-  const holdUntilRef = useRef(0);
-  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /** The last list actually handed to React, so identical updates re-render nothing. */
+  /** The last list handed to React, so identical updates re-render nothing. */
   const publishedKeyRef = useRef("");
   /** The parent's words as last seen, so only *their* speech restarts the thinking clock. */
   const lastParentWordsRef = useRef("");
@@ -154,12 +149,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const stopTimers = useCallback(() => {
     if (limitTimerRef.current) clearTimeout(limitTimerRef.current);
     if (tickRef.current) clearInterval(tickRef.current);
-    // Without this, a pending release could publish a transcript after the
-    // call has finished and put her words back on an ended call's screen.
-    if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
     limitTimerRef.current = null;
     tickRef.current = null;
-    holdTimerRef.current = null;
   }, []);
 
   const clearThinking = useCallback(() => {
@@ -169,26 +160,15 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /**
-   * Put on screen every turn the parent is allowed to read. Everything is
-   * readable except a run of her turns at the very end that she has not begun
-   * saying and whose hold has not expired — never anything in the middle, so a
-   * line already on screen can never vanish.
-   *
-   * The screen is only updated when the visible words actually changed.
-   * `onTranscript` fires many times a second while either of them is speaking,
-   * and each call used to hand React a brand-new array, re-rendering the whole
-   * conversation every time — including the many updates that only carried her
-   * words while they were still held back, which changed nothing on screen.
-   * That is the hanging the owner reported on an Android phone (9 Nov 2026).
+   * Put the whole conversation on screen, but only touch React when the words
+   * actually changed. `onTranscript` fires many times a second while either of
+   * them is speaking, and handing React a brand-new array every time
+   * re-rendered the entire conversation — the hanging the owner reported on an
+   * Android phone (9 Nov 2026). Returns the list so the caller can decide about
+   * the thinking indicator.
    */
   const publishTranscript = useCallback(() => {
-    const all = allTurnsRef.current;
-    let visible = all;
-    if (!agentAudibleRef.current && Date.now() < holdUntilRef.current) {
-      let end = all.length;
-      while (end > 0 && all[end - 1]?.role === "agent") end -= 1;
-      visible = all.slice(0, end);
-    }
+    const visible = allTurnsRef.current;
     const key = visible.map((turn) => turn.role + ":" + turn.content).join("\u0000");
     if (key !== publishedKeyRef.current) {
       publishedKeyRef.current = key;
@@ -196,19 +176,6 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     }
     return visible;
   }, []);
-
-  /**
-   * Let her unspoken words through when the hold expires, so the deadline is a
-   * real one even if no further transcript update arrives to trigger a publish.
-   */
-  const scheduleHoldRelease = useCallback(() => {
-    if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
-    const wait = Math.max(0, holdUntilRef.current - Date.now());
-    holdTimerRef.current = setTimeout(() => {
-      holdTimerRef.current = null;
-      publishTranscript();
-    }, wait);
-  }, [publishTranscript]);
 
   const finish = useCallback(
     (message: Bilingual | null) => {
@@ -231,7 +198,6 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     setTranscript([]);
     allTurnsRef.current = [];
     agentAudibleRef.current = false;
-    holdUntilRef.current = 0;
     publishedKeyRef.current = "";
     lastParentWordsRef.current = "";
     setElapsedSeconds(0);
@@ -333,7 +299,6 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
             if (!current()) return;
             // Her voice is playing, so whatever she has said so far may be read.
             agentAudibleRef.current = true;
-            holdUntilRef.current = 0;
             publishTranscript();
             clearThinking();
             setPhase("speaking");
@@ -341,9 +306,6 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
           onAgentStopTalking: () => {
             if (!current()) return;
             agentAudibleRef.current = false;
-            // A last chunk of text can land after the audio ends; she has
-            // certainly said it by now, so release everything we hold.
-            holdUntilRef.current = 0;
             publishTranscript();
             setPhase("listening");
           },
@@ -358,15 +320,6 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
               )
               .map((u) => ({ role: u.role, content: u.content }));
             allTurnsRef.current = turns;
-            // Text arriving while she is already speaking is hers to show now.
-            // Text arriving ahead of her voice waits — but only until the
-            // deadline, so it cannot be stranded by a missing audio event.
-            if (agentAudibleRef.current) {
-              holdUntilRef.current = 0;
-            } else if (turns.at(-1)?.role === "agent" && holdUntilRef.current <= Date.now()) {
-              holdUntilRef.current = Date.now() + HOLD_UNSPOKEN_MS;
-              scheduleHoldRelease();
-            }
             const visible = publishTranscript();
             // The parent has spoken and nothing has come back yet: after a
             // quiet moment, show that the assistant is working on it.
@@ -383,8 +336,13 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
             if (parentWords !== lastParentWordsRef.current) {
               lastParentWordsRef.current = parentWords;
               clearThinking();
-              if (visible.at(-1)?.role === "user") {
-                thinkingTimerRef.current = setTimeout(() => setThinking(true), THINKING_AFTER_MS);
+              if (visible.at(-1)?.role === "user" && !agentAudibleRef.current) {
+                thinkingTimerRef.current = setTimeout(() => {
+                  // Re-checked on firing: she may have started speaking during
+                  // the wait, and "thinking…" over her own voice is the worst
+                  // version of this indicator.
+                  if (!agentAudibleRef.current) setThinking(true);
+                }, THINKING_AFTER_MS);
               }
             }
           },
@@ -420,7 +378,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       void sessionRef.current?.end();
       finish(s.callTimeUp);
     }, grantedSeconds * 1000);
-  }, [finish, clearThinking, publishTranscript, scheduleHoldRelease]);
+  }, [finish, clearThinking, publishTranscript]);
 
   const endCall = useCallback(async () => {
     attemptRef.current += 1;
