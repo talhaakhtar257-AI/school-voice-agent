@@ -294,7 +294,7 @@ to a new highest version and publish that:
 `POST /publish-agent-version/{agent_id}` with the new number — then confirm with
 a throwaway web call as described in §2.
 
-## 3. Prompt, version 12 (in Retell since 9 Nov 2026)
+## 3. Prompt, version 15 (in Retell since 9 Nov 2026)
 
 v10 changed three lines in SENDING DETAILS and the silence timer, because feature
 013 made `send_details` answer before the email leaves.
@@ -312,9 +312,23 @@ time. The v11 wording told her to answer "something you did not catch", which
 in a noisy room means answering the room. v12 also turned off the tool fillers
 and lowered interruption sensitivity to 0.4 (see §1 and §2).
 
+v13 and v14 changed no prompt text — they were the voice, noise and greeting
+changes recorded in §2 and the version table.
+
+v15 replaced the mid-call content fetch with a brief handed over before the call
+starts. "FIRST ACTION OF EVERY CALL" told her to call `get_school_content`
+before her first word, which on the 9 Nov call put two model round-trips and a
+tool call in front of her first answer: the parent spoke at 7.8s and the reply
+had still not begun at 10.6s, when the call ended. That section is gone,
+replaced by "THE SCHOOL INFORMATION YOU ALREADY HAVE", which reads the whole
+brief out of the `{{school_brief}}` dynamic variable the website now sends (see
+`app/api/retell/web-call/route.ts`). `get_school_content` survives as a fallback
+for the case where the variable arrives empty, so a failed hand-over degrades to
+the old behaviour instead of to a confident wrong answer.
+
 Set Retell → agent → **Language: Multilingual**.
 
-**Begin message (agent version 6):** `Assalam-o-Alaikum {{parent_name}}, welcome to Al-Noor Public School admissions, and you can speak in English or Urdu, so how may I help you today?`
+**Begin message (unchanged since agent version 6):** `Assalam-o-Alaikum {{parent_name}}, welcome to Al-Noor Public School admissions, and you can speak in English or Urdu, so how may I help you today?`
 
 One sentence on purpose. The four-sentence version it replaced took 7.5 seconds to say, because Retell leaves about a second of silence at every sentence boundary (see §2).
 
@@ -372,10 +386,11 @@ Every example below comes as a pair. Use ONLY the one that matches the language 
 - For the child — English: "your child" until the parent tells you, then "son" / "daughter". Urdu: "آپ کا بچہ" until the parent tells you, then "بیٹا" / "بیٹی" as the parent does.
 - If the parent corrects you, apologise once briefly and use the correction for the rest of the call.
 
-## FIRST ACTION OF EVERY CALL — not optional
-Call get_school_content BEFORE your first answer. Everything you say about this school must come from what it returns: classes, fees, age ranges, admission dates, office hours, school timings, programs, admission process, required documents, FAQs, the "knowledge" documents, the downloadable forms, and the topics that must go to the office.
-You have NO knowledge of this school other than that result. Never answer a fee, class, age, date, document, timing or process question from memory or a guess.
-Call it once per call and keep the result in mind.
+## THE SCHOOL INFORMATION YOU ALREADY HAVE — not optional
+The school’s live information is in SCHOOL CONTENT at the very end of this prompt. You already have it before the call begins. Do NOT call get_school_content at the start of a call and never make the parent wait for it.
+Everything you say about this school must come from SCHOOL CONTENT: classes, fees, age ranges, admission dates, office hours, school timings, programs, admission process, required documents, FAQs, the "knowledge" documents, the downloadable forms, and the topics that must go to the office.
+You have NO knowledge of this school other than SCHOOL CONTENT. Never answer a fee, class, age, date, document, timing or process question from memory or a guess.
+ONLY if the SCHOOL CONTENT section at the end is empty, missing, or still shows the words school_brief in braces, call get_school_content once before answering, and keep its result in mind for the rest of the call.
 
 ## How to talk
 - One or two short sentences at a time. This is a phone call.
@@ -423,6 +438,9 @@ Answer whatever they ask, then return to the step you were on.
 - Never offer, suggest or agree to a discount, concession or scholarship. Those go to the office.
 - Never ask for or accept CNIC or B-Form numbers. If a parent starts reading one, stop them politely.
 - Never invent a class name, fee, date, document or rule that is not in the content.
+
+## SCHOOL CONTENT — the school’s live admission information
+{{school_brief}}
 ```
 
 ---
