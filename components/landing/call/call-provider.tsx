@@ -44,6 +44,14 @@ const FALLBACK_MESSAGES: Record<string, Bilingual> = {
 // another full call's minutes each time.
 const CONNECT_RETRY_DELAYS_MS = [1000, 2500];
 
+// How long the parent has been waiting before "thinking…" appears. It was 900ms
+// while the indicator cleared as soon as her reply's *text* arrived. Since her
+// words are held until her *voice* starts — about 600ms later — the same 900ms
+// kept the indicator up roughly 600ms longer on every turn, and the owner
+// reported the assistant "thinking more". 1500ms restores the old on-screen
+// timing; a reply slower than normal still shows it.
+const THINKING_AFTER_MS = 1500;
+
 type CallContextValue = {
   phase: CallPhase;
   muted: boolean;
@@ -112,6 +120,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const allTurnsRef = useRef<Turn[]>([]);
   const agentAudibleRef = useRef(false);
   const releasedAgentTurnsRef = useRef(0);
+  /** The parent's words as last seen, so only *their* speech restarts the thinking clock. */
+  const lastParentWordsRef = useRef("");
   const thinkingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const limitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -173,6 +183,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     allTurnsRef.current = [];
     agentAudibleRef.current = false;
     releasedAgentTurnsRef.current = 0;
+    lastParentWordsRef.current = "";
     setElapsedSeconds(0);
     setMaxSeconds(null);
     setCallId(null);
@@ -295,12 +306,23 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
             }
             const visible = publishTranscript();
             // The parent has spoken and nothing has come back yet: after a
-            // short quiet moment, show that the assistant is working on it.
-            // Judged on what the parent can see, so the indicator stays up
-            // while her words are still held back.
-            clearThinking();
-            if (visible.at(-1)?.role === "user") {
-              thinkingTimerRef.current = setTimeout(() => setThinking(true), 900);
+            // quiet moment, show that the assistant is working on it.
+            //
+            // Only the parent's own words restart that clock. Her reply streams
+            // in as many small updates while it is held back for her voice, and
+            // each one used to switch the indicator off and start it again — so
+            // "thinking…" flickered on every turn, which the owner saw as the
+            // assistant stuttering (reported 9 Nov 2026).
+            const parentWords = turns
+              .filter((t) => t.role === "user")
+              .map((t) => t.content)
+              .join("\n");
+            if (parentWords !== lastParentWordsRef.current) {
+              lastParentWordsRef.current = parentWords;
+              clearThinking();
+              if (visible.at(-1)?.role === "user") {
+                thinkingTimerRef.current = setTimeout(() => setThinking(true), THINKING_AFTER_MS);
+              }
             }
           },
           onEnd: () => {
