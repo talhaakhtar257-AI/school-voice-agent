@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmail } from "./send";
+import { emailConfigured, sendEmail } from "./send";
 import { INFO_TOPICS, type InfoTopic } from "./info-pack";
 import { parentMail, readLead, recordFailure } from "./send-summaries";
 
@@ -38,6 +38,21 @@ export type DetailsPlan =
  * the office number and the cause is logged.
  */
 export async function planDetailsSend(retellCallId: string): Promise<DetailsPlan> {
+  // Checked before anything else, and deliberately returning "error" rather
+  // than "no-email": with no provider key the delivery in after() cannot
+  // possibly succeed, but the route has already answered the agent by then and
+  // the agent has already told the parent the email is on its way. Without
+  // this, a deployment missing BREVO_API_KEY or RESEND_API_KEY makes the
+  // assistant promise an email that never leaves — a false statement to a
+  // parent, which Constitution I forbids. "error" is the branch whose wording
+  // apologises and offers the office number instead.
+  if (!emailConfigured()) {
+    console.error(
+      `[email] send_details asked for, but no email provider is configured @ ${new Date().toISOString()}`,
+    );
+    return { state: "error" };
+  }
+
   const { data: call, error } = await createAdminClient()
     .from("calls")
     .select("id, lead_id, parent_email, details_sent_count")
