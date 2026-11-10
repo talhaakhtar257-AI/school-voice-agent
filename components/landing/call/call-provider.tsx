@@ -52,6 +52,31 @@ const CONNECT_RETRY_DELAYS_MS = [1000, 2500];
 // timing; a reply slower than normal still shows it.
 const THINKING_AFTER_MS = 1500;
 
+/**
+ * Is this failure the microphone rather than the assistant?
+ *
+ * It matters because the two need opposite things from the parent. "The
+ * assistant is not available right now" tells someone whose browser is holding
+ * a permission prompt that our product is broken, when all they have to do is
+ * tap Allow — and on a phone they have never used this app on, that is the
+ * likeliest first-call failure there is. The `micRefused` wording has existed,
+ * translated, since the landing page was built; nothing on the parent-facing
+ * side ever showed it (found 10 Nov 2026, before the client demo).
+ *
+ * Retell's SDK passes the browser's own error through, so the `name` is the
+ * reliable signal: `NotAllowedError` is a refusal or a blocked permission,
+ * `NotFoundError` is a device with no microphone, `SecurityError` is an
+ * insecure context. The message check is a backstop for the case where a
+ * wrapper has flattened the DOMException into a plain Error, which is why it
+ * looks for the words a browser uses rather than anything Retell-specific.
+ */
+function isMicrophoneFailure(error: Error): boolean {
+  if (/^(NotAllowedError|NotFoundError|NotReadableError|SecurityError)$/.test(error.name)) return true;
+  return /permission|not allowed|notallowed|denied|getusermedia|microphone|audio input|no audio track/i.test(
+    error.message,
+  );
+}
+
 type CallContextValue = {
   phase: CallPhase;
   muted: boolean;
@@ -358,6 +383,15 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
             // "no status" means the request never reached Retell (network).
             const httpStatus = "status" in error ? Number(error.status) : null;
             console.error(`[call/error] try ${tryNumber + 1}/3, ${httpStatus ? `HTTP ${httpStatus}` : "no status"}: ${error.message}`);
+            // Checked before the retry logic on purpose: retrying cannot win a
+            // permission back, and three attempts would sit the parent in
+            // "still connecting" for about four seconds before finally telling
+            // them the wrong thing.
+            if (isMicrophoneFailure(error)) {
+              attemptRef.current += 1;
+              finish(s.micRefused);
+              return;
+            }
             if (failedBeforeLive(httpStatus === 401 || httpStatus === 403)) return;
             attemptRef.current += 1;
             finish(s.assistantUnavailable);
